@@ -5,7 +5,6 @@ import com.goggles.mentoring_service.domain.common.UserType;
 import com.goggles.mentoring_service.domain.mentoring.exception.InvalidMentorUserTypeException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import jakarta.validation.constraints.Email;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -24,21 +23,21 @@ public class Mentor {
 	@Column(name = "mentor_id", nullable = false)
 	private UUID id;
 
-	@Column(name = "mentor_name",length = 100, nullable = false)
+	@Column(name = "mentor_name", length = 100, nullable = false)
 	private String name;
 
-	@Column(name= "mentor_field", length = 100, nullable = false)
+	@Column(name = "mentor_field", length = 100, nullable = false)
 	private String field;
 
 	private String email;
 
 	@Builder
-	protected Mentor(UUID id, String name, String field,String email,  UserType userType) {
+	protected Mentor(UUID id, String name, String field, String email, UserType userType) {
 		checkIfMentorAuthValidate(id, userType);
 		this.id = id;
 		this.name = name;
 		this.field = field;
-		this.email =email;
+		this.email = email;
 	}
 
 	private static void checkIfMentorAuthValidate(UUID id, UserType userType) {

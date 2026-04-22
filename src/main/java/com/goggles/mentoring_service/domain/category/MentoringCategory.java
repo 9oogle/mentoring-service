@@ -1,9 +1,9 @@
 package com.goggles.mentoring_service.domain.category;
 
 import com.goggles.common.domain.BaseAudit;
-import com.goggles.mentoring_service.domain.common.UserType;
-import com.goggles.mentoring_service.domain.category.exception.InactiveCategoryCannotMoveException;
 import com.goggles.mentoring_service.domain.category.exception.CategoryAdminForbiddenException;
+import com.goggles.mentoring_service.domain.category.exception.InactiveCategoryCannotMoveException;
+import com.goggles.mentoring_service.domain.common.UserType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -15,22 +15,23 @@ import java.util.UUID;
 
 /**
  * Partial Unique Indexes for Active Categories:
- *
+ * <p>
  * CREATE UNIQUE INDEX uq_mentoring_category_code_active
  * ON p_mentoring_category (code)
  * WHERE deleted_at IS NULL;
- *
+ * <p>
  * CREATE UNIQUE INDEX uq_mentoring_category_name_active
  * ON p_mentoring_category (name)
  * WHERE deleted_at IS NULL;
- *
+ * <p>
  * CREATE UNIQUE INDEX uq_mentoring_category_sort_active
  * ON p_mentoring_category (sort_order)
  * WHERE is_active = true;
  */
 
 @Getter
-@Entity @ToString
+@Entity
+@ToString
 @Table(name = "P_MENTORING_CATEGORY")
 @Access(AccessType.FIELD)
 @SQLRestriction("deleted_at IS NULL")
@@ -40,7 +41,7 @@ public class MentoringCategory extends BaseAudit {
 	@EmbeddedId
 	private MentoringCategoryId mentoringCategoryId;
 
-	@Column(length=50, nullable = false)
+	@Column(length = 50, nullable = false)
 	private String name;
 
 	@Column(length = 10, nullable = false)
@@ -61,49 +62,49 @@ public class MentoringCategory extends BaseAudit {
 
 	public static MentoringCategory create(UUID userId, UserType type, String name, String code) {
 		checkIfUserTypeIsAdmin(userId, type);
-		 return new MentoringCategory(name, code);
+		return new MentoringCategory(name, code);
 	}
 
-	public void softDelete(UUID userId,UserType type) {
+	private static void checkIfUserTypeIsAdmin(UUID userId, UserType type) {
+		if (type != UserType.MASTER) {
+			throw new CategoryAdminForbiddenException(userId, type);
+		}
+	}
+
+	public void softDelete(UUID userId, UserType type) {
 		checkIfUserTypeIsAdmin(userId, type);
 		this.softDelete(userId);
 		this.active = false;
 		this.sortOrder = null;
 	}
 
-	public void updateNameAndCode(UUID userId,UserType type, String name, String code) {
+	public void updateNameAndCode(UUID userId, UserType type, String name, String code) {
 		checkIfUserTypeIsAdmin(userId, type);
 		this.name = name;
 		this.code = code;
 	}
 
-	public void activate(UUID userId,UserType type, int sortOrder) {
+	public void activate(UUID userId, UserType type, int sortOrder) {
 		checkIfUserTypeIsAdmin(userId, type);
 		this.sortOrder = sortOrder;
 		this.active = true;
 	}
 
-	public void deactivate(UUID userId,UserType type) {
+	public void deactivate(UUID userId, UserType type) {
 		checkIfUserTypeIsAdmin(userId, type);
 		this.active = false;
 		this.sortOrder = null;
 	}
 
-	public void move(UUID userId,UserType type, int newSortOrder) {
+	public void move(UUID userId, UserType type, int newSortOrder) {
 		checkIfUserTypeIsAdmin(userId, type);
 		checkActivation();
 		this.sortOrder = newSortOrder;
 	}
 
 	private void checkActivation() {
-		if(!this.active) {
+		if (!this.active) {
 			throw new InactiveCategoryCannotMoveException();
-		}
-	}
-
-	private static void checkIfUserTypeIsAdmin(UUID userId, UserType type) {
-		if (type != UserType.MASTER) {
-			throw new CategoryAdminForbiddenException(userId, type);
 		}
 	}
 }
