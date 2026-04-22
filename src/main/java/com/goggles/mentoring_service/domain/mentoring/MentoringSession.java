@@ -24,7 +24,7 @@ public class MentoringSession {
 		MentoringSession session = new MentoringSession();
 		session.sessionDate = date;
 		if(startTime.isAfter(endTime) || startTime.equals(endTime)) {
-			throw new InvalidTimeRangeException("세션의 시작 시간은 종료 시간보다 이전이어야 합니다.");
+			throw InvalidTimeRangeException.forSession();
 		}
 		session.sessionStartTime = startTime;
 		session.sessionEndTime = endTime;

@@ -1,17 +1,16 @@
 package com.goggles.mentoring_service.domain.mentoring;
 
 import com.goggles.common.domain.BaseAudit;
+import com.goggles.mentoring_service.domain.mentoring.exception.BookedSessionCannotBeDeletedException;
+import com.goggles.mentoring_service.domain.mentoring.exception.MentoringPolicyViolationException;
+import com.goggles.mentoring_service.domain.mentoring.exception.RepeatPatternRequiredException;
+import com.goggles.mentoring_service.domain.mentoring.exception.SessionNotFoundException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLRestriction;
-
-import com.goggles.mentoring_service.domain.mentoring.exception.BookedSessionCannotBeDeletedException;
-import com.goggles.mentoring_service.domain.mentoring.exception.MentoringPolicyViolationException;
-import com.goggles.mentoring_service.domain.mentoring.exception.RepeatPatternRequiredException;
-import com.goggles.mentoring_service.domain.mentoring.exception.SessionNotFoundException;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -66,21 +65,21 @@ public class Mentoring extends BaseAudit {
 	@ElementCollection(fetch = FetchType.LAZY)
 	@CollectionTable(name = "P_REPEAT_PATTERN", joinColumns = @JoinColumn(name = "mentoring_id"))
 	@OrderColumn(name = "pattern_order")
-	private List<RepeatPattern> repeatPatterns = new ArrayList<>();
+	private final List<RepeatPattern> repeatPatterns = new ArrayList<>();
 
 	@ElementCollection(fetch = FetchType.LAZY)
 	@CollectionTable(name = "P_MENTORING_SESSION", joinColumns = @JoinColumn(name = "mentoring_id"))
 	@OrderColumn(name = "session_order")
-	private List<MentoringSession> sessions = new ArrayList<>();
+	private final List<MentoringSession> sessions = new ArrayList<>();
 
 
 	private Mentoring(Mentor mentor, CategorySnapshot mentoringCategory, String title,
-			String subtitle, String description, MentoringDuration duration,
-			MentoringStatus status, MentoringType mentoringType,
-			BookingType bookingType, int sessionCount, int maxParticipants, boolean excludeHolidays, int price) {
+			String subtitle, String description, MentoringDuration duration, MentoringStatus status,
+			MentoringType mentoringType, BookingType bookingType, int sessionCount,
+			int maxParticipants, boolean excludeHolidays, int price) {
 		validateTypeConstraints(mentoringType, bookingType, sessionCount, maxParticipants);
 		if (price < 0) {
-			throw new MentoringPolicyViolationException("가격은 0원 이상이어야 합니다.");
+			throw MentoringPolicyViolationException.invalidPrice();
 		}
 		this.mentoringId = MentoringId.of();
 		this.mentor = mentor;
@@ -98,26 +97,27 @@ public class Mentoring extends BaseAudit {
 		this.price = price;
 	}
 
-	private static void validateTypeConstraints(MentoringType mentoringType, BookingType bookingType,
-			int sessionCount, int maxParticipants) {
+	private static void validateTypeConstraints(MentoringType mentoringType,
+			BookingType bookingType, int sessionCount, int maxParticipants) {
 		if (mentoringType == MentoringType.GROUP && maxParticipants <= 1) {
-			throw new MentoringPolicyViolationException("그룹 멘토링은 최대 참여자 수가 2명 이상이어야 합니다.");
+			throw MentoringPolicyViolationException.groupMentoringMinParticipants();
 		}
 		if (mentoringType == MentoringType.ONE_ON_ONE && maxParticipants != 1) {
-			throw new MentoringPolicyViolationException("1:1 멘토링의 최대 참여자 수는 1명이어야 합니다.");
+			throw MentoringPolicyViolationException.oneOnOneMaxParticipants();
 		}
 		if (bookingType == BookingType.SELF_SELECT && sessionCount <= 1) {
-			throw new MentoringPolicyViolationException("자유 선택 예약은 세션 수가 2회 이상이어야 합니다.");
+			throw MentoringPolicyViolationException.selfSelectMinSessions();
 		}
 	}
 
 	@Builder
 	public static Mentoring create(Mentor mentor, CategorySnapshot mentoringCategory, String title,
-			String subtitle, String description, MentoringDuration duration,
-			MentoringStatus status, MentoringType mentoringType,
-			BookingType bookingType, int sessionCount, int maxParticipants, boolean excludeHolidays, int price) {
+			String subtitle, String description, MentoringDuration duration, MentoringStatus status,
+			MentoringType mentoringType, BookingType bookingType, int sessionCount,
+			int maxParticipants, boolean excludeHolidays, int price) {
 		return new Mentoring(mentor, mentoringCategory, title, subtitle, description, duration,
-				status, mentoringType, bookingType, sessionCount, maxParticipants, excludeHolidays, price);
+				status, mentoringType, bookingType, sessionCount, maxParticipants, excludeHolidays,
+				price);
 	}
 
 	public void activate() {
@@ -151,7 +151,8 @@ public class Mentoring extends BaseAudit {
 	}
 
 	public void removeSessions(List<MentoringSession> sessionsToRemove) {
-		if (sessionsToRemove.stream().anyMatch(MentoringSession::isBooked)) {
+		if (sessionsToRemove.stream()
+				.anyMatch(MentoringSession::isBooked)) {
 			throw new BookedSessionCannotBeDeletedException();
 		}
 		this.sessions.removeAll(sessionsToRemove);
@@ -171,7 +172,9 @@ public class Mentoring extends BaseAudit {
 
 	private MentoringSession findSession(LocalDate date, LocalTime startTime) {
 		return this.sessions.stream()
-				.filter(s -> s.getSessionDate().equals(date) && s.getSessionStartTime().equals(startTime))
+				.filter(s -> s.getSessionDate()
+						.equals(date) && s.getSessionStartTime()
+						.equals(startTime))
 				.findFirst()
 				.orElseThrow(() -> new SessionNotFoundException(date, startTime));
 	}

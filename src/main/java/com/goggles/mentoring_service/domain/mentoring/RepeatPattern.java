@@ -24,7 +24,7 @@ public class RepeatPattern {
 		RepeatPattern pattern = new RepeatPattern();
 		pattern.dayOfWeek = dayOfWeek;
 		if (startTime.isAfter(endTime) || startTime.equals(endTime)) {
-			throw new InvalidTimeRangeException("반복 패턴의 시작 시간은 종료 시간보다 이전이어야 합니다.");
+			throw InvalidTimeRangeException.forRepeatPattern();
 		}
 		pattern.startTime = startTime;
 		pattern.endTime = endTime;

@@ -7,5 +7,6 @@ import java.util.Optional;
 
 public interface MentoringRepository {
 	void save(Mentoring mentoring);
+
 	Optional<Mentoring> findById(MentoringId id);
 }
