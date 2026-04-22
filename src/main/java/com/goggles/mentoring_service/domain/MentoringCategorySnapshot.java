@@ -1,9 +1,0 @@
-package com.goggles.mentoring_service.domain;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
-
-@Embeddable
-public record MentoringCategorySnapshot(MentoringCategoryId mentoringCategoryId,
-										@Column(length = 50, name = "mentoring_category_name") String name,
-										@Column(length = 10, name = "mentoring_category_code") String code) {}
