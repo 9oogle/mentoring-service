@@ -1,5 +1,7 @@
 package com.goggles.mentoring_service.domain;
 
+import com.goggles.mentoring_service.domain.exception.BookedSessionStatusCannotBeChangedException;
+import com.goggles.mentoring_service.domain.exception.SessionNotAvailableException;
 import jakarta.persistence.Embeddable;
 import lombok.*;
 
@@ -27,14 +29,14 @@ public class MentoringSession {
 
 	public void deactivate() {
 		if (this.status == SessionStatus.BOOKED) {
-			throw new IllegalStateException("예약된 세션은 상태를 변경할 수 없습니다.");
+			throw new BookedSessionStatusCannotBeChangedException();
 		}
 		this.status = SessionStatus.NOT_AVAILABLE;
 	}
 
 	public void activate() {
 		if (this.status == SessionStatus.BOOKED) {
-			throw new IllegalStateException("예약된 세션은 상태를 변경할 수 없습니다.");
+			throw new BookedSessionStatusCannotBeChangedException();
 		}
 		this.status = SessionStatus.AVAILABLE;
 	}
@@ -45,7 +47,7 @@ public class MentoringSession {
 
 	public void book() {
 		if (this.status != SessionStatus.AVAILABLE) {
-			throw new IllegalStateException("예약 가능한 세션이 아닙니다.");
+			throw new SessionNotAvailableException();
 		}
 		this.status = SessionStatus.BOOKED;
 	}

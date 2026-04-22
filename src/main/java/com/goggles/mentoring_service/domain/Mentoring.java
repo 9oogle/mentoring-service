@@ -8,6 +8,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLRestriction;
 
+import com.goggles.mentoring_service.domain.exception.BookedSessionCannotBeDeletedException;
+import com.goggles.mentoring_service.domain.exception.InvalidMentoringPolicyException;
+import com.goggles.mentoring_service.domain.exception.RepeatPatternRequiredException;
+import com.goggles.mentoring_service.domain.exception.SessionNotFoundException;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -89,13 +94,13 @@ public class Mentoring extends BaseAudit {
 	private static void validateTypeConstraints(MentoringType mentoringType, BookingType bookingType,
 			int sessionCount, int maxParticipants) {
 		if (mentoringType == MentoringType.GROUP && maxParticipants <= 1) {
-			throw new IllegalArgumentException("그룹 멘토링은 최대 참여자 수가 2명 이상이어야 합니다.");
+			throw new InvalidMentoringPolicyException("그룹 멘토링은 최대 참여자 수가 2명 이상이어야 합니다.");
 		}
 		if (mentoringType == MentoringType.ONE_ON_ONE && maxParticipants != 1) {
-			throw new IllegalArgumentException("1:1 멘토링의 최대 참여자 수는 1명이어야 합니다.");
+			throw new InvalidMentoringPolicyException("1:1 멘토링의 최대 참여자 수는 1명이어야 합니다.");
 		}
 		if (bookingType == BookingType.SELF_SELECT && sessionCount <= 1) {
-			throw new IllegalArgumentException("자유 선택 예약은 세션 수가 2회 이상이어야 합니다.");
+			throw new InvalidMentoringPolicyException("자유 선택 예약은 세션 수가 2회 이상이어야 합니다.");
 		}
 	}
 
@@ -110,7 +115,7 @@ public class Mentoring extends BaseAudit {
 
 	public void activate() {
 		if (bookingType == BookingType.AUTO_REPEAT && repeatPatterns.isEmpty()) {
-			throw new IllegalStateException("자동 반복 멘토링은 요일 반복 패턴이 설정되어야 활성화할 수 있습니다.");
+			throw new RepeatPatternRequiredException();
 		}
 		this.status = MentoringStatus.ACTIVE;
 	}
@@ -139,8 +144,8 @@ public class Mentoring extends BaseAudit {
 	}
 
 	public void removeSessions(List<MentoringSession> sessionsToRemove) {
-		if(sessionsToRemove.stream().anyMatch(MentoringSession::isBooked)) {
-			throw new IllegalStateException("예약된 세션은 삭제할 수 없습니다.");
+		if (sessionsToRemove.stream().anyMatch(MentoringSession::isBooked)) {
+			throw new BookedSessionCannotBeDeletedException();
 		}
 		this.sessions.removeAll(sessionsToRemove);
 	}
@@ -161,7 +166,7 @@ public class Mentoring extends BaseAudit {
 		return this.sessions.stream()
 				.filter(s -> s.getSessionDate().equals(date) && s.getSessionStartTime().equals(startTime))
 				.findFirst()
-				.orElseThrow(() -> new IllegalArgumentException("해당 날짜와 시간에 세션이 존재하지 않습니다."));
+				.orElseThrow(() -> new SessionNotFoundException(date, startTime));
 	}
 
 }
