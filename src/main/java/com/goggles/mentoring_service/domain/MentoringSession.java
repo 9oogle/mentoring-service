@@ -19,33 +19,36 @@ public class MentoringSession {
 	private LocalTime sessionEndTime;
 	private SessionStatus status = SessionStatus.AVAILABLE;
 
-	public static MentoringSession of(LocalDate date, LocalTime startTime, LocalTime endTime) {
+	 static MentoringSession of(LocalDate date, LocalTime startTime, LocalTime endTime) {
 		MentoringSession session = new MentoringSession();
 		session.sessionDate = date;
+		if(startTime.isAfter(endTime) || startTime.equals(endTime)) {
+			throw new IllegalArgumentException("세션의 시작 시간은 종료 시간보다 이전이어야 합니다.");
+		}
 		session.sessionStartTime = startTime;
 		session.sessionEndTime = endTime;
 		return session;
 	}
 
-	public void deactivate() {
+	 void deactivate() {
 		if (this.status == SessionStatus.BOOKED) {
 			throw new BookedSessionStatusCannotBeChangedException();
 		}
 		this.status = SessionStatus.NOT_AVAILABLE;
 	}
 
-	public void activate() {
+	 void activate() {
 		if (this.status == SessionStatus.BOOKED) {
 			throw new BookedSessionStatusCannotBeChangedException();
 		}
 		this.status = SessionStatus.AVAILABLE;
 	}
 
-	public boolean isBooked() {
+	 boolean isBooked() {
 		return this.status == SessionStatus.BOOKED;
 	}
 
-	public void book() {
+	 void book() {
 		if (this.status != SessionStatus.AVAILABLE) {
 			throw new SessionNotAvailableException();
 		}
