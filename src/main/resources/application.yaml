@@ -1,6 +1,6 @@
 spring:
   application:
-    name: mentoring-server
+    name: mentoring-service
   datasource:
     url: jdbc:postgresql://localhost:5432/goggles
     username: ${DB_USERNAME:goggles}

@@ -2,7 +2,7 @@
 
 The following was discovered as part of building this project:
 
-* The original package name 'com.goggles.mentoring-server' is invalid and this project uses 'com.goggles.mentoring_server' instead.
+* The original package name 'com.goggles.mentoring-service' is invalid and this project uses 'com.goggles.mentoring_service' instead.
 
 # Getting Started
 
