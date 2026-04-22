@@ -1,8 +1,9 @@
 package com.goggles.mentoring_service.domain;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface MentoringRepository {
 	void save(Mentoring mentoring);
-	Mentoring findById(UUID id);
+	Optional<Mentoring> findById(MentoringId id);
 }
