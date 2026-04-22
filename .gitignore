@@ -24,6 +24,7 @@ logs/
 Thumbs.db
 
 # Secrets
+gradle.properties
 application-secret.yml
 application-secret.yaml
 application-prod.yml
