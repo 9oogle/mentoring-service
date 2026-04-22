@@ -20,4 +20,4 @@ jobs:
         run: chmod +x ./gradlew
         
       - name: Check code formatting with Spotless
-        run: ./gradlew spotlessCheck
+        run: ./gradlew spotlessCheck -PGitHubPackagesUsername=${{ github.actor }} -PGitHubPackagesPassword=${{ secrets.GITHUB_TOKEN }}
