@@ -16,19 +16,18 @@ public class UserContextArgumentResolver implements HandlerMethodArgumentResolve
 
 	@Override
 	public boolean supportsParameter(MethodParameter parameter) {
-		return parameter.getParameterType().equals(UserContext.class);
+		return parameter.getParameterType()
+				.equals(UserContext.class);
 	}
 
 	@Override
-	public UserContext resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
-			NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
+	public UserContext resolveArgument(MethodParameter parameter,
+			ModelAndViewContainer mavContainer, NativeWebRequest webRequest,
+			WebDataBinderFactory binderFactory) {
 		HttpServletRequest request = webRequest.getNativeRequest(HttpServletRequest.class);
-		return new UserContext(
-				UUID.fromString(request.getHeader("X-User-Id")),
+		return new UserContext(UUID.fromString(request.getHeader("X-User-Id")),
 				UserType.valueOf(request.getHeader("X-User-Type")),
-				request.getHeader("X-User-Name"),
-				request.getHeader("X-User-Email"),
-				request.getHeader("X-User-Field")
-		);
+				request.getHeader("X-User-Name"), request.getHeader("X-User-Email"),
+				request.getHeader("X-User-Field"));
 	}
 }

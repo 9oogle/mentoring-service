@@ -22,7 +22,8 @@ public enum BookingStatus {
 				throw InvalidBookingStatusTransitionException.cannotModifyPaymentFailed();
 			}
 			throw switch (newStatus) {
-				case PAYMENT_COMPLETED -> InvalidBookingStatusTransitionException.cannotCompletePayment(this);
+				case PAYMENT_COMPLETED ->
+						InvalidBookingStatusTransitionException.cannotCompletePayment(this);
 				case ACCEPTED -> InvalidBookingStatusTransitionException.cannotAccept(this);
 				case REJECTED -> InvalidBookingStatusTransitionException.cannotReject(this);
 				case CANCELED -> InvalidBookingStatusTransitionException.alreadyClosedBooking(this);

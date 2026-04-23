@@ -37,8 +37,8 @@ public class BookedMentoring {
 
 
 	static BookedMentoring of(UUID mentoringId, String categoryCode, String categoryName,
-			String title, String subtitle, UUID mentorId, String mentorName,
-			LocalDate sessionDate, LocalTime sessionStartTime, LocalTime sessionEndTime) {
+			String title, String subtitle, UUID mentorId, String mentorName, LocalDate sessionDate,
+			LocalTime sessionStartTime, LocalTime sessionEndTime) {
 		BookedMentoring bookedMentoring = new BookedMentoring();
 		bookedMentoring.mentoringId = mentoringId;
 		bookedMentoring.categoryCode = categoryCode;

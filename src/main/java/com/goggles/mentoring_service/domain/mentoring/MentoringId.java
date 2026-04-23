@@ -9,16 +9,14 @@ import java.io.Serializable;
 import java.util.UUID;
 
 @Embeddable
-public record MentoringId (@JdbcTypeCode(SqlTypes.UUID)
-						   @Column(length=36, name="mentoring_id")
-	UUID mentoringId
-) implements Serializable {
+public record MentoringId(
+		@JdbcTypeCode(SqlTypes.UUID) @Column(length = 36, name = "mentoring_id") UUID mentoringId) implements Serializable {
 
-	public static MentoringId of(){
+	public static MentoringId of() {
 		return new MentoringId(UUID.randomUUID());
 	}
 
-	public static MentoringId of(String mentoringIdString){
+	public static MentoringId of(String mentoringIdString) {
 		return new MentoringId(UUID.fromString(mentoringIdString));
 	}
 }

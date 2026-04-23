@@ -9,7 +9,8 @@ public class InvalidBookingStatusTransitionException extends MentoringValidation
 		super(message);
 	}
 
-	public static InvalidBookingStatusTransitionException cannotCompletePayment(BookingStatus current) {
+	public static InvalidBookingStatusTransitionException cannotCompletePayment(
+			BookingStatus current) {
 		return new InvalidBookingStatusTransitionException(
 				String.format("결제 완료 처리는 PENDING 상태에서만 가능합니다. 현재 상태: %s", current));
 	}
@@ -28,7 +29,8 @@ public class InvalidBookingStatusTransitionException extends MentoringValidation
 				String.format("예약 거절은 PAYMENT_COMPLETED 상태에서만 가능합니다. 현재 상태: %s", current));
 	}
 
-	public static InvalidBookingStatusTransitionException alreadyClosedBooking(BookingStatus current) {
+	public static InvalidBookingStatusTransitionException alreadyClosedBooking(
+			BookingStatus current) {
 		return new InvalidBookingStatusTransitionException(
 				String.format("이미 종료된 예약은 변경할 수 없습니다. 현재 상태: %s", current));
 	}

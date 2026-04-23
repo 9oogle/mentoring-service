@@ -50,14 +50,13 @@ public class MentoringBooking extends BaseAudit {
 	}
 
 	@Builder
-	public static MentoringBooking create(
-			UUID mentoringId, String categoryCode, String categoryName,
-			String title, String subtitle, UUID mentorId, String mentorName,
+	public static MentoringBooking create(UUID mentoringId, String categoryCode,
+			String categoryName, String title, String subtitle, UUID mentorId, String mentorName,
 			LocalDate sessionDate, LocalTime sessionStartTime, LocalTime sessionEndTime,
 			UUID menteeId, UserType menteeUserType, String menteeName) {
-		BookedMentoring bookedMentoring = BookedMentoring.of(
-				mentoringId, categoryCode, categoryName, title, subtitle,
-				mentorId, mentorName, sessionDate, sessionStartTime, sessionEndTime);
+		BookedMentoring bookedMentoring =
+				BookedMentoring.of(mentoringId, categoryCode, categoryName, title, subtitle,
+						mentorId, mentorName, sessionDate, sessionStartTime, sessionEndTime);
 		Mentee mentee = Mentee.of(menteeId, menteeUserType, menteeName);
 		return new MentoringBooking(bookedMentoring, mentee);
 	}
@@ -118,11 +117,13 @@ public class MentoringBooking extends BaseAudit {
 			if (!bookedMentoring.isMentor(canceledBy)) {
 				throw UnauthorizedBookingAccessException.noPermissionToCancel();
 			}
-		} else if (userType == UserType.STUDENT) {
+		}
+		else if (userType == UserType.STUDENT) {
 			if (!mentee.isMentee(canceledBy)) {
 				throw UnauthorizedBookingAccessException.noPermissionToCancel();
 			}
-		} else {
+		}
+		else {
 			throw UnauthorizedBookingAccessException.noPermissionToCancel();
 		}
 	}

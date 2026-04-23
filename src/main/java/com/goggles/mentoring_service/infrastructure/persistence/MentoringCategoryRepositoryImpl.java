@@ -22,8 +22,17 @@ public class MentoringCategoryRepositoryImpl implements MentoringCategoryReposit
 	}
 
 	@Override
+	public void saveAll(List<MentoringCategory> categories) {
+		jpaRepository.saveAll(categories);
+	}
+
+	@Override
 	public Optional<MentoringCategory> findById(MentoringCategoryId id) {
 		return jpaRepository.findById(id);
 	}
 
+	@Override
+	public List<MentoringCategory> findByActiveIsTrue() {
+		return jpaRepository.findByActiveIsTrue();
+	}
 }
