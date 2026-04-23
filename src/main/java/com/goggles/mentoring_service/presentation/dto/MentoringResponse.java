@@ -41,6 +41,40 @@ public class MentoringResponse {
 		}
 
 	}
+
+	public record Schedules(List<RepeatPatternDto> repeatPatterns, List<SessionDto> sessions) {
+		public record RepeatPatternDto(DayOfWeek dayOfWeek, LocalTime startTime,
+									   LocalTime endTime) {
+			public static RepeatPatternDto of(
+					MentoringResult.Schedules.RepeatPatternDto patternDto) {
+				return new RepeatPatternDto(patternDto.dayOfWeek(), patternDto.startTime(),
+						patternDto.endTime());
+			}
+		}
+
+		public record SessionDto(LocalDate date, LocalTime startTime, LocalTime endTime,
+								 SessionStatus status) {
+
+			public static SessionDto of(MentoringResult.Schedules.SessionDto sessionDto) {
+				return new SessionDto(sessionDto.date(), sessionDto.startTime(),
+						sessionDto.endTime(), sessionDto.status());
+			}
+		}
+
+		public static Schedules of(MentoringResult.Schedules schedules) {
+			List<RepeatPatternDto> patterns = schedules.repeatPatterns()
+					.stream()
+					.map(RepeatPatternDto::of)
+					.toList();
+			List<SessionDto> sessions = schedules.sessions()
+					.stream()
+					.map(SessionDto::of)
+					.toList();
+			return new Schedules(patterns, sessions);
+		}
+
+	}
+
 	public record Summary(UUID mentoringId, String title, String subtitle, String mentorName,
 						  String categoryName, MentoringType mentoringType, Format format,
 						  int price, MentoringStatus status) {

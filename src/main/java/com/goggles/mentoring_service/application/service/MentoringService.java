@@ -46,6 +46,14 @@ public class MentoringService {
 				.orElseThrow(() -> new MentoringNotFoundException(new MentoringId(mentoringId)));
 		return MentoringResult.Detail.from(mentoring);
 	}
+
+	@Transactional(readOnly = true)
+	public MentoringResult.Schedules getMentoringSchedules(UUID mentoringId) {
+		Mentoring mentoring = mentoringRepository.findById(new MentoringId(mentoringId))
+				.orElseThrow(() -> new MentoringNotFoundException(new MentoringId(mentoringId)));
+		return MentoringResult.Schedules.from(mentoring);
+	}
+
 	@Transactional(readOnly = true)
 	public Page<MentoringResult.Summary> searchMentorings(
 			MentoringSearchCondition condition, CommonPageRequest pageRequest) {

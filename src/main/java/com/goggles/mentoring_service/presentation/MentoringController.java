@@ -41,6 +41,13 @@ public class MentoringController {
 		MentoringResult.Detail detailDto= mentoringService.getMentoring(mentoringId);
 		return  MentoringResponse.Detail.of(detailDto);
 	}
+
+	@GetMapping("/{mentoringId}/schedules")
+	public MentoringResponse.Schedules getMentoringSchedules(@PathVariable UUID mentoringId) {
+		MentoringResult.Schedules schedule = mentoringService.getMentoringSchedules(mentoringId);
+		return MentoringResponse.Schedules.of(schedule);
+	}
+
 	@GetMapping
 	public CommonPageResponse<MentoringResponse.Summary> searchMentorings(
 			@RequestParam(required = false) String keyword,

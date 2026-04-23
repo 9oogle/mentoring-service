@@ -48,6 +48,24 @@ public class MentoringResult {
 		}
 	}
 
+	public record Schedules(
+			List<RepeatPatternDto> repeatPatterns,
+			List<SessionDto> sessions
+	) {
+		public record RepeatPatternDto(DayOfWeek dayOfWeek, LocalTime startTime, LocalTime endTime) {}
+		public record SessionDto(LocalDate date, LocalTime startTime, LocalTime endTime, SessionStatus status) {}
+
+		public static Schedules from(Mentoring m) {
+			List<RepeatPatternDto> patterns = m.getRepeatPatterns().stream()
+					.map(p -> new RepeatPatternDto(p.getDayOfWeek(), p.getStartTime(), p.getEndTime()))
+					.toList();
+			List<SessionDto> sessions = m.getSessions().stream()
+					.map(s -> new SessionDto(s.getSessionDate(), s.getSessionStartTime(), s.getSessionEndTime(), s.getStatus()))
+					.toList();
+			return new Schedules(patterns, sessions);
+		}
+	}
+
 	public record Summary(
 			UUID mentoringId,
 			String title,
