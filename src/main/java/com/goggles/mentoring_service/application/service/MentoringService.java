@@ -23,11 +23,14 @@ public class MentoringService {
 
 	public UUID createMentoring(MentoringCommand.Create command) {
 		UUID categoryId = command.categoryId();
-		MentoringCategory category = categoryRepository.findById(new MentoringCategoryId(categoryId))
-				.orElseThrow(() -> new CategoryNotFoundException(categoryId));
+		MentoringCategory category =
+				categoryRepository.findById(new MentoringCategoryId(categoryId))
+						.orElseThrow(() -> new CategoryNotFoundException(categoryId));
 
 		Mentoring mentoring = command.toMentoring(category);
+
 		mentoringRepository.save(mentoring);
-		return mentoring.getMentoringId().mentoringId();
+		return mentoring.getMentoringId()
+				.mentoringId();
 	}
 }
