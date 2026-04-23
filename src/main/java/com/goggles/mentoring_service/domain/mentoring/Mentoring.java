@@ -33,7 +33,7 @@ public class Mentoring extends BaseAudit {
 	private Mentor mentor;
 
 	@Embedded
-	private CategorySnapshot mentoringCategory;
+	private Category mentoringCategory;
 
 	@Column(length = 100, nullable = false)
 	private String title;
@@ -73,7 +73,7 @@ public class Mentoring extends BaseAudit {
 	private final List<MentoringSession> sessions = new ArrayList<>();
 
 
-	private Mentoring(Mentor mentor, CategorySnapshot mentoringCategory, String title,
+	private Mentoring(Mentor mentor, Category mentoringCategory, String title,
 			String subtitle, String description, MentoringDuration duration, MentoringStatus status,
 			MentoringType mentoringType, BookingType bookingType, int sessionCount,
 			int maxParticipants, boolean excludeHolidays, int price) {
@@ -111,7 +111,7 @@ public class Mentoring extends BaseAudit {
 	}
 
 	@Builder
-	public static Mentoring create(Mentor mentor, CategorySnapshot mentoringCategory, String title,
+	public static Mentoring create(Mentor mentor, Category mentoringCategory, String title,
 			String subtitle, String description, MentoringDuration duration, MentoringStatus status,
 			MentoringType mentoringType, BookingType bookingType, int sessionCount,
 			int maxParticipants, boolean excludeHolidays, int price) {
