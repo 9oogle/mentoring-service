@@ -19,13 +19,12 @@ public class RepeatPattern {
 	private LocalTime startTime;
 	private LocalTime endTime;
 
-
 	public static RepeatPattern of(DayOfWeek dayOfWeek, LocalTime startTime, LocalTime endTime) {
-		RepeatPattern pattern = new RepeatPattern();
-		pattern.dayOfWeek = dayOfWeek;
 		if (startTime.isAfter(endTime) || startTime.equals(endTime)) {
 			throw InvalidTimeRangeException.forRepeatPattern();
 		}
+		RepeatPattern pattern = new RepeatPattern();
+		pattern.dayOfWeek = dayOfWeek;
 		pattern.startTime = startTime;
 		pattern.endTime = endTime;
 		return pattern;
