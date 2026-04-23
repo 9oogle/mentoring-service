@@ -9,8 +9,8 @@ reviews:
   collapse_walkthrough: false
 
   auto_review:
-    enabled: true
-    drafts: false
+    enabled: false
+    auto_incremental_review: false
 
   path_filters:
     - "!**/generated/**"
@@ -22,9 +22,12 @@ reviews:
   path_instructions:
     - path: "**/domain/**"
       instructions: |
-        - Aggregate Root 외부 노출 여부
-        - Aggregate 간 참조는 ID 기반인지
-        - domain에 JPA/Spring 의존성 있는지
+        - 이 프로젝트는 도메인 엔티티에 JPA/Hibernate 어노테이션(@Entity, @Embeddable, @JdbcTypeCode 등)을 직접 사용하는 실용적 설계를 채택하고 있습니다. JPA 어노테이션 자체를 문제로 지적하지 마세요.
+        - Aggregate Root를 통하지 않고 내부 VO/엔티티가 직접 외부로 노출되는지 확인
+        - Aggregate 간 참조는 객체 참조 대신 ID 기반인지 확인
+        - 도메인 메서드 내부에서 LocalDateTime.now() 같은 현재 시간을 직접 사용하는지 확인 (외부 주입 방식 사용 여부)
+        - 상태 전이 시 예외 메시지가 현재 상태와 맞는지 확인. 단, 도메인 연산에서 도달 불가능한 케이스에 IllegalStateException을 사용하는 것은 올바른 패턴이므로 지적하지 마세요.
+        - 이벤트 payload에 Aggregate 식별자(ID)가 포함되어 있는지 확인
 
     - path: "**/application/**"
       instructions: |
