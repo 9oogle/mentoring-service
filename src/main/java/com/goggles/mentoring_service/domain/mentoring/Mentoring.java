@@ -78,7 +78,7 @@ public class Mentoring extends BaseAudit {
 	private Mentoring(Mentor mentor, Category mentoringCategory, String title,
 			String subtitle, String description, MentoringDuration duration, MentoringStatus status,
 			MentoringType mentoringType, BookingType bookingType, int sessionCount,
-			int maxParticipants, boolean excludeHolidays, int price) {
+			int maxParticipants, boolean excludeHolidays, int price, LocalDate endDate) {
 		validateTypeConstraints(mentoringType, bookingType, sessionCount, maxParticipants);
 		if (price < 0) {
 			throw MentoringPolicyViolationException.invalidPrice();
@@ -97,6 +97,7 @@ public class Mentoring extends BaseAudit {
 		this.maxParticipants = maxParticipants;
 		this.excludeHolidays = excludeHolidays;
 		this.price = price;
+		this.endDate = endDate;
 	}
 
 	private static void validateTypeConstraints(MentoringType mentoringType,
@@ -119,13 +120,13 @@ public class Mentoring extends BaseAudit {
 			String title, String subtitle, String description,
 			MentoringDuration duration, MentoringStatus status,
 			MentoringType mentoringType, BookingType bookingType,
-			int sessionCount, int maxParticipants, boolean excludeHolidays, int price) {
+			int sessionCount, int maxParticipants, boolean excludeHolidays, int price, LocalDate endDate) {
 		Mentor mentor = Mentor.builder()
 				.id(mentorId).name(mentorName).field(mentorField).email(mentorEmail).userType(mentorType)
 				.build();
 		Category category = Category.of(categoryId, categoryName, categoryCode);
 		return new Mentoring(mentor, category, title, subtitle, description, duration,
-				status, mentoringType, bookingType, sessionCount, maxParticipants, excludeHolidays, price);
+				status, mentoringType, bookingType, sessionCount, maxParticipants, excludeHolidays, price, endDate);
 	}
 
 	public void activate() {

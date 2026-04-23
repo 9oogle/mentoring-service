@@ -29,6 +29,7 @@ public class Mentor {
 	@Column(name = "mentor_field", length = 100, nullable = false)
 	private String field;
 
+	@Column(name = "mentor_email", length = 100, nullable = false)
 	private String email;
 
 	@Builder
