@@ -24,7 +24,6 @@ public class MentoringBooking extends BaseAudit {
 
 	private static final int CANCELLATION_DEADLINE_HOURS = 24;
 
-
 	@EmbeddedId
 	private MentoringBookingId mentoringBookingId;
 
@@ -84,7 +83,6 @@ public class MentoringBooking extends BaseAudit {
 		this.closure = BookingClosure.close(canceledBy, reason);
 	}
 
-
 	public UUID getClosedBy() {
 		return this.closure != null ? this.closure.getClosedBy() : null;
 	}
@@ -102,7 +100,6 @@ public class MentoringBooking extends BaseAudit {
 			throw UnauthorizedBookingAccessException.noPermissionToProcess();
 		}
 	}
-
 
 	private void checkIfUserCanCancel(UUID canceledBy, UserType userType) {
 		if (userType == UserType.INSTRUCTOR) {
@@ -136,6 +133,4 @@ public class MentoringBooking extends BaseAudit {
 	private void validateStatus(BookingStatus transitionTo) {
 		this.status.checkTransitionValidation(transitionTo);
 	}
-
-
 }

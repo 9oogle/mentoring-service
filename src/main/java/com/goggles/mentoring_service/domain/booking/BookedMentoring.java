@@ -25,6 +25,7 @@ public class BookedMentoring {
 	private String categoryName;
 	private String title;
 	private String subtitle;
+
 	private UUID mentorId;
 	private String mentorName;
 	private String mentorEmail;
