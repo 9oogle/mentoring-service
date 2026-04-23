@@ -1,7 +1,13 @@
 package com.goggles.mentoring_service.presentation;
 
+import com.goggles.common.pagination.CommonPageRequest;
+import com.goggles.common.pagination.CommonPageResponse;
 import com.goggles.mentoring_service.application.command.MentoringCommand;
+import com.goggles.mentoring_service.application.query.MentoringSearchCondition;
+import com.goggles.mentoring_service.application.query.MentoringSort;
 import com.goggles.mentoring_service.application.service.MentoringService;
+import com.goggles.mentoring_service.domain.mentoring.MentoringStatus;
+import com.goggles.mentoring_service.domain.mentoring.MentoringType;
 import com.goggles.mentoring_service.presentation.dto.MentoringRequest;
 import com.goggles.mentoring_service.presentation.dto.MentoringResponse;
 import com.goggles.mentoring_service.presentation.support.UserContext;
@@ -26,5 +32,19 @@ public class MentoringController {
 		MentoringCommand.Create command = request.toCommand(userContext);
 		UUID mentoringId = mentoringService.createMentoring(command);
 		return new MentoringResponse.Create(mentoringId);
+	}
+	@GetMapping
+	public CommonPageResponse<MentoringResponse.Summary> searchMentorings(
+			@RequestParam(required = false) String keyword,
+			@RequestParam(required = false) UUID categoryId,
+			@RequestParam(required = false) UUID mentorId,
+			@RequestParam(required = false) MentoringStatus status,
+			@RequestParam(required = false) MentoringType mentoringType,
+			@RequestParam(required = false) MentoringSort sortBy,
+			CommonPageRequest pageRequest) {
+		MentoringSearchCondition condition = new MentoringSearchCondition(keyword, categoryId, mentorId, status, mentoringType, sortBy);
+		Page<MentoringResult.Summary> summary = mentoringService.searchMentorings(condition,
+				pageRequest);
+		return CommonPageResponse.of(summary.map(MentoringResponse.Summary::of));
 	}
 }

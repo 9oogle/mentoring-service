@@ -1,12 +1,17 @@
 package com.goggles.mentoring_service.domain.mentoring.repository;
 
+import com.goggles.mentoring_service.application.query.MentoringSearchCondition;
 import com.goggles.mentoring_service.domain.mentoring.Mentoring;
 import com.goggles.mentoring_service.domain.mentoring.MentoringId;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 
 public interface MentoringRepository {
-	void save(Mentoring mentoring);
 
+	void save(Mentoring mentoring);
 	Optional<Mentoring> findById(MentoringId id);
+	Page<Mentoring> findAll(MentoringSearchCondition condition, Pageable pageable);
+
 }
