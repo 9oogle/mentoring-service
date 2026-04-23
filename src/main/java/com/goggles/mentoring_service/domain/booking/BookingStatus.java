@@ -24,7 +24,8 @@ public enum BookingStatus {
 			throw switch (newStatus) {
 				case PAYMENT_COMPLETED -> InvalidBookingStatusTransitionException.cannotCompletePayment(this);
 				case ACCEPTED -> InvalidBookingStatusTransitionException.cannotAccept(this);
-				case REJECTED, CANCELED -> InvalidBookingStatusTransitionException.alreadyClosedBooking(this);
+				case REJECTED -> InvalidBookingStatusTransitionException.cannotReject(this);
+				case CANCELED -> InvalidBookingStatusTransitionException.alreadyClosedBooking(this);
 				default -> throw new IllegalStateException("정의되지 않은 상태 전이입니다: " + newStatus);
 			};
 		}
