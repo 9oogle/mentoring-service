@@ -66,21 +66,21 @@ public class MentoringBooking extends BaseAudit {
 		this.status = BookingStatus.ACCEPTED;
 	}
 
-	public void reject(UUID userId, UserType userType, String reason) {
+	public void reject(UUID userId, UserType userType, String reason, LocalDateTime now) {
 		validateReason(reason);
 		checkIfUserIsMentor(userId, userType);
 		validateStatus(BookingStatus.REJECTED);
 		this.status = BookingStatus.REJECTED;
-		this.closure = BookingClosure.close(userId, reason);
+		this.closure = BookingClosure.close(userId, reason, now);
 	}
 
-	public void cancel(UUID canceledBy, UserType userType, String reason) {
+	public void cancel(UUID canceledBy, UserType userType, String reason, LocalDateTime now) {
 		validateReason(reason);
 		checkIfUserCanCancel(canceledBy, userType);
-		checkCancellationDeadline();
+		checkCancellationDeadline(now);
 		validateStatus(BookingStatus.CANCELED);
 		this.status = BookingStatus.CANCELED;
-		this.closure = BookingClosure.close(canceledBy, reason);
+		this.closure = BookingClosure.close(canceledBy, reason, now);
 	}
 
 	public UUID getClosedBy() {
@@ -121,11 +121,10 @@ public class MentoringBooking extends BaseAudit {
 		}
 	}
 
-	private void checkCancellationDeadline() {
+	private void checkCancellationDeadline(LocalDateTime now) {
 		LocalDateTime sessionStart = LocalDateTime.of(bookedMentoring.getSessionDate(),
 				bookedMentoring.getSessionStartTime());
-		if (LocalDateTime.now()
-				.isAfter(sessionStart.minusHours(CANCELLATION_DEADLINE_HOURS))) {
+		if (now.isAfter(sessionStart.minusHours(CANCELLATION_DEADLINE_HOURS))) {
 			throw CancellationDeadlineExceededException.of();
 		}
 	}

@@ -29,8 +29,8 @@ public class BookingClosure {
 		this.closeReason = closeReason;
 	}
 
-	public static BookingClosure close(UUID userId, String reason) {
-		return new BookingClosure(userId, LocalDateTime.now(), reason);
+	public static BookingClosure close(UUID userId, String reason, LocalDateTime now) {
+		return new BookingClosure(userId, now, reason);
 	}
 
 }

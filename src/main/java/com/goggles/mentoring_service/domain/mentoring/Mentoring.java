@@ -144,9 +144,9 @@ public class Mentoring extends BaseAudit {
 		this.sessions.addAll(sessions);
 	}
 
-	public void updateSessions(List<MentoringSession> newSessions) {
+	public void updateSessions(List<MentoringSession> newSessions, LocalDate now) {
 		this.sessions.removeIf(session -> session.getSessionDate()
-				.isAfter(LocalDate.now()) && !session.isBooked());
+				.isAfter(now) && !session.isBooked());
 		this.sessions.addAll(newSessions);
 	}
 
