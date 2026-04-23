@@ -7,6 +7,7 @@ import java.util.UUID;
 public record BookingAcceptedEvent(
 		UUID bookingId,
 		UUID menteeId,
+		UUID mentorId,
 		String mentorName,
 		String title,
 		LocalDate sessionDate,
