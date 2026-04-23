@@ -19,4 +19,12 @@ public class Category {
 	private String name;
 	@Column(length = 10, name = "category_code")
 	private String code;
+
+	static Category of(UUID categoryId, String name, String code) {
+		Category category = new Category();
+		category.categoryId = categoryId;
+		category.name = name;
+		category.code = code;
+		return category;
+	}
 }

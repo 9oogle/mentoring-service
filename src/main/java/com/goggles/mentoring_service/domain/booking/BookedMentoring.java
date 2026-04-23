@@ -26,17 +26,18 @@ public class BookedMentoring {
 	private String title;
 	private String subtitle;
 
+	@JdbcTypeCode(SqlTypes.UUID)
+	@Column(name = "mentor_id", nullable = false)
 	private UUID mentorId;
 	private String mentorName;
-	private String mentorEmail;
 
 	private LocalDate sessionDate;
 	private LocalTime sessionStartTime;
 	private LocalTime sessionEndTime;
 
 
-	public static BookedMentoring of(UUID mentoringId, String categoryCode, String categoryName,
-			String title, String subtitle, UUID mentorId, String mentorName, String mentorEmail,
+	static BookedMentoring of(UUID mentoringId, String categoryCode, String categoryName,
+			String title, String subtitle, UUID mentorId, String mentorName,
 			LocalDate sessionDate, LocalTime sessionStartTime, LocalTime sessionEndTime) {
 		BookedMentoring bookedMentoring = new BookedMentoring();
 		bookedMentoring.mentoringId = mentoringId;
@@ -46,7 +47,6 @@ public class BookedMentoring {
 		bookedMentoring.subtitle = subtitle;
 		bookedMentoring.mentorId = mentorId;
 		bookedMentoring.mentorName = mentorName;
-		bookedMentoring.mentorEmail = mentorEmail;
 		bookedMentoring.sessionDate = sessionDate;
 		bookedMentoring.sessionStartTime = sessionStartTime;
 		bookedMentoring.sessionEndTime = sessionEndTime;

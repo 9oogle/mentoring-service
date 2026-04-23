@@ -13,7 +13,6 @@ public record
 
 MentoringBookingId(
 		@JdbcTypeCode(SqlTypes.UUID) @Column(length = 36, name = "id") UUID bookingId) implements Serializable {
-
 	public static MentoringBookingId of() {
 		return new MentoringBookingId(UUID.randomUUID());
 	}

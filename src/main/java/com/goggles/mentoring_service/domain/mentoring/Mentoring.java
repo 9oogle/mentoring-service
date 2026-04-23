@@ -1,6 +1,7 @@
 package com.goggles.mentoring_service.domain.mentoring;
 
 import com.goggles.common.domain.BaseAudit;
+import com.goggles.mentoring_service.domain.common.UserType;
 import com.goggles.mentoring_service.domain.mentoring.exception.BookedSessionCannotBeDeletedException;
 import com.goggles.mentoring_service.domain.mentoring.exception.MentoringPolicyViolationException;
 import com.goggles.mentoring_service.domain.mentoring.exception.RepeatPatternRequiredException;
@@ -16,6 +17,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 
 @Getter
@@ -111,13 +113,19 @@ public class Mentoring extends BaseAudit {
 	}
 
 	@Builder
-	public static Mentoring create(Mentor mentor, Category mentoringCategory, String title,
-			String subtitle, String description, MentoringDuration duration, MentoringStatus status,
-			MentoringType mentoringType, BookingType bookingType, int sessionCount,
-			int maxParticipants, boolean excludeHolidays, int price) {
-		return new Mentoring(mentor, mentoringCategory, title, subtitle, description, duration,
-				status, mentoringType, bookingType, sessionCount, maxParticipants, excludeHolidays,
-				price);
+	public static Mentoring create(
+			UUID mentorId, String mentorName, String mentorField, String mentorEmail, UserType mentorType,
+			UUID categoryId, String categoryName, String categoryCode,
+			String title, String subtitle, String description,
+			MentoringDuration duration, MentoringStatus status,
+			MentoringType mentoringType, BookingType bookingType,
+			int sessionCount, int maxParticipants, boolean excludeHolidays, int price) {
+		Mentor mentor = Mentor.builder()
+				.id(mentorId).name(mentorName).field(mentorField).email(mentorEmail).userType(mentorType)
+				.build();
+		Category category = Category.of(categoryId, categoryName, categoryCode);
+		return new Mentoring(mentor, category, title, subtitle, description, duration,
+				status, mentoringType, bookingType, sessionCount, maxParticipants, excludeHolidays, price);
 	}
 
 	public void activate() {

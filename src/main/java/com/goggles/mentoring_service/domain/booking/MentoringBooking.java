@@ -7,11 +7,14 @@ import com.goggles.mentoring_service.domain.booking.exception.UnauthorizedBookin
 import com.goggles.mentoring_service.domain.common.UserType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.UUID;
 
 @Getter
@@ -46,7 +49,16 @@ public class MentoringBooking extends BaseAudit {
 		this.mentee = mentee;
 	}
 
-	public static MentoringBooking create(BookedMentoring bookedMentoring, Mentee mentee) {
+	@Builder
+	public static MentoringBooking create(
+			UUID mentoringId, String categoryCode, String categoryName,
+			String title, String subtitle, UUID mentorId, String mentorName,
+			LocalDate sessionDate, LocalTime sessionStartTime, LocalTime sessionEndTime,
+			UUID menteeId, UserType menteeUserType, String menteeName) {
+		BookedMentoring bookedMentoring = BookedMentoring.of(
+				mentoringId, categoryCode, categoryName, title, subtitle,
+				mentorId, mentorName, sessionDate, sessionStartTime, sessionEndTime);
+		Mentee mentee = Mentee.of(menteeId, menteeUserType, menteeName);
 		return new MentoringBooking(bookedMentoring, mentee);
 	}
 
@@ -67,8 +79,8 @@ public class MentoringBooking extends BaseAudit {
 	}
 
 	public void reject(UUID userId, UserType userType, String reason, LocalDateTime now) {
-		validateReason(reason);
 		checkIfUserIsMentor(userId, userType);
+		validateReason(reason);
 		validateStatus(BookingStatus.REJECTED);
 		this.status = BookingStatus.REJECTED;
 		this.closure = BookingClosure.close(userId, reason, now);
