@@ -1,4 +1,4 @@
-package com.goggles.mentoring_service.application.command;
+package com.goggles.mentoring_service.domain.booking;
 
 import java.time.LocalDate;
 import java.time.LocalTime;

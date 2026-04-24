@@ -2,6 +2,7 @@ package com.goggles.mentoring_service.domain.mentoring;
 
 import com.goggles.common.domain.BaseAudit;
 import com.goggles.mentoring_service.domain._common.UserType;
+import com.goggles.mentoring_service.domain.booking.SessionSlot;
 import com.goggles.mentoring_service.domain.mentoring.exception.BookedSessionCannotBeDeletedException;
 import com.goggles.mentoring_service.domain.mentoring.exception.MentoringPolicyViolationException;
 import com.goggles.mentoring_service.domain.mentoring.exception.RepeatPatternRequiredException;
@@ -248,6 +249,10 @@ public class Mentoring extends BaseAudit {
 		findSession(date, startTime).book();
 	}
 
+	public void bookSession(List<SessionSlot> sessionSlots) {
+		sessionSlots.forEach(slot -> findSession(slot.date(), slot.startTime()).book());
+	}
+
 	private MentoringSession findSession(LocalDate date, LocalTime startTime) {
 		return this.sessions.stream()
 				.filter(session -> session.getSessionDate()
@@ -256,5 +261,4 @@ public class Mentoring extends BaseAudit {
 				.findFirst()
 				.orElseThrow(() -> new SessionNotFoundException(date, startTime));
 	}
-
 }

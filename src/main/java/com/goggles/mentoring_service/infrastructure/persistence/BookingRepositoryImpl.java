@@ -1,0 +1,25 @@
+package com.goggles.mentoring_service.infrastructure.persistence;
+
+import com.goggles.mentoring_service.domain.booking.MentoringBooking;
+import com.goggles.mentoring_service.domain.booking.MentoringBookingId;
+import com.goggles.mentoring_service.domain.booking.repository.MentoringBookingRepository;
+import com.goggles.mentoring_service.infrastructure.persistence.jpa.BookingJpaRepository;
+import java.util.Optional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+
+@Repository
+@RequiredArgsConstructor
+public class BookingRepositoryImpl implements MentoringBookingRepository {
+  private final BookingJpaRepository jpaRepository;
+
+  @Override
+  public MentoringBooking save(MentoringBooking mentoringBooking) {
+    return jpaRepository.save(mentoringBooking);
+  }
+
+  @Override
+  public Optional<MentoringBooking> findById(MentoringBookingId id) {
+    return jpaRepository.findById(id);
+  }
+}
