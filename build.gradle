@@ -61,7 +61,7 @@ dependencies {
 	implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.16'
 
-	implementation 'com.goggles:common-library:1.0.0'
+	implementation 'com.goggles:common-library:1.0.1'
 
 	testCompileOnly 'org.projectlombok:lombok'
 	testAnnotationProcessor 'org.projectlombok:lombok'
