@@ -33,6 +33,11 @@ public class MentoringCategoryRepositoryImpl implements MentoringCategoryReposit
 
 	@Override
 	public List<MentoringCategory> findByActiveIsTrue() {
-		return jpaRepository.findByActiveIsTrue();
+		return jpaRepository.findByActiveIsTrueOrderBySortOrderAsc();
+	}
+
+	@Override
+	public List<MentoringCategory> findAllByOrderBySortOrderAsc() {
+		return jpaRepository.findAllByOrderBySortOrderAsc();
 	}
 }

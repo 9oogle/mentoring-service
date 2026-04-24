@@ -1,7 +1,7 @@
 package com.goggles.mentoring_service.domain.category;
 
 import com.goggles.common.domain.BaseAudit;
-import com.goggles.mentoring_service.domain.category.exception.CategoryAdminForbiddenException;
+import com.goggles.common.exception.ForbiddenException;
 import com.goggles.mentoring_service.domain.category.exception.InactiveCategoryCannotMoveException;
 import com.goggles.mentoring_service.domain._common.UserType;
 import jakarta.persistence.*;
@@ -67,7 +67,7 @@ public class MentoringCategory extends BaseAudit {
 
 	private static void checkIfUserTypeIsAdmin(UUID userId, UserType type) {
 		if (type != UserType.MASTER) {
-			throw new CategoryAdminForbiddenException(userId, type);
+			throw new ForbiddenException("관리자 권한이 필요합니다");
 		}
 	}
 
