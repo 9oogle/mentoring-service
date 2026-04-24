@@ -11,10 +11,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 
+@Repository
 @RequiredArgsConstructor
 public class MentoringQueryRepositoryImpl implements MentoringQueryRepository {
 

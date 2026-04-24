@@ -5,6 +5,7 @@ import com.goggles.mentoring_service.domain.mentoring.Mentoring;
 import com.goggles.mentoring_service.domain.mentoring.MentoringId;
 import com.goggles.mentoring_service.domain.mentoring.repository.MentoringRepository;
 import com.goggles.mentoring_service.infrastructure.persistence.jpa.MentoringJpaRepository;
+import com.goggles.mentoring_service.infrastructure.persistence.jpa.MentoringQueryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +19,7 @@ import java.util.Optional;
 public class MentoringRepositoryImpl implements MentoringRepository {
 
 	private final MentoringJpaRepository jpaRepository;
+	private final MentoringQueryRepository queryRepository;
 
 	@Override
 	public void save(Mentoring mentoring) {
@@ -31,6 +33,6 @@ public class MentoringRepositoryImpl implements MentoringRepository {
 
 	@Override
 	public Page<Mentoring> findAll(MentoringSearchCondition condition, Pageable pageable) {
-		return jpaRepository.search(condition, pageable);
+		return queryRepository.search(condition, pageable);
 	}
 }
