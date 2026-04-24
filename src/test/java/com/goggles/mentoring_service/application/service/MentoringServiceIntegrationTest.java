@@ -7,7 +7,7 @@ import com.goggles.mentoring_service.application.result.MentoringResult;
 import com.goggles.mentoring_service.config.TestAuditConfig;
 import com.goggles.mentoring_service.domain.category.MentoringCategory;
 import com.goggles.mentoring_service.domain.category.repository.MentoringCategoryRepository;
-import com.goggles.mentoring_service.domain.common.UserType;
+import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.mentoring.Format;
 import com.goggles.mentoring_service.domain.mentoring.Mentoring;
 import com.goggles.mentoring_service.domain.mentoring.MentoringId;

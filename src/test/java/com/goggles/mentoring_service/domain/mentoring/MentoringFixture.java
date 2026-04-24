@@ -2,7 +2,7 @@ package com.goggles.mentoring_service.domain.mentoring;
 
 import com.goggles.mentoring_service.application.command.SessionSlot;
 import com.goggles.mentoring_service.application.command.TimeSchedules;
-import com.goggles.mentoring_service.domain.common.UserType;
+import com.goggles.mentoring_service.domain._common.UserType;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;

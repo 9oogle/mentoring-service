@@ -1,6 +1,6 @@
 package com.goggles.mentoring_service.presentation.support;
 
-import com.goggles.mentoring_service.domain.common.UserType;
+import com.goggles.mentoring_service.domain._common.UserType;
 
 import java.util.UUID;
 

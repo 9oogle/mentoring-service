@@ -1,7 +1,7 @@
 package com.goggles.mentoring_service.domain.mentoring;
 
 import com.goggles.common.domain.BaseAudit;
-import com.goggles.mentoring_service.domain.common.UserType;
+import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.mentoring.exception.BookedSessionCannotBeDeletedException;
 import com.goggles.mentoring_service.domain.mentoring.exception.MentoringPolicyViolationException;
 import com.goggles.mentoring_service.domain.mentoring.exception.RepeatPatternRequiredException;

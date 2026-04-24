@@ -1,7 +1,7 @@
 package com.goggles.mentoring_service.domain.mentoring;
 
 
-import com.goggles.mentoring_service.domain.common.UserType;
+import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.mentoring.exception.InvalidMentorUserTypeException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;

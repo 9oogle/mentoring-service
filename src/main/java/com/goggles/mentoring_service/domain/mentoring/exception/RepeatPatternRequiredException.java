@@ -1,6 +1,6 @@
 package com.goggles.mentoring_service.domain.mentoring.exception;
 
-import com.goggles.mentoring_service.domain.common.MentoringValidationException;
+import com.goggles.mentoring_service.domain._common.MentoringValidationException;
 
 public class RepeatPatternRequiredException extends MentoringValidationException {
 
