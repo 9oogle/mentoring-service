@@ -22,8 +22,8 @@ public class MentoringRequest {
 						 @NotNull MentoringType mentoringType, @NotNull Format format,
 						 @Min(1) int sessionCount, @Min(1) int maxParticipants,
 						 boolean excludeHolidays, @Min(0) int price, LocalDate endDate,
-						 @NotEmpty List<SessionDto> sessions,
-						 @NotEmpty List<RepeatPatternDto> repeatPatterns) {
+						 @Valid @NotEmpty List<SessionDto> sessions,
+						 @Valid @NotEmpty List<RepeatPatternDto> repeatPatterns) {
 		public MentoringCommand.Create toCommand(UserContext userContext) {
 			List<SessionSlot> sessionSlots = sessions().stream()
 					.map(session -> new SessionSlot(session.date(), session.startTime(),
@@ -42,9 +42,10 @@ public class MentoringRequest {
 					endDate(), sessionSlots, patterns);
 		}
 
-		public record SessionDto(LocalDate date, LocalTime startTime, LocalTime endTime) {}
+		public record SessionDto(@NotNull LocalDate date, @NotNull LocalTime startTime,
+								 @NotNull LocalTime endTime) {}
 
-		public record RepeatPatternDto(DayOfWeek dayOfWeek, LocalTime startTime,
-									   LocalTime endTime) {}
+		public record RepeatPatternDto(@NotNull DayOfWeek dayOfWeek, @NotNull LocalTime startTime,
+									   @NotNull LocalTime endTime) {}
 	}
 }
