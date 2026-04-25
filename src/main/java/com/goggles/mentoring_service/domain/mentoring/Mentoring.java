@@ -17,6 +17,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,33 +30,51 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Mentoring extends BaseAudit {
 
+	@Getter(AccessLevel.NONE)
 	@ElementCollection(fetch = FetchType.LAZY)
 	@CollectionTable(name = "P_REPEAT_PATTERN", joinColumns = @JoinColumn(name = "mentoring_id"))
 	@OrderColumn(name = "pattern_order")
 	private final List<RepeatPattern> repeatPatterns = new ArrayList<>();
+
+	@Getter(AccessLevel.NONE)
 	@ElementCollection(fetch = FetchType.LAZY)
 	@CollectionTable(name = "P_MENTORING_SESSION", joinColumns = @JoinColumn(name = "mentoring_id"))
 	@OrderColumn(name = "session_order")
 	private final List<MentoringSession> sessions = new ArrayList<>();
+
 	@EmbeddedId
 	private MentoringId mentoringId;
+
 	@Embedded
 	private Mentor mentor;
+
 	@Embedded
 	private Category mentoringCategory;
+
 	@Column(length = 100, nullable = false)
 	private String title;
+
 	private String subtitle;
+
 	@Column(columnDefinition = "TEXT")
 	private String description;
+
 	private MentoringDuration duration;
+
 	private MentoringStatus status = MentoringStatus.INACTIVE;
+
 	private Format format = Format.SINGLE;
+
 	private MentoringType mentoringType = MentoringType.ONE_ON_ONE;
+
 	private int sessionCount = 1;
+
 	private int maxParticipants = 1;
+
 	private LocalDate endDate;
+
 	private boolean excludeHolidays;
+
 	@Column(nullable = false)
 	private int price;
 
@@ -128,6 +147,14 @@ public class Mentoring extends BaseAudit {
 				.isAfter(SessionPolicy.BUSINESS_END)) {
 			throw MentoringPolicyViolationException.sessionOutsideBusinessHours();
 		}
+	}
+
+	public List<RepeatPattern> getRepeatPatterns() {
+		return Collections.unmodifiableList(repeatPatterns);
+	}
+
+	public List<MentoringSession> getSessions() {
+		return Collections.unmodifiableList(sessions);
 	}
 
 	public void activate() {
