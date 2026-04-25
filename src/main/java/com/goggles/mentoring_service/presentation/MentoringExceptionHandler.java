@@ -4,7 +4,7 @@ package com.goggles.mentoring_service.presentation;
 import com.goggles.common.exception.ConflictException;
 import com.goggles.common.exception.ForbiddenException;
 import com.goggles.common.exception.NotFoundException;
-import com.goggles.mentoring_service.domain.exception.MentoringValidationException;
+import com.goggles.mentoring_service.domain.common.MentoringValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -33,7 +33,7 @@ public class MentoringExceptionHandler {
 	public ProblemDetail handleForbiddenException(ForbiddenException e) {
 		ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
 		problemDetail.setTitle("Forbidden");
-		problemDetail.setDetail("접근 권한이 없습니다.");
+		problemDetail.setDetail(e.getMessage());
 		return problemDetail;
 	}
 
