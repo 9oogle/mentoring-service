@@ -2,6 +2,7 @@ package com.goggles.mentoring_service.domain.booking;
 
 import static com.goggles.mentoring_service.domain.mentoring.MentoringFixture.*;
 
+import com.goggles.mentoring_service.application.result.BookingResult;
 import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.mentoring.Mentoring;
 import java.time.LocalDate;
@@ -56,5 +57,13 @@ public class BookingFixture {
     MentoringBooking booking = paymentCompletedBooking();
     booking.accept(MENTOR_ID, UserType.INSTRUCTOR);
     return booking;
+  }
+
+  public static BookingResult.Detail bookingDetail() {
+    return BookingResult.Detail.from(pendingBooking());
+  }
+
+  public static BookingResult.Summary bookingSummary() {
+    return BookingResult.Summary.from(pendingBooking());
   }
 }

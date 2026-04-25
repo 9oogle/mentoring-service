@@ -31,9 +31,7 @@ public class BookingQueryRepositoryImpl implements BookingQueryRepository {
     BooleanBuilder where = buildWhere(b, condition);
     OrderSpecifier<?> order = buildOrder(b, bt, condition.sort());
 
-    boolean sortBySession =
-        condition.sort() == BookingSort.SESSION_DATE_ASC
-            || condition.sort() == BookingSort.SESSION_DATE_DESC;
+    boolean sortBySession =condition.sort().isSortBySession() ;
 
     List<MentoringBooking> content;
     Long total;
