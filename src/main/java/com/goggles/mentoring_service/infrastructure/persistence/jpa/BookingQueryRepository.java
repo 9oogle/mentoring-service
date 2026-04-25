@@ -1,18 +1,10 @@
-package com.goggles.mentoring_service.domain.booking.repository;
+package com.goggles.mentoring_service.infrastructure.persistence.jpa;
 
 import com.goggles.mentoring_service.application.query.BookingSearchCondition;
 import com.goggles.mentoring_service.domain.booking.MentoringBooking;
-import com.goggles.mentoring_service.domain.booking.MentoringBookingId;
-
-import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-public interface MentoringBookingRepository {
-
-	MentoringBooking save(MentoringBooking mentoringBooking);
-
-  Optional<MentoringBooking> findById(MentoringBookingId id);
-
+public interface BookingQueryRepository {
   Page<MentoringBooking> findByUser(BookingSearchCondition condition, Pageable pageable);
 }

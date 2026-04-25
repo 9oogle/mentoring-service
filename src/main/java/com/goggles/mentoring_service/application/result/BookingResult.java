@@ -3,6 +3,13 @@ package com.goggles.mentoring_service.application.result;
 import com.goggles.mentoring_service.domain.booking.MentoringBooking;
 import com.goggles.mentoring_service.domain.mentoring.Mentoring;
 
+import com.goggles.mentoring_service.domain.booking.BookingStatus;
+import com.goggles.mentoring_service.domain.booking.MentoringBooking;
+import com.goggles.mentoring_service.domain.booking.MentoringBookingId;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
 import java.util.UUID;
 
 public class BookingResult {
@@ -19,6 +26,33 @@ public class BookingResult {
             mentoring.getMentor().getId(),
             mentoring.getMentor().getName()
         );
+
+  public record Summary(
+      UUID bookingId,
+      String mentoringTitle,
+      String mentorName,
+      String menteeName,
+      BookingStatus status,
+      List<BookedTimeInfo> requestedSessions,
+      LocalDateTime createdAt) {
+
+    public static Summary from(MentoringBooking booking) {
+
+      List<BookedTimeInfo> sessionInfos =
+          booking.getBookedTimes().stream()
+              .map(
+                  t ->
+                      new BookedTimeInfo(
+                          t.getSessionDate(), t.getSessionStartTime(), t.getSessionEndTime()))
+              .toList();
+      return new Summary(
+          booking.getMentoringBookingId().bookingId(),
+          booking.getBookedMentoring().getTitle(),
+          booking.getBookedMentoring().getMentorName(),
+          booking.getMentee().getName(),
+          booking.getStatus(),
+          sessionInfos,
+          booking.getCreatedAt());
     }
   }
 
@@ -56,7 +90,9 @@ public class BookingResult {
               .map(
                   time ->
                       new BookedTimeInfo(
-                          time.getSessionDate(), time.getSessionStartTime(), time.getSessionEndTime()))
+                          time.getSessionDate(),
+                          time.getSessionStartTime(),
+                          time.getSessionEndTime()))
               .toList();
 
       ClosureInfo closureInfo =

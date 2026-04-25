@@ -1,7 +1,10 @@
 package com.goggles.mentoring_service.application.service;
 
+import com.goggles.common.exception.ForbiddenException;
+import com.goggles.common.pagination.CommonPageRequest;
 import com.goggles.mentoring_service.application.command.BookingCommand;
 import com.goggles.mentoring_service.application.command.MenteeInfo;
+import com.goggles.mentoring_service.application.query.BookingSearchCondition;
 import com.goggles.mentoring_service.application.result.BookingResult;
 import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.booking.BookedMentoring;
@@ -21,12 +24,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class BookingService {
+
   private final MentoringBookingRepository bookingRepository;
   private final MentoringRepository mentoringRepository;
 
@@ -60,6 +66,15 @@ public class BookingService {
 
     return BookingResult.Detail.from(booking);
   }
+
+  @Transactional(readOnly = true)
+  public Page<BookingResult.Summary> getMyBookings(
+      BookingSearchCondition condition, CommonPageRequest pageRequest) {
+    return bookingRepository
+        .findByUser(condition, pageRequest.toPageable(Sort.unsorted()))
+        .map(BookingResult.Summary::from);
+  }
+
   private void checkAccess(MentoringBooking booking, UUID userId, UserType userType) {
     boolean isMentee = userType == UserType.STUDENT && booking.getMentee().isMentee(userId);
     boolean isMentor =

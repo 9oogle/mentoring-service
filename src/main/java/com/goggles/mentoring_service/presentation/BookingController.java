@@ -1,6 +1,10 @@
 package com.goggles.mentoring_service.presentation;
 
+import com.goggles.common.pagination.CommonPageRequest;
+import com.goggles.common.pagination.CommonPageResponse;
 import com.goggles.mentoring_service.application.command.BookingCommand;
+import com.goggles.mentoring_service.application.query.BookingSearchCondition;
+import com.goggles.mentoring_service.application.query.BookingSort;
 import com.goggles.mentoring_service.application.result.BookingResult;
 import com.goggles.mentoring_service.application.service.BookingService;
 import com.goggles.mentoring_service.domain.booking.BookingStatus;
@@ -8,7 +12,9 @@ import com.goggles.mentoring_service.presentation.dto.BookingRequest;
 import com.goggles.mentoring_service.presentation.dto.BookingResponse;
 import com.goggles.mentoring_service.presentation.support.UserContext;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,10 +35,21 @@ public class BookingController {
   }
 
   @GetMapping("/{bookingId}")
-  public BookingResponse.Detail getBooking(
-      UserContext userContext, @PathVariable UUID bookingId) {
+  public BookingResponse.Detail getBooking(UserContext userContext, @PathVariable UUID bookingId) {
     BookingResult.Detail result =
         bookingService.getBooking(bookingId, userContext.userId(), userContext.userType());
     return BookingResponse.Detail.of(result);
+  }
+
+  @GetMapping
+  public CommonPageResponse<BookingResponse.Summary> getMyBookings(
+      UserContext userContext,
+      @RequestParam(required = false) BookingStatus status,
+      @RequestParam(required = false) BookingSort sort,
+      CommonPageRequest pageRequest) {
+    BookingSearchCondition condition =
+        new BookingSearchCondition(userContext.userId(), userContext.userType(), status, sort);
+    Page<BookingResult.Summary> page = bookingService.getMyBookings(condition, pageRequest);
+    return CommonPageResponse.of(page.map(BookingResponse.Summary::of));
   }
 }
