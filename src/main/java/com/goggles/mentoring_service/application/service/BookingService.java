@@ -3,7 +3,11 @@ package com.goggles.mentoring_service.application.service;
 import com.goggles.mentoring_service.application.command.BookingCommand;
 import com.goggles.mentoring_service.application.command.MenteeInfo;
 import com.goggles.mentoring_service.application.result.BookingResult;
+import com.goggles.mentoring_service.domain._common.UserType;
+import com.goggles.mentoring_service.domain.booking.BookedMentoring;
+import com.goggles.mentoring_service.domain.booking.Mentee;
 import com.goggles.mentoring_service.domain.booking.MentoringBooking;
+import com.goggles.mentoring_service.domain.booking.MentoringBookingId;
 import com.goggles.mentoring_service.domain.booking.SessionSlot;
 import com.goggles.mentoring_service.domain.booking.exception.BookingNotFoundException;
 import com.goggles.mentoring_service.domain.booking.repository.MentoringBookingRepository;
@@ -15,6 +19,7 @@ import com.goggles.mentoring_service.domain.mentoring.repository.MentoringReposi
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +49,24 @@ public class BookingService {
     return BookingResult.Create.of(booking, mentoring);
   }
 
+  @Transactional(readOnly = true)
+  public BookingResult.Detail getBooking(UUID bookingId, UUID userId, UserType userType) {
+    MentoringBooking booking =
+        bookingRepository
+            .findById(new MentoringBookingId(bookingId))
+            .orElseThrow(() -> new BookingNotFoundException(new MentoringBookingId(bookingId)));
+
+    checkAccess(booking, userId, userType);
+
+    return BookingResult.Detail.from(booking);
+  }
+  private void checkAccess(MentoringBooking booking, UUID userId, UserType userType) {
+    boolean isMentee = userType == UserType.STUDENT && booking.getMentee().isMentee(userId);
+    boolean isMentor =
+        userType == UserType.INSTRUCTOR && booking.getBookedMentoring().isMentor(userId);
+    if (!isMentee && !isMentor) {
+      throw new ForbiddenException("해당 예약에 접근 권한이 없습니다.");
+    }
   @Transactional
   public void paymentFailed(BookingCommand.PaymentFailed command) {
     MentoringBooking booking =
