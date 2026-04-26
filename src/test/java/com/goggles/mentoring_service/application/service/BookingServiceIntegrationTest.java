@@ -286,6 +286,103 @@ class BookingServiceIntegrationTest {
     return new BookingCommand.Create(menteeInfo, mentoringId, List.of(slot), REQUEST_MESSAGE, UUID.randomUUID());
   }
 
+@Test
+  void acceptBooking_persists_status_change() {
+    UUID mentoringId = saveMentoringWithSession(SESSION_DATE_1);
+    UUID bookingId = savePaymentCompletedBooking(mentoringId);
+
+    bookingService.acceptBooking(
+        new BookingCommand.Accept(bookingId, MENTOR_ID, UserType.INSTRUCTOR));
+
+    em.flush();
+    em.clear();
+
+    MentoringBooking booking =
+        bookingRepository.findById(new MentoringBookingId(bookingId)).orElseThrow();
+
+    log.info("==== 예약 승인 결과 ====");
+    log.info("bookingId: {} | status: {}", bookingId, booking.getStatus());
+
+    assertThat(booking.getStatus()).isEqualTo(BookingStatus.ACCEPTED);
+  }
+
+  @Test
+  void rejectBooking_persists_status_and_closure() {
+    UUID mentoringId = saveMentoringWithSession(SESSION_DATE_1);
+    UUID bookingId = savePaymentCompletedBooking(mentoringId);
+
+    bookingService.rejectBooking(
+        new BookingCommand.Reject(bookingId, MENTOR_ID, UserType.INSTRUCTOR, REJECT_REASON));
+
+
+
+
+
+
+    MentoringBooking booking =
+        bookingRepository.findById(new MentoringBookingId(bookingId)).orElseThrow();
+
+    log.info("==== 예약 거절 결과 ====");
+    log.info(
+        "bookingId: {} | status: {} | reason: {}",
+        bookingId,
+        booking.getStatus(),
+        booking.getCloseReason());
+
+    assertThat(booking.getStatus()).isEqualTo(BookingStatus.REJECTED);
+    assertThat(booking.getCloseReason()).isEqualTo(REJECT_REASON);
+    assertThat(booking.getClosedBy()).isEqualTo(MENTOR_ID);
+  }
+
+  private UUID savePaymentCompletedBooking(UUID mentoringId) {
+    BookingCommand.Create command = bookingCommand(mentoringId, sessionSlot(SESSION_DATE_1));
+    BookingResult.Create result = bookingService.createBooking(command);
+
+    MentoringBooking booking =
+        bookingRepository.findById(new MentoringBookingId(result.enrollmentId())).orElseThrow();
+    booking.completePayment();
+    bookingRepository.save(booking);
+
+    return result.enrollmentId();
+  }
+
+  @Test
+  void cancelBooking_persists_status_and_closure() {
+    UUID mentoringId = saveMentoringWithSession(SESSION_DATE_1);
+    UUID bookingId = savePaymentCompletedBooking(mentoringId);
+
+    bookingService.cancelBooking(
+        new BookingCommand.Cancel(bookingId, MENTEE_ID, UserType.STUDENT, CANCEL_REASON));
+
+    em.flush();
+    em.clear();
+
+    MentoringBooking booking =
+        bookingRepository.findById(new MentoringBookingId(bookingId)).orElseThrow();
+
+    log.info("==== 예약 취소 결과 ====");
+    log.info(
+        "bookingId: {} | status: {} | reason: {}",
+        bookingId,
+        booking.getStatus(),
+        booking.getCloseReason());
+
+    assertThat(booking.getStatus()).isEqualTo(BookingStatus.CANCELED);
+    assertThat(booking.getCloseReason()).isEqualTo(CANCEL_REASON);
+    assertThat(booking.getClosedBy()).isEqualTo(MENTEE_ID);
+  }
+
+  @Test
+  void acceptBooking_booking_not_found() {
+    assertThatThrownBy(
+            () ->
+                bookingService.acceptBooking(
+                    new BookingCommand.Accept(UUID.randomUUID(), MENTOR_ID, UserType.INSTRUCTOR)))
+        .isInstanceOf(BookingNotFoundException.class);
+  }
+
+
+
   private BookingCommand.Create bookingCommand(UUID mentoringId, SessionSlot slot, UUID menteeId, String menteeName) {
     MenteeInfo menteeInfo = new MenteeInfo(menteeId, UserType.STUDENT, menteeName);
     return new BookingCommand.Create(menteeInfo, mentoringId, List.of(slot), REQUEST_MESSAGE, null);

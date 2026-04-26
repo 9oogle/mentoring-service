@@ -186,4 +186,32 @@ class MentoringBookingTest {
             () -> booking.cancel(MENTEE_ID, UserType.STUDENT, CANCEL_REASON, BEFORE_DEADLINE))
         .isInstanceOf(InvalidBookingStatusTransitionException.class);
   }
+
+  @Test
+  void reject_from_accepted_status() {
+    MentoringBooking booking = acceptedBooking();
+
+    assertThatThrownBy(
+            () -> booking.reject(MENTOR_ID, UserType.INSTRUCTOR, REJECT_REASON, LocalDateTime.now()))
+        .isInstanceOf(InvalidBookingStatusTransitionException.class);
+  }
+
+  @Test
+  void reject_by_student() {
+    MentoringBooking booking = paymentCompletedBooking();
+
+    assertThatThrownBy(
+            () -> booking.reject(MENTEE_ID, UserType.STUDENT, REJECT_REASON, LocalDateTime.now()))
+        .isInstanceOf(UnauthorizedBookingAccessException.class);
+  }
+
+  @Test
+  void cancel_from_payment_failed() {
+    MentoringBooking booking = pendingBooking();
+    booking.failPayment( "결제 실패 사유", LocalDateTime.now());
+
+    assertThatThrownBy(
+            () -> booking.cancel(MENTEE_ID, UserType.STUDENT, CANCEL_REASON, BEFORE_DEADLINE))
+        .isInstanceOf(InvalidBookingStatusTransitionException.class);
+  }
 }

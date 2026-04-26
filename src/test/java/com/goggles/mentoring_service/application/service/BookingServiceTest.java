@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
+import com.goggles.common.event.Events;
 import com.goggles.common.exception.ForbiddenException;
 import com.goggles.common.pagination.CommonPageRequest;
 import com.goggles.mentoring_service.application.command.BookingCommand;
@@ -16,6 +17,10 @@ import com.goggles.mentoring_service.domain.booking.BookingSearchCondition;
 import com.goggles.mentoring_service.domain.booking.BookingSort;
 import com.goggles.mentoring_service.application.result.BookingResult;
 import com.goggles.mentoring_service.domain._common.UserType;
+import com.goggles.mentoring_service.domain.booking.BookingStatus;
+import com.goggles.mentoring_service.domain.booking.MentoringBooking;
+import com.goggles.mentoring_service.domain.booking.exception.BookingNotFoundException;
+import com.goggles.mentoring_service.domain.booking.exception.UnauthorizedBookingAccessException;
 import com.goggles.mentoring_service.domain.booking.MentoringBooking;
 import com.goggles.mentoring_service.domain.booking.exception.BookingNotFoundException;
 import com.goggles.mentoring_service.domain.booking.repository.MentoringBookingRepository;
@@ -92,6 +97,90 @@ class BookingServiceTest {
 
     assertThatThrownBy(() -> bookingService.createBooking(command))
         .isInstanceOf(RuntimeException.class);
+  }
+
+  @Test
+  void acceptBooking_success() {
+    MentoringBooking booking = paymentCompletedBooking();
+    given(bookingRepository.findById(any())).willReturn(Optional.of(booking));
+
+    bookingService.acceptBooking(
+        new BookingCommand.Accept(booking.getMentoringBookingId().bookingId(), MENTOR_ID, UserType.INSTRUCTOR));
+
+    assertThat(booking.getStatus()).isEqualTo(BookingStatus.ACCEPTED);
+  }
+
+  @Test
+  void acceptBooking_booking_not_found() {
+    given(bookingRepository.findById(any())).willReturn(Optional.empty());
+
+    assertThatThrownBy(
+            () -> bookingService.acceptBooking(
+                new BookingCommand.Accept(UUID.randomUUID(), MENTOR_ID, UserType.INSTRUCTOR)))
+        .isInstanceOf(BookingNotFoundException.class);
+  }
+
+  @Test
+  void rejectBooking_success() {
+    MentoringBooking booking = paymentCompletedBooking();
+    given(bookingRepository.findById(any())).willReturn(Optional.of(booking));
+
+    bookingService.rejectBooking(
+        new BookingCommand.Reject(
+            booking.getMentoringBookingId().bookingId(), MENTOR_ID, UserType.INSTRUCTOR, REJECT_REASON));
+
+    assertThat(booking.getStatus()).isEqualTo(BookingStatus.REJECTED);
+  }
+
+  @Test
+  void rejectBooking_booking_not_found() {
+    given(bookingRepository.findById(any())).willReturn(Optional.empty());
+
+    assertThatThrownBy(
+            () ->
+                bookingService.rejectBooking(
+                    new BookingCommand.Reject(
+                        UUID.randomUUID(), MENTOR_ID, UserType.INSTRUCTOR, REJECT_REASON)))
+        .isInstanceOf(BookingNotFoundException.class);
+  }
+
+  @Test
+  void cancelBooking_success() {
+    MentoringBooking booking = paymentCompletedBooking();
+    given(bookingRepository.findById(any())).willReturn(Optional.of(booking));
+
+    bookingService.cancelBooking(
+        new BookingCommand.Cancel(
+            booking.getMentoringBookingId().bookingId(), MENTEE_ID, UserType.STUDENT, CANCEL_REASON));
+
+    assertThat(booking.getStatus()).isEqualTo(BookingStatus.CANCELED);
+  }
+
+  @Test
+  void cancelBooking_booking_not_found() {
+    given(bookingRepository.findById(any())).willReturn(Optional.empty());
+
+    assertThatThrownBy(
+            () ->
+                bookingService.cancelBooking(
+                    new BookingCommand.Cancel(
+                        UUID.randomUUID(), MENTEE_ID, UserType.STUDENT, CANCEL_REASON)))
+        .isInstanceOf(BookingNotFoundException.class);
+  }
+
+  @Test
+  void acceptBooking_unauthorized() {
+    MentoringBooking booking = paymentCompletedBooking();
+    given(bookingRepository.findById(any())).willReturn(Optional.of(booking));
+
+    assertThatThrownBy(
+            () ->
+                bookingService.acceptBooking(
+                    new BookingCommand.Accept(
+                        booking.getMentoringBookingId().bookingId(),
+                        UUID.randomUUID(),
+                        UserType.INSTRUCTOR)))
+        .isInstanceOf(UnauthorizedBookingAccessException.class);
   }
 
   private BookingCommand.Create defaultCommand(Mentoring mentoring) {

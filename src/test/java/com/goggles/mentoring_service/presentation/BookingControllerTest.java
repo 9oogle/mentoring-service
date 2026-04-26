@@ -4,6 +4,8 @@ import static com.goggles.mentoring_service.domain.booking.BookingFixture.*;
 import static com.goggles.mentoring_service.domain.mentoring.MentoringFixture.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.BDDMockito.willThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -18,6 +20,8 @@ import com.goggles.mentoring_service.application.service.BookingService;
 import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.booking.MentoringBookingId;
 import com.goggles.mentoring_service.domain.booking.exception.BookingNotFoundException;
+import com.goggles.mentoring_service.domain.booking.exception.InvalidBookingStatusTransitionException;
+import com.goggles.mentoring_service.domain.booking.exception.UnauthorizedBookingAccessException;
 import com.goggles.mentoring_service.domain.mentoring.MentoringId;
 import com.goggles.mentoring_service.domain.mentoring.exception.MentoringNotFoundException;
 import com.goggles.mentoring_service.infrastructure.config.WebMvcConfig;
@@ -25,6 +29,7 @@ import com.goggles.mentoring_service.presentation.dto.BookingRequest;
 import com.goggles.mentoring_service.presentation.support.TestHeaders;
 import com.goggles.mentoring_service.presentation.support.UserContextArgumentResolver;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -210,6 +215,196 @@ class BookingControllerTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.content.length()").value(0))
         .andExpect(jsonPath("$.totalElements").value(0));
+  }
+
+  @Test
+  void acceptBooking_success() throws Exception {
+    UUID bookingId = UUID.randomUUID();
+    willDoNothing().given(bookingService).acceptBooking(any());
+
+    mockMvc
+        .perform(
+            post("/api/v1/mentoring-bookings/{bookingId}/acceptance", bookingId)
+                .headers(TestHeaders.headersFor(UserType.INSTRUCTOR)))
+        .andDo(print())
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void acceptBooking_booking_not_found() throws Exception {
+    UUID bookingId = UUID.randomUUID();
+    willThrow(new BookingNotFoundException(new MentoringBookingId(bookingId)))
+        .given(bookingService).acceptBooking(any());
+
+    mockMvc
+        .perform(
+            post("/api/v1/mentoring-bookings/{bookingId}/acceptance", bookingId)
+                .headers(TestHeaders.headersFor(UserType.INSTRUCTOR)))
+
+
+
+
+
+
+        .andDo(print())
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.title").value("Not Found"));
+  }
+
+  @Test
+  void rejectBooking_success() throws Exception {
+    UUID bookingId = UUID.randomUUID();
+    willDoNothing().given(bookingService).rejectBooking(any());
+
+    mockMvc
+        .perform(
+            post("/api/v1/mentoring-bookings/{bookingId}/rejection", bookingId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .headers(TestHeaders.headersFor(UserType.INSTRUCTOR))
+                .content(objectMapper.writeValueAsString(Map.of("reason", REJECT_REASON))))
+        .andDo(print())
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void rejectBooking_fails_without_reason() throws Exception {
+    UUID bookingId = UUID.randomUUID();
+
+    mockMvc
+        .perform(
+            post("/api/v1/mentoring-bookings/{bookingId}/rejection", bookingId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .headers(TestHeaders.headersFor(UserType.INSTRUCTOR))
+                .content("{}"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void cancelBooking_success() throws Exception {
+    UUID bookingId = UUID.randomUUID();
+    willDoNothing().given(bookingService).cancelBooking(any());
+
+    mockMvc
+        .perform(
+            post("/api/v1/mentoring-bookings/{bookingId}/cancellation", bookingId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .headers(TestHeaders.headersFor(UserType.STUDENT))
+                .content(objectMapper.writeValueAsString(Map.of("reason", CANCEL_REASON))))
+        .andDo(print())
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void cancelBooking_fails_without_reason() throws Exception {
+    UUID bookingId = UUID.randomUUID();
+
+    mockMvc
+        .perform(
+            post("/api/v1/mentoring-bookings/{bookingId}/cancellation", bookingId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .headers(TestHeaders.headersFor(UserType.STUDENT))
+                .content("{}"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void rejectBooking_booking_not_found() throws Exception {
+    UUID bookingId = UUID.randomUUID();
+    willThrow(new BookingNotFoundException(new MentoringBookingId(bookingId)))
+        .given(bookingService)
+        .rejectBooking(any());
+
+    mockMvc
+        .perform(
+            post("/api/v1/mentoring-bookings/{bookingId}/rejection", bookingId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .headers(TestHeaders.headersFor(UserType.INSTRUCTOR))
+                .content(objectMapper.writeValueAsString(Map.of("reason", REJECT_REASON))))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.title").value("Not Found"));
+  }
+
+  @Test
+  void cancelBooking_booking_not_found() throws Exception {
+    UUID bookingId = UUID.randomUUID();
+    willThrow(new BookingNotFoundException(new MentoringBookingId(bookingId)))
+        .given(bookingService)
+        .cancelBooking(any());
+
+    mockMvc
+        .perform(
+            post("/api/v1/mentoring-bookings/{bookingId}/cancellation", bookingId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .headers(TestHeaders.headersFor(UserType.STUDENT))
+                .content(objectMapper.writeValueAsString(Map.of("reason", CANCEL_REASON))))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.title").value("Not Found"));
+  }
+
+  @Test
+  void acceptBooking_unauthorized() throws Exception {
+    UUID bookingId = UUID.randomUUID();
+    willThrow(UnauthorizedBookingAccessException.noPermissionToProcess())
+        .given(bookingService)
+        .acceptBooking(any());
+
+    mockMvc
+        .perform(
+            post("/api/v1/mentoring-bookings/{bookingId}/acceptance", bookingId)
+                .headers(TestHeaders.headersFor(UserType.INSTRUCTOR)))
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.title").value("Forbidden"));
+  }
+
+  @Test
+  void rejectBooking_unauthorized() throws Exception {
+    UUID bookingId = UUID.randomUUID();
+    willThrow(UnauthorizedBookingAccessException.noPermissionToProcess())
+        .given(bookingService)
+        .rejectBooking(any());
+
+    mockMvc
+        .perform(
+            post("/api/v1/mentoring-bookings/{bookingId}/rejection", bookingId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .headers(TestHeaders.headersFor(UserType.STUDENT))
+                .content(objectMapper.writeValueAsString(Map.of("reason", REJECT_REASON))))
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.title").value("Forbidden"));
+  }
+
+  @Test
+  void cancelBooking_unauthorized() throws Exception {
+    UUID bookingId = UUID.randomUUID();
+    willThrow(UnauthorizedBookingAccessException.noPermissionToCancel())
+        .given(bookingService)
+        .cancelBooking(any());
+
+    mockMvc
+        .perform(
+            post("/api/v1/mentoring-bookings/{bookingId}/cancellation", bookingId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .headers(TestHeaders.headersFor(UserType.STUDENT))
+                .content(objectMapper.writeValueAsString(Map.of("reason", CANCEL_REASON))))
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.title").value("Forbidden"));
+  }
+
+  @Test
+  void acceptBooking_invalid_status() throws Exception {
+    UUID bookingId = UUID.randomUUID();
+    willThrow(InvalidBookingStatusTransitionException.cannotAccept(
+            com.goggles.mentoring_service.domain.booking.BookingStatus.PENDING))
+        .given(bookingService)
+        .acceptBooking(any());
+
+    mockMvc
+        .perform(
+            post("/api/v1/mentoring-bookings/{bookingId}/acceptance", bookingId)
+                .headers(TestHeaders.headersFor(UserType.INSTRUCTOR)))
+        .andDo(print())
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.title").value("Invalid mentoring request"));
   }
 
   private BookingRequest.Create defaultRequest() {

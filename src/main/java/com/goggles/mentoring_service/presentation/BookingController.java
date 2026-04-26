@@ -52,7 +52,6 @@ public class BookingController {
     Page<BookingResult.Summary> page = bookingService.getMyBookings(condition, pageRequest);
     return CommonPageResponse.of(page.map(BookingResponse.Summary::of));
   }
-}
 
   @ResponseStatus(HttpStatus.OK)
   @PostMapping("/{bookingId}/acceptance")
