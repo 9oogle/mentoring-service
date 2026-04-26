@@ -43,8 +43,8 @@ class BookingServiceTest {
   @InjectMocks private BookingService bookingService;
 
   @Mock private MentoringBookingRepository bookingRepository;
-
   @Mock private MentoringRepository mentoringRepository;
+  @Mock private Events events;
 
   @Test
   void createBooking_success() {
