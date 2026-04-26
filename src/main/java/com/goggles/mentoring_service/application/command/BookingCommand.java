@@ -19,4 +19,6 @@ public class BookingCommand {
   ) {}
 
   public record Accept(UUID bookingId, UUID userId, UserType userType) {}
+
+  public record Reject(UUID bookingId, UUID userId, UserType userType, String reason) {}
 }

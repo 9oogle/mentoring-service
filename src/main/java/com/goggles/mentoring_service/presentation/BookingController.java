@@ -61,4 +61,14 @@ public class BookingController {
         new BookingCommand.Accept(bookingId, userContext.userId(), userContext.userType());
     bookingService.acceptBooking(command);
   }
+
+  @ResponseStatus(HttpStatus.OK)
+  @PostMapping("/{bookingId}/rejection")
+  public void rejectBooking(
+      UserContext userContext,
+      @PathVariable UUID bookingId,
+      @Valid @RequestBody BookingRequest.Reject request) {
+    BookingCommand.Reject command = request.toCommand(bookingId, userContext);
+    bookingService.rejectBooking(command);
+  }
 }
