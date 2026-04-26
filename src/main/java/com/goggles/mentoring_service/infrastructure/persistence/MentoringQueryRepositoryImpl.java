@@ -4,6 +4,7 @@ import com.goggles.mentoring_service.domain.mentoring.MentoringSearchCondition;
 import com.goggles.mentoring_service.domain.mentoring.MentoringSort;
 import com.goggles.mentoring_service.domain.mentoring.Mentoring;
 import com.goggles.mentoring_service.domain.mentoring.QMentoring;
+import com.goggles.mentoring_service.infrastructure.Escape;
 import com.goggles.mentoring_service.infrastructure.persistence.jpa.MentoringQueryRepository;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
@@ -27,7 +28,6 @@ public class MentoringQueryRepositoryImpl implements MentoringQueryRepository {
 	public Page<Mentoring> search(MentoringSearchCondition condition, Pageable pageable) {
 		QMentoring m = QMentoring.mentoring;
 		BooleanBuilder where = buildWhere(m, condition);
-		OrderSpecifier<?> order = buildOrder(m, condition);
 
 		List<Mentoring> content = queryFactory
 				.selectFrom(m)
@@ -50,7 +50,7 @@ public class MentoringQueryRepositoryImpl implements MentoringQueryRepository {
 		BooleanBuilder where = new BooleanBuilder();
 
 		if (StringUtils.hasText(condition.keyword())) {
-			String pattern = "%" + condition.keyword().toLowerCase() + "%";
+			String pattern = Escape.contains(condition.keyword());
 			where.and(
 					m.title.lower().like(pattern)
 							.or(m.subtitle.lower().like(pattern))
@@ -79,13 +79,17 @@ public class MentoringQueryRepositoryImpl implements MentoringQueryRepository {
 		return where;
 	}
 
-	private OrderSpecifier<?> buildOrder(QMentoring m, MentoringSearchCondition condition) {
-		return switch (condition.sortBy()) {
+	private OrderSpecifier<?>[] buildOrder(QMentoring m, MentoringSearchCondition condition) {
+		OrderSpecifier<?> primary = switch (condition.sortBy()) {
 			case PRICE_ASC -> m.price.asc();
 			case PRICE_DESC -> m.price.desc();
 			case DURATION_ASC -> m.duration.asc();
 			case DURATION_DESC -> m.duration.desc();
 			default -> m.createdAt.desc();
 		};
+		if (condition.sortBy() == MentoringSort.CREATED_AT) {
+			return new OrderSpecifier<?>[]{ primary };
+		}
+		return new OrderSpecifier<?>[]{ primary, m.createdAt.desc() };
 	}
 }
