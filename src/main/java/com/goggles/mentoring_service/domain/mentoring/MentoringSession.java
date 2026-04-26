@@ -20,36 +20,36 @@ public class MentoringSession {
 	private LocalTime sessionEndTime;
 	private SessionStatus status = SessionStatus.AVAILABLE;
 
-	 static MentoringSession of(LocalDate date, LocalTime startTime, LocalTime endTime) {
-		MentoringSession session = new MentoringSession();
-		session.sessionDate = date;
-		if(startTime.isAfter(endTime) || startTime.equals(endTime)) {
+	static MentoringSession of(LocalDate date, LocalTime startTime, LocalTime endTime) {
+		if (startTime.isAfter(endTime) || startTime.equals(endTime)) {
 			throw InvalidTimeRangeException.forSession();
 		}
+		MentoringSession session = new MentoringSession();
+		session.sessionDate = date;
 		session.sessionStartTime = startTime;
 		session.sessionEndTime = endTime;
 		return session;
 	}
 
-	 void deactivate() {
+	void deactivate() {
 		if (this.status == SessionStatus.BOOKED) {
 			throw new BookedSessionStatusCannotBeChangedException();
 		}
 		this.status = SessionStatus.NOT_AVAILABLE;
 	}
 
-	 void activate() {
+	void activate() {
 		if (this.status == SessionStatus.BOOKED) {
 			throw new BookedSessionStatusCannotBeChangedException();
 		}
 		this.status = SessionStatus.AVAILABLE;
 	}
 
-	 boolean isBooked() {
+	boolean isBooked() {
 		return this.status == SessionStatus.BOOKED;
 	}
 
-	 void book() {
+	void book() {
 		if (this.status != SessionStatus.AVAILABLE) {
 			throw new SessionNotAvailableException();
 		}

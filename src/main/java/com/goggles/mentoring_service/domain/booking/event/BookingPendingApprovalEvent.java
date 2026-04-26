@@ -4,13 +4,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.UUID;
 
-public record BookingPendingApprovalEvent(
-		UUID bookingId,
-		UUID mentorId,
-		String menteeName,
-		String title,
-		LocalDate sessionDate,
-		LocalTime sessionStartTime,
-		LocalTime sessionEndTime
-) {
-}
+public record BookingPendingApprovalEvent(UUID bookingId, UUID mentorId, String menteeName,
+										  String title, LocalDate sessionDate,
+										  LocalTime sessionStartTime, LocalTime sessionEndTime) {}

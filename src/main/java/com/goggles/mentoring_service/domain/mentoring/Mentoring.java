@@ -13,9 +13,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,6 +29,18 @@ import java.util.UUID;
 @SQLRestriction("deleted_at IS NULL")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Mentoring extends BaseAudit {
+
+	@Getter(AccessLevel.NONE)
+	@ElementCollection(fetch = FetchType.LAZY)
+	@CollectionTable(name = "P_REPEAT_PATTERN", joinColumns = @JoinColumn(name = "mentoring_id"))
+	@OrderColumn(name = "pattern_order")
+	private final List<RepeatPattern> repeatPatterns = new ArrayList<>();
+
+	@Getter(AccessLevel.NONE)
+	@ElementCollection(fetch = FetchType.LAZY)
+	@CollectionTable(name = "P_MENTORING_SESSION", joinColumns = @JoinColumn(name = "mentoring_id"))
+	@OrderColumn(name = "session_order")
+	private final List<MentoringSession> sessions = new ArrayList<>();
 
 	@EmbeddedId
 	private MentoringId mentoringId;
@@ -49,7 +63,7 @@ public class Mentoring extends BaseAudit {
 
 	private MentoringStatus status = MentoringStatus.INACTIVE;
 
-	private BookingType bookingType = BookingType.ONE_TIME;
+	private Format format = Format.SINGLE;
 
 	private MentoringType mentoringType = MentoringType.ONE_ON_ONE;
 
@@ -59,27 +73,18 @@ public class Mentoring extends BaseAudit {
 
 	private LocalDate endDate;
 
-	private boolean excludeHolidays;
+	private boolean excludeHolidays = true;
 
 	@Column(nullable = false)
 	private int price;
 
-	@ElementCollection(fetch = FetchType.LAZY)
-	@CollectionTable(name = "P_REPEAT_PATTERN", joinColumns = @JoinColumn(name = "mentoring_id"))
-	@OrderColumn(name = "pattern_order")
-	private final List<RepeatPattern> repeatPatterns = new ArrayList<>();
 
-	@ElementCollection(fetch = FetchType.LAZY)
-	@CollectionTable(name = "P_MENTORING_SESSION", joinColumns = @JoinColumn(name = "mentoring_id"))
-	@OrderColumn(name = "session_order")
-	private final List<MentoringSession> sessions = new ArrayList<>();
-
-
-	private Mentoring(Mentor mentor, Category mentoringCategory, String title,
-			String subtitle, String description, MentoringDuration duration, MentoringStatus status,
-			MentoringType mentoringType, BookingType bookingType, int sessionCount,
-			int maxParticipants, boolean excludeHolidays, int price) {
-		validateTypeConstraints(mentoringType, bookingType, sessionCount, maxParticipants);
+	private Mentoring(Mentor mentor, Category mentoringCategory, String title, String subtitle,
+			String description, MentoringDuration duration, MentoringStatus status,
+			MentoringType mentoringType, Format format, int sessionCount, int maxParticipants,
+			boolean excludeHolidays, int price, LocalDate endDate,
+			List<RepeatPattern> repeatPatterns, List<MentoringSession> mentoringSessions) {
+		validateTypeConstraints(mentoringType, format, sessionCount, maxParticipants);
 		if (price < 0) {
 			throw MentoringPolicyViolationException.invalidPrice();
 		}
@@ -91,45 +96,69 @@ public class Mentoring extends BaseAudit {
 		this.description = description;
 		this.duration = duration;
 		this.status = status;
-		this.bookingType = bookingType;
+		this.format = format;
 		this.mentoringType = mentoringType;
 		this.sessionCount = sessionCount;
 		this.maxParticipants = maxParticipants;
 		this.excludeHolidays = excludeHolidays;
 		this.price = price;
+		this.endDate = endDate;
+		this.repeatPatterns.addAll(repeatPatterns);
+		this.sessions.addAll(mentoringSessions);
 	}
 
-	private static void validateTypeConstraints(MentoringType mentoringType,
-			BookingType bookingType, int sessionCount, int maxParticipants) {
+	private static void validateTypeConstraints(MentoringType mentoringType, Format format,
+			int sessionCount, int maxParticipants) {
 		if (mentoringType == MentoringType.GROUP && maxParticipants <= 1) {
 			throw MentoringPolicyViolationException.groupMentoringMinParticipants();
 		}
 		if (mentoringType == MentoringType.ONE_ON_ONE && maxParticipants != 1) {
 			throw MentoringPolicyViolationException.oneOnOneMaxParticipants();
 		}
-		if (bookingType == BookingType.SELF_SELECT && sessionCount <= 1) {
+		if (format == Format.MULTI && sessionCount <= 1) {
 			throw MentoringPolicyViolationException.selfSelectMinSessions();
 		}
 	}
 
 	@Builder
-	public static Mentoring create(
-			UUID mentorId, String mentorName, String mentorField, String mentorEmail, UserType mentorType,
-			UUID categoryId, String categoryName, String categoryCode,
-			String title, String subtitle, String description,
-			MentoringDuration duration, MentoringStatus status,
-			MentoringType mentoringType, BookingType bookingType,
-			int sessionCount, int maxParticipants, boolean excludeHolidays, int price) {
+	public static Mentoring create(UUID mentorId, String mentorName, String mentorField,
+			String mentorEmail, UserType mentorType, UUID categoryId, String categoryName,
+			String categoryCode, String title, String subtitle, String description,
+			MentoringDuration duration, MentoringStatus status, MentoringType mentoringType,
+			Format format, int sessionCount, int maxParticipants, boolean excludeHolidays,
+			int price, LocalDate endDate, List<RepeatPattern> repeatPatterns,
+			List<MentoringSession> sessions) {
 		Mentor mentor = Mentor.builder()
-				.id(mentorId).name(mentorName).field(mentorField).email(mentorEmail).userType(mentorType)
+				.id(mentorId)
+				.name(mentorName)
+				.field(mentorField)
+				.email(mentorEmail)
+				.userType(mentorType)
 				.build();
 		Category category = Category.of(categoryId, categoryName, categoryCode);
-		return new Mentoring(mentor, category, title, subtitle, description, duration,
-				status, mentoringType, bookingType, sessionCount, maxParticipants, excludeHolidays, price);
+		return new Mentoring(mentor, category, title, subtitle, description, duration, status,
+				mentoringType, format, sessionCount, maxParticipants, excludeHolidays, price,
+				endDate, repeatPatterns, sessions);
+	}
+
+	private static void validateSessionWithinWorkingHours(MentoringSession session) {
+		if (session.getSessionStartTime()
+				.isBefore(SessionPolicy.BUSINESS_START) || session.getSessionEndTime()
+				.isAfter(SessionPolicy.BUSINESS_END)) {
+			throw MentoringPolicyViolationException.sessionOutsideBusinessHours();
+		}
+	}
+
+	public List<RepeatPattern> getRepeatPatterns() {
+		return Collections.unmodifiableList(repeatPatterns);
+	}
+
+	public List<MentoringSession> getSessions() {
+		return Collections.unmodifiableList(sessions);
 	}
 
 	public void activate() {
-		if (bookingType == BookingType.AUTO_REPEAT && repeatPatterns.isEmpty()) {
+		if (format == Format.MULTI && repeatPatterns.isEmpty()) {
 			throw new RepeatPatternRequiredException();
 		}
 		this.status = MentoringStatus.ACTIVE;
@@ -148,8 +177,49 @@ public class Mentoring extends BaseAudit {
 		this.repeatPatterns.addAll(newPatterns);
 	}
 
-	public void addSessions(List<MentoringSession> sessions) {
-		this.sessions.addAll(sessions);
+	public void addSessions(List<MentoringSession> newSessions) {
+		newSessions.forEach(this::validateSession);
+		this.sessions.addAll(newSessions);
+	}
+
+	private void validateSession(MentoringSession session) {
+		validateSessionWithinWorkingHours(session);
+		validateSessionDuration(session);
+		validateSessionBeforeEndDate(session);
+	}
+
+	private void validateSessionBeforeEndDate(MentoringSession session) {
+		if (this.endDate != null && session.getSessionDate()
+				.isAfter(this.endDate)) {
+			throw MentoringPolicyViolationException.sessionBeyondEndDate();
+		}
+	}
+
+	private void validateSessionDuration(MentoringSession session) {
+		long minutes = Duration.between(session.getSessionStartTime(), session.getSessionEndTime())
+				.toMinutes();
+		if (minutes != this.duration.getMinutes()) {
+			throw MentoringPolicyViolationException.sessionDurationMismatch();
+		}
+	}
+
+	public List<MentoringSession> generateSessions(LocalDate from, LocalDate to,
+			HolidayProvider holidayProvider) {
+		if (format != Format.MULTI) {
+			throw MentoringPolicyViolationException.generateSessionsOnlyForAutoRepeat();
+		}
+		LocalDate effectiveTo = (endDate != null && endDate.isBefore(to)) ? endDate : to;
+		List<MentoringSession> generated = new ArrayList<>();
+
+		for (LocalDate date = from; !date.isAfter(effectiveTo); date = date.plusDays(1)) {
+			if (excludeHolidays && holidayProvider.isHoliday(date)) continue;
+			final LocalDate current = date;
+			repeatPatterns.stream()
+					.filter(p -> p.getDayOfWeek() == current.getDayOfWeek())
+					.map(p -> MentoringSession.of(current, p.getStartTime(), p.getEndTime()))
+					.forEach(generated::add);
+		}
+		return generated;
 	}
 
 	public void updateSessions(List<MentoringSession> newSessions, LocalDate now) {
@@ -180,8 +250,8 @@ public class Mentoring extends BaseAudit {
 
 	private MentoringSession findSession(LocalDate date, LocalTime startTime) {
 		return this.sessions.stream()
-				.filter(s -> s.getSessionDate()
-						.equals(date) && s.getSessionStartTime()
+				.filter(session -> session.getSessionDate()
+						.equals(date) && session.getSessionStartTime()
 						.equals(startTime))
 				.findFirst()
 				.orElseThrow(() -> new SessionNotFoundException(date, startTime));
