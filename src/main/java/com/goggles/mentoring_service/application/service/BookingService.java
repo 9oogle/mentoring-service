@@ -93,4 +93,27 @@ public class BookingService {
     booking.failPayment(command.failureReason(), LocalDateTime.now());
     bookingRepository.save(booking);
   }
+
+  @Transactional
+  public void acceptBooking(BookingCommand.Accept command) {
+    MentoringBookingId id = new MentoringBookingId(command.bookingId());
+    MentoringBooking booking =
+        bookingRepository.findById(id).orElseThrow(() -> new BookingNotFoundException(id));
+    booking.accept(command.userId(), command.userType());
+
+    BookedTime firstSession = booking.getBookedTimes().getFirst();
+    events.trigger(
+        command.bookingId() + "." + TOPIC_ACCEPTED,
+        DOMAIN_TYPE,
+        TOPIC_ACCEPTED,
+        new BookingAcceptedEvent(
+            booking.getMentoringBookingId().bookingId(),
+            booking.getMentee().getId(),
+            booking.getBookedMentoring().getMentorId(),
+            booking.getBookedMentoring().getMentorName(),
+            booking.getBookedMentoring().getTitle(),
+            firstSession.getSessionDate(),
+            firstSession.getSessionStartTime(),
+            firstSession.getSessionEndTime()));
+  }
 }

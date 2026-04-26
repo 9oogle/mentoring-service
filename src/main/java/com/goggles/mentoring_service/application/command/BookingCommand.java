@@ -1,5 +1,6 @@
 package com.goggles.mentoring_service.application.command;
 
+import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.booking.MentoringBookingId;
 import com.goggles.mentoring_service.domain.booking.SessionSlot;
 import java.util.List;
@@ -16,4 +17,6 @@ public class BookingCommand {
   public record PaymentFailed(
           MentoringBookingId mentoringBookingId, UUID orderId, String failureReason
   ) {}
+
+  public record Accept(UUID bookingId, UUID userId, UserType userType) {}
 }

@@ -53,3 +53,12 @@ public class BookingController {
     return CommonPageResponse.of(page.map(BookingResponse.Summary::of));
   }
 }
+
+  @ResponseStatus(HttpStatus.OK)
+  @PostMapping("/{bookingId}/acceptance")
+  public void acceptBooking(UserContext userContext, @PathVariable UUID bookingId) {
+    BookingCommand.Accept command =
+        new BookingCommand.Accept(bookingId, userContext.userId(), userContext.userType());
+    bookingService.acceptBooking(command);
+  }
+}
