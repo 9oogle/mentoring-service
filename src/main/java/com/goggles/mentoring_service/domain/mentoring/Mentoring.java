@@ -73,7 +73,7 @@ public class Mentoring extends BaseAudit {
 
 	private LocalDate endDate;
 
-	private boolean excludeHolidays;
+	private boolean excludeHolidays = true;
 
 	@Column(nullable = false)
 	private int price;
