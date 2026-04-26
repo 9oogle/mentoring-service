@@ -71,4 +71,14 @@ public class BookingController {
     BookingCommand.Reject command = request.toCommand(bookingId, userContext);
     bookingService.rejectBooking(command);
   }
+
+  @ResponseStatus(HttpStatus.OK)
+  @PostMapping("/{bookingId}/cancellation")
+  public void cancelBooking(
+      UserContext userContext,
+      @PathVariable UUID bookingId,
+      @Valid @RequestBody BookingRequest.Cancel request) {
+    BookingCommand.Cancel command = request.toCommand(bookingId, userContext);
+    bookingService.cancelBooking(command);
+  }
 }

@@ -48,4 +48,11 @@ public class BookingRequest {
         return new BookingCommand.PaymentFailed(mentoringBookingId, orderId(), failureReason());
     }
   }
+
+  public record Cancel(@NotBlank String reason) {
+    public BookingCommand.Cancel toCommand(UUID bookingId, UserContext userContext) {
+      return new BookingCommand.Cancel(
+          bookingId, userContext.userId(), userContext.userType(), reason());
+    }
+  }
 }

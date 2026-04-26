@@ -1,5 +1,6 @@
 package com.goggles.mentoring_service.application.service;
 
+import com.goggles.common.event.Events;
 import com.goggles.common.exception.ForbiddenException;
 import com.goggles.common.pagination.CommonPageRequest;
 import com.goggles.mentoring_service.application.command.BookingCommand;
@@ -8,10 +9,15 @@ import com.goggles.mentoring_service.domain.booking.BookingSearchCondition;
 import com.goggles.mentoring_service.application.result.BookingResult;
 import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.booking.BookedMentoring;
+import com.goggles.mentoring_service.domain.booking.BookedMentoring;
+import com.goggles.mentoring_service.domain.booking.BookedTime;
 import com.goggles.mentoring_service.domain.booking.Mentee;
 import com.goggles.mentoring_service.domain.booking.MentoringBooking;
 import com.goggles.mentoring_service.domain.booking.MentoringBookingId;
 import com.goggles.mentoring_service.domain.booking.SessionSlot;
+import com.goggles.mentoring_service.domain.booking.event.BookingAcceptedEvent;
+import com.goggles.mentoring_service.domain.booking.event.BookingCanceledEvent;
+import com.goggles.mentoring_service.domain.booking.event.BookingRejectedEvent;
 import com.goggles.mentoring_service.domain.booking.exception.BookingNotFoundException;
 import com.goggles.mentoring_service.domain.booking.repository.MentoringBookingRepository;
 import com.goggles.mentoring_service.domain.mentoring.Mentoring;
@@ -32,9 +38,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class BookingService {
+  private static final String DOMAIN_TYPE = "BOOKING";
+  private static final String TOPIC_ACCEPTED = "booking.accepted";
+  private static final String TOPIC_REJECTED = "booking.rejected";
+  private static final String TOPIC_CANCELED = "booking.canceled";
 
   private final MentoringBookingRepository bookingRepository;
   private final MentoringRepository mentoringRepository;
+  private final Events events;
 
   @Transactional
   public BookingResult.Create createBooking(BookingCommand.Create command) {
@@ -134,6 +145,28 @@ public class BookingService {
             booking.getMentee().getId(),
             booking.getBookedMentoring().getMentorId(),
             booking.getBookedMentoring().getMentorName(),
+            booking.getBookedMentoring().getTitle(),
+            command.reason(),
+            firstSession.getSessionDate()));
+  }
+
+  @Transactional
+  public void cancelBooking(BookingCommand.Cancel command) {
+    MentoringBookingId id = new MentoringBookingId(command.bookingId());
+    MentoringBooking booking =
+        bookingRepository.findById(id).orElseThrow(() -> new BookingNotFoundException(id));
+    booking.cancel(command.userId(), command.userType(), command.reason(), LocalDateTime.now());
+
+    BookedTime firstSession = booking.getBookedTimes().getFirst();
+    events.trigger(
+        command.bookingId() + "." + TOPIC_CANCELED,
+        DOMAIN_TYPE,
+        TOPIC_CANCELED,
+        new BookingCanceledEvent(
+            booking.getMentoringBookingId().bookingId(),
+            command.userId(),
+            booking.getMentee().getId(),
+            booking.getBookedMentoring().getMentorId(),
             booking.getBookedMentoring().getTitle(),
             command.reason(),
             firstSession.getSessionDate()));
