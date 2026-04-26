@@ -1,9 +1,8 @@
 package com.goggles.mentoring_service.application.service;
 
 import com.goggles.common.pagination.CommonPageRequest;
-import com.goggles.common.pagination.CommonPageResponse;
 import com.goggles.mentoring_service.application.command.MentoringCommand;
-import com.goggles.mentoring_service.application.query.MentoringSearchCondition;
+import com.goggles.mentoring_service.domain.mentoring.MentoringSearchCondition;
 import com.goggles.mentoring_service.application.result.MentoringResult;
 import com.goggles.mentoring_service.domain.category.MentoringCategory;
 import com.goggles.mentoring_service.domain.category.MentoringCategoryId;

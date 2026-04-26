@@ -1,6 +1,7 @@
 package com.goggles.mentoring_service.infrastructure.persistence;
 
-import com.goggles.mentoring_service.application.query.MentoringSearchCondition;
+import com.goggles.mentoring_service.domain.mentoring.MentoringSearchCondition;
+import com.goggles.mentoring_service.domain.mentoring.MentoringSort;
 import com.goggles.mentoring_service.domain.mentoring.Mentoring;
 import com.goggles.mentoring_service.domain.mentoring.QMentoring;
 import com.goggles.mentoring_service.infrastructure.persistence.jpa.MentoringQueryRepository;
@@ -31,7 +32,7 @@ public class MentoringQueryRepositoryImpl implements MentoringQueryRepository {
 		List<Mentoring> content = queryFactory
 				.selectFrom(m)
 				.where(where)
-				.orderBy(order)
+				.orderBy(buildOrder(m, condition))
 				.offset(pageable.getOffset())
 				.limit(pageable.getPageSize())
 				.fetch();

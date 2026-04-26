@@ -2,7 +2,7 @@ package com.goggles.mentoring_service.presentation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.goggles.common.pagination.CommonPageRequestArgumentResolver;
-import com.goggles.mentoring_service.application.query.MentoringSort;
+import com.goggles.mentoring_service.domain.mentoring.MentoringSort;
 import com.goggles.mentoring_service.application.result.MentoringResult;
 import com.goggles.mentoring_service.application.service.MentoringService;
 import com.goggles.mentoring_service.domain.mentoring.Format;

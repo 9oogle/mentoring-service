@@ -1,4 +1,4 @@
-package com.goggles.mentoring_service.application.query;
+package com.goggles.mentoring_service.domain.mentoring;
 
 public enum MentoringSort {
 	CREATED_AT,

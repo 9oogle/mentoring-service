@@ -1,7 +1,7 @@
 package com.goggles.mentoring_service.domain.mentoring.repository;
 
-import com.goggles.mentoring_service.application.query.MentoringSearchCondition;
 import com.goggles.mentoring_service.domain.mentoring.Mentoring;
+import com.goggles.mentoring_service.domain.mentoring.MentoringSearchCondition;
 import com.goggles.mentoring_service.domain.mentoring.MentoringId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
