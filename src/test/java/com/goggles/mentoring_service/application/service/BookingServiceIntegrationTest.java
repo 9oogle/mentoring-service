@@ -28,6 +28,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -249,6 +250,135 @@ class BookingServiceIntegrationTest {
 
 		assertThat(result.getContent()).isEmpty();
 		assertThat(result.getTotalElements()).isZero();
+	}
+
+	// ── 회차 목록 조회 ────────────────────────────────────────────────────────
+
+	@Test
+	void getBookingSessions_returns_sessions() {
+		UUID mentoringId = saveMentoringWithSession(SESSION_DATE_1);
+		BookingResult.Create created =
+				bookingService.createBooking(bookingCommand(mentoringId, sessionSlot(SESSION_DATE_1)));
+
+		em.flush();
+		em.clear();
+
+		BookingResult.SessionList result =
+				bookingService.getBookingSessions(created.enrollmentId(), MENTEE_ID, UserType.STUDENT);
+
+		log.info("==== 회차 목록 조회 결과 ====");
+		log.info("sessions: {}건", result.sessions().size());
+		log.info("sessionDate: {}", result.sessions().get(0).sessionDate());
+		log.info("progressStatus: {}", result.sessions().get(0).progressStatus());
+
+		assertThat(result.sessions()).hasSize(1);
+		assertThat(result.sessions().get(0).sessionDate()).isEqualTo(SESSION_DATE_1);
+		assertThat(result.sessions().get(0).progressStatus()).isEqualTo(SessionProgressStatus.SCHEDULED);
+	}
+
+	// ── 회차 진행 처리 ────────────────────────────────────────────────────────
+
+	@Test
+	void completeSession_changes_status_to_completed() {
+		UUID mentoringId = saveMentoringWithSession(SESSION_DATE_1);
+		BookingResult.Create created =
+				bookingService.createBooking(bookingCommand(mentoringId, sessionSlot(SESSION_DATE_1)));
+
+		em.flush();
+		em.clear();
+
+		MentoringBooking booking =
+				bookingRepository.findById(new MentoringBookingId(created.enrollmentId())).orElseThrow();
+		booking.completePayment();
+		booking.accept(MENTOR_ID, UserType.INSTRUCTOR);
+		em.flush();
+		em.clear();
+
+		UUID sessionId =
+				bookingService
+						.getBookingSessions(created.enrollmentId(), MENTOR_ID, UserType.INSTRUCTOR)
+						.sessions()
+						.get(0)
+						.sessionId();
+
+		bookingService.completeSession(
+				new BookingCommand.CompleteSession(
+						created.enrollmentId(), sessionId, MENTOR_ID, UserType.INSTRUCTOR));
+
+		em.flush();
+		em.clear();
+
+		BookingResult.SessionList result =
+				bookingService.getBookingSessions(created.enrollmentId(), MENTOR_ID, UserType.INSTRUCTOR);
+
+		log.info("==== 회차 진행 처리 결과 ====");
+		log.info("progressStatus: {}", result.sessions().get(0).progressStatus());
+
+		assertThat(result.sessions().get(0).progressStatus()).isEqualTo(SessionProgressStatus.COMPLETED);
+	}
+
+	// ── 회차 일정 변경 ────────────────────────────────────────────────────────
+
+	@Test
+	void rescheduleSession_updates_session_and_rebooking_mentoring_slots() {
+		UUID mentoringId = saveMentoringWithSessions(SESSION_DATE_1, MENTORING_SESSION_DATE_2);
+		BookingResult.Create created =
+				bookingService.createBooking(bookingCommand(mentoringId, sessionSlot(SESSION_DATE_1)));
+
+		em.flush();
+		em.clear();
+
+		MentoringBooking booking =
+				bookingRepository.findById(new MentoringBookingId(created.enrollmentId())).orElseThrow();
+		booking.completePayment();
+		booking.accept(MENTOR_ID, UserType.INSTRUCTOR);
+		em.flush();
+		em.clear();
+
+		UUID sessionId =
+				bookingService
+						.getBookingSessions(created.enrollmentId(), MENTOR_ID, UserType.INSTRUCTOR)
+						.sessions()
+						.get(0)
+						.sessionId();
+
+		LocalDateTime now = LocalDateTime.of(2026, 1, 1, 0, 0);
+		bookingService.rescheduleSession(
+				new BookingCommand.RescheduleSession(
+						created.enrollmentId(),
+						sessionId,
+						MENTORING_SESSION_DATE_2,
+						START_TIME,
+						END_TIME,
+						MENTOR_ID,
+						UserType.INSTRUCTOR,
+						now));
+
+		em.flush();
+		em.clear();
+
+		BookingResult.SessionList result =
+				bookingService.getBookingSessions(created.enrollmentId(), MENTOR_ID, UserType.INSTRUCTOR);
+
+		log.info("==== 회차 일정 변경 결과 ====");
+		log.info("변경된 sessionDate: {}", result.sessions().get(0).sessionDate());
+
+		assertThat(result.sessions().get(0).sessionDate()).isEqualTo(MENTORING_SESSION_DATE_2);
+
+		Mentoring mentoring =
+				mentoringRepository.findById(new MentoringId(mentoringId)).orElseThrow();
+		assertThat(mentoring.getSessions())
+				.anySatisfy(
+						s -> {
+							assertThat(s.getSessionDate()).isEqualTo(SESSION_DATE_1);
+							assertThat(s.getStatus()).isEqualTo(SessionStatus.AVAILABLE);
+						});
+		assertThat(mentoring.getSessions())
+				.anySatisfy(
+						s -> {
+							assertThat(s.getSessionDate()).isEqualTo(MENTORING_SESSION_DATE_2);
+							assertThat(s.getStatus()).isEqualTo(SessionStatus.BOOKED);
+						});
 	}
 
 	// ── 헬퍼 ─────────────────────────────────────────────────────────────────
