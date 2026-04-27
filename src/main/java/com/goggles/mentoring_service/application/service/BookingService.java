@@ -76,16 +76,6 @@ public class BookingService {
 				.map(BookingResult.Summary::from);
 	}
 
-	private void checkAccess(MentoringBooking booking, UUID userId, UserType userType) {
-		boolean isMentee = userType == UserType.STUDENT && booking.getMentee()
-				.isMentee(userId);
-		boolean isMentor = userType == UserType.INSTRUCTOR && booking.getBookedMentoring()
-				.isMentor(userId);
-		if (!isMentee && !isMentor) {
-			throw new ForbiddenException("해당 예약에 접근 권한이 없습니다.");
-		}
-	}
-
 	@Transactional
 	public void paymentFailed(BookingCommand.PaymentFailed command) {
 		MentoringBooking booking = bookingRepository.findById(command.mentoringBookingId())
@@ -142,4 +132,28 @@ public class BookingService {
 						.getTitle(), command.reason(), booking.getBookingSessions(),
 						booking.getOrderId()));
 	}
+
+
+  @Transactional(readOnly = true)
+  public BookingResult.SessionList getBookingSessions(
+      UUID bookingId, UUID userId, UserType userType) {
+    MentoringBooking booking = findBooking(bookingId);
+    checkAccess(booking, userId, userType);
+    return BookingResult.SessionList.from(booking);
+  }
+
+	private MentoringBooking findBooking(UUID bookingId) {
+		MentoringBookingId id = new MentoringBookingId(bookingId);
+		return bookingRepository.findById(id)
+				.orElseThrow(() -> new BookingNotFoundException(id));
+	}
+
+	private void checkAccess(MentoringBooking booking, UUID userId, UserType userType) {
+    boolean isMentee = userType == UserType.STUDENT && booking.getMentee().isMentee(userId);
+    boolean isMentor =
+        userType == UserType.INSTRUCTOR && booking.getBookedMentoring().isMentor(userId);
+    if (!isMentee && !isMentor) {
+      throw new ForbiddenException("해당 예약에 접근 권한이 없습니다.");
+    }
+  }
 }

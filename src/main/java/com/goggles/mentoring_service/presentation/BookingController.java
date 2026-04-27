@@ -43,17 +43,6 @@ public class BookingController {
 		return BookingResponse.Detail.of(result);
 	}
 
-	@GetMapping
-	public CommonPageResponse<BookingResponse.Summary> getMyBookings(UserContext userContext,
-			@RequestParam(required = false) BookingStatus status,
-			@RequestParam(required = false) BookingSort sort, CommonPageRequest pageRequest) {
-		BookingSearchCondition condition =
-				new BookingSearchCondition(userContext.userId(), userContext.userType(), status,
-						sort);
-		Page<BookingResult.Summary> page = bookingService.getMyBookings(condition, pageRequest);
-		return CommonPageResponse.of(page.map(BookingResponse.Summary::of));
-	}
-
 	@ResponseStatus(HttpStatus.OK)
 	@PostMapping("/{bookingId}/acceptance")
 	public void acceptBooking(UserContext userContext, @PathVariable UUID bookingId) {
@@ -77,4 +66,24 @@ public class BookingController {
 		BookingCommand.Cancel command = request.toCommand(bookingId, userContext);
 		bookingService.cancelBooking(command);
 	}
+
+  @GetMapping("/{bookingId}/sessions")
+  public BookingResponse.SessionList getBookingSessions(
+      UserContext userContext, @PathVariable UUID bookingId) {
+    BookingResult.SessionList result =
+        bookingService.getBookingSessions(bookingId, userContext.userId(), userContext.userType());
+    return BookingResponse.SessionList.of(result);
+  }
+
+  @GetMapping
+  public CommonPageResponse<BookingResponse.Summary> getMyBookings(
+      UserContext userContext,
+      @RequestParam(required = false) BookingStatus status,
+      @RequestParam(required = false) BookingSort sort,
+      CommonPageRequest pageRequest) {
+    BookingSearchCondition condition =
+        new BookingSearchCondition(userContext.userId(), userContext.userType(), status, sort);
+    Page<BookingResult.Summary> page = bookingService.getMyBookings(condition, pageRequest);
+    return CommonPageResponse.of(page.map(BookingResponse.Summary::of));
+  }
 }
