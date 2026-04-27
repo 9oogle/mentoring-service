@@ -22,7 +22,7 @@ public class AdminController {
 
 	@GetMapping("mentorings-categories")
 	public CategoryResponse.CategoryListForAdmin getAllCategories(UserContext userContext) {
-		CategoryCommand.GetList command = CategoryCommand.GetList.toRequest(userContext);
+		CategoryCommand.GetList command = new CategoryCommand.GetList(userContext.userId(), userContext.userType());
 		List<CategoryResult.Info> categories = categoryService.getAllCategories(command);
 		return CategoryResponse.CategoryListForAdmin.of(categories);
 	}
