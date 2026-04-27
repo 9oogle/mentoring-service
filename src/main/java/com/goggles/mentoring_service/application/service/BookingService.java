@@ -148,7 +148,15 @@ public class BookingService {
 				.orElseThrow(() -> new BookingNotFoundException(id));
 	}
 
-	private void checkAccess(MentoringBooking booking, UUID userId, UserType userType) {
+
+  @Transactional
+  public void completeSession(BookingCommand.CompleteSession command) {
+    MentoringBooking booking = findBooking(command.bookingId());
+    booking.completeSession(command.sessionId(), command.userId(), command.userType());
+  }
+
+
+  private void checkAccess(MentoringBooking booking, UUID userId, UserType userType) {
     boolean isMentee = userType == UserType.STUDENT && booking.getMentee().isMentee(userId);
     boolean isMentor =
         userType == UserType.INSTRUCTOR && booking.getBookedMentoring().isMentor(userId);

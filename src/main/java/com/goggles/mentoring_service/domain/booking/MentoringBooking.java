@@ -52,6 +52,8 @@ public class MentoringBooking extends BaseAudit {
 
 	private UUID orderId;
 
+
+
 	private MentoringBooking(BookedMentoring bookedMentoring, Mentee mentee,
 			List<BookingSession> bookingSessions, String requestMessage, UUID orderId) {
 		this.mentoringBookingId = MentoringBookingId.of();
@@ -99,6 +101,7 @@ public class MentoringBooking extends BaseAudit {
 		this.closure = BookingClosure.close(userId, reason, now);
 	}
 
+
 	public void cancel(UUID canceledBy, UserType userType, String reason, LocalDateTime now) {
 		validateReason(reason);
 		checkIfUserCanCancel(canceledBy, userType);
@@ -108,9 +111,25 @@ public class MentoringBooking extends BaseAudit {
 		this.closure = BookingClosure.close(canceledBy, reason, now);
 	}
 
-	public UUID getClosedBy() {
-		return this.closure != null ? this.closure.getClosedBy() : null;
-	}
+  public void completeSession(UUID sessionId, UUID userId, UserType userType) {
+    checkIfUserIsMentor(userId, userType);
+    if (status != BookingStatus.ACCEPTED) {
+      throw SessionOperationNotAllowedException.completionNotAllowed(status);
+    }
+    findBookingSession(sessionId).complete();
+  }
+
+  private BookingSession findBookingSession(UUID sessionId) {
+    return bookingSessions.stream()
+        .filter(bt -> bt.getId().equals(sessionId))
+        .findFirst()
+        .orElseThrow(() -> new BookedSessionNotFoundException(sessionId));
+  }
+
+  public UUID getClosedBy() {
+    return this.closure != null ? this.closure.getClosedBy() : null;
+  }
+
 
 	public LocalDateTime getClosedAt() {
 		return this.closure != null ? this.closure.getClosedAt() : null;

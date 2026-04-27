@@ -75,6 +75,15 @@ public class BookingController {
     return BookingResponse.SessionList.of(result);
   }
 
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @PatchMapping("/{bookingId}/sessions/{sessionId}/complete")
+  public void completeSession(
+      UserContext userContext, @PathVariable UUID bookingId, @PathVariable UUID sessionId) {
+    bookingService.completeSession(
+        new BookingCommand.CompleteSession(
+            bookingId, sessionId, userContext.userId(), userContext.userType()));
+  }
+
   @GetMapping
   public CommonPageResponse<BookingResponse.Summary> getMyBookings(
       UserContext userContext,
