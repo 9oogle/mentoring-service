@@ -1,7 +1,7 @@
 package com.goggles.mentoring_service.domain.booking;
 
-import com.goggles.mentoring_service.domain.booking.exception.InvalidMenteeUserTypeException;
 import com.goggles.mentoring_service.domain._common.UserType;
+import com.goggles.mentoring_service.domain.booking.exception.InvalidMenteeUserTypeException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.AccessLevel;

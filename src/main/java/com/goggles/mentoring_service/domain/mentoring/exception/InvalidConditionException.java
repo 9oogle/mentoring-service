@@ -16,7 +16,8 @@ public class InvalidConditionException extends MentoringValidationException {
 	}
 
 	public static InvalidConditionException forSort() {
-		return new InvalidConditionException("유효하지 않은 정렬 옵션입니다. CREATED_AT, PRICE_ASC, PRICE_DESC, DURATION_ASC, DURATION_DESC만 허용됩니다.");
+		return new InvalidConditionException(
+				"유효하지 않은 정렬 옵션입니다. CREATED_AT, PRICE_ASC, PRICE_DESC, DURATION_ASC, DURATION_DESC만 허용됩니다.");
 	}
 
 }

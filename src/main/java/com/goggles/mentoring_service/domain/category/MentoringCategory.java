@@ -2,8 +2,8 @@ package com.goggles.mentoring_service.domain.category;
 
 import com.goggles.common.domain.BaseAudit;
 import com.goggles.common.exception.ForbiddenException;
-import com.goggles.mentoring_service.domain.category.exception.InactiveCategoryCannotMoveException;
 import com.goggles.mentoring_service.domain._common.UserType;
+import com.goggles.mentoring_service.domain.category.exception.InactiveCategoryCannotMoveException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

@@ -1,7 +1,7 @@
 package com.goggles.mentoring_service.domain.booking.exception;
 
-import com.goggles.mentoring_service.domain.booking.BookingStatus;
 import com.goggles.mentoring_service.domain._common.MentoringValidationException;
+import com.goggles.mentoring_service.domain.booking.BookingStatus;
 
 public class InvalidBookingStatusTransitionException extends MentoringValidationException {
 

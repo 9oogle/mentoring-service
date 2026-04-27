@@ -1,8 +1,8 @@
 package com.goggles.mentoring_service.infrastructure.persistence;
 
+import com.goggles.mentoring_service.domain.mentoring.Mentoring;
 import com.goggles.mentoring_service.domain.mentoring.MentoringSearchCondition;
 import com.goggles.mentoring_service.domain.mentoring.MentoringSort;
-import com.goggles.mentoring_service.domain.mentoring.Mentoring;
 import com.goggles.mentoring_service.domain.mentoring.QMentoring;
 import com.goggles.mentoring_service.infrastructure.Escape;
 import com.goggles.mentoring_service.infrastructure.persistence.jpa.MentoringQueryRepository;
@@ -29,16 +29,14 @@ public class MentoringQueryRepositoryImpl implements MentoringQueryRepository {
 		QMentoring m = QMentoring.mentoring;
 		BooleanBuilder where = buildWhere(m, condition);
 
-		List<Mentoring> content = queryFactory
-				.selectFrom(m)
+		List<Mentoring> content = queryFactory.selectFrom(m)
 				.where(where)
 				.orderBy(buildOrder(m, condition))
 				.offset(pageable.getOffset())
 				.limit(pageable.getPageSize())
 				.fetch();
 
-		Long total = queryFactory
-				.select(m.count())
+		Long total = queryFactory.select(m.count())
 				.from(m)
 				.where(where)
 				.fetchOne();
@@ -51,13 +49,16 @@ public class MentoringQueryRepositoryImpl implements MentoringQueryRepository {
 
 		if (StringUtils.hasText(condition.keyword())) {
 			String pattern = Escape.contains(condition.keyword());
-			where.and(
-					m.title.lower().like(pattern)
-							.or(m.subtitle.lower().like(pattern))
-							.or(m.description.lower().like(pattern))
-							.or(m.mentor.name.lower().like(pattern))
-							.or(m.mentoringCategory.name.lower().like(pattern))
-			);
+			where.and(m.title.lower()
+					.like(pattern)
+					.or(m.subtitle.lower()
+							.like(pattern))
+					.or(m.description.lower()
+							.like(pattern))
+					.or(m.mentor.name.lower()
+							.like(pattern))
+					.or(m.mentoringCategory.name.lower()
+							.like(pattern)));
 		}
 
 		if (condition.categoryId() != null) {
@@ -88,8 +89,8 @@ public class MentoringQueryRepositoryImpl implements MentoringQueryRepository {
 			default -> m.createdAt.desc();
 		};
 		if (condition.sortBy() == MentoringSort.CREATED_AT) {
-			return new OrderSpecifier<?>[]{ primary };
+			return new OrderSpecifier<?>[]{primary};
 		}
-		return new OrderSpecifier<?>[]{ primary, m.createdAt.desc() };
+		return new OrderSpecifier<?>[]{primary, m.createdAt.desc()};
 	}
 }

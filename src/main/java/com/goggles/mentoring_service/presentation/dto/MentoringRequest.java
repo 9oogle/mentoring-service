@@ -49,19 +49,11 @@ public class MentoringRequest {
 									   @NotNull LocalTime endTime) {}
 	}
 
-	public record Search(
-			String keyword,
-			UUID categoryId,
-			UUID mentorId,
-			String status,
-			String mentoringType,
-			String sortBy
-	) {
+	public record Search(String keyword, UUID categoryId, UUID mentorId, String status,
+						 String mentoringType, String sortBy) {
 		public MentoringSearchCondition toCondition() {
-			return new MentoringSearchCondition(
-					keyword, categoryId, mentorId,
-					toStatus(), toType(), toSort()
-			);
+			return new MentoringSearchCondition(keyword, categoryId, mentorId, toStatus(), toType(),
+					toSort());
 		}
 
 		private MentoringStatus toStatus() {

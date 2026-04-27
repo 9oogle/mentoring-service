@@ -24,6 +24,7 @@ public class CategoryResponse {
 		}
 
 	}
+
 	public record CategoryListForAdmin(List<ListItemForAdmin> categories) {
 		public static CategoryListForAdmin of(List<CategoryResult.Info> categoryList) {
 			List<ListItemForAdmin> items = categoryList.stream()
@@ -33,8 +34,9 @@ public class CategoryResponse {
 		}
 
 	}
+
 	public record ListItemForAdmin(UUID categoryId, String name, String code, Integer sortOrder,
-						   boolean active) {
+								   boolean active) {
 		public static ListItemForAdmin of(CategoryResult.Info info) {
 			return new ListItemForAdmin(info.getCategoryId(), info.getName(), info.getCode(),
 					info.getSortOrder(), info.isActive());

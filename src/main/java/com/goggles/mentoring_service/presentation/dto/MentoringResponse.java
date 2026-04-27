@@ -18,6 +18,15 @@ public class MentoringResponse {
 						 Format format, MentoringType mentoringType, MentoringDuration duration,
 						 int sessionCount, int maxParticipants, boolean excludeHolidays, int price,
 						 LocalDate endDate) {
+		public static Detail of(MentoringResult.Detail detail) {
+			return new Detail(detail.mentoringId(), detail.title(), detail.subtitle(),
+					detail.description(), MentorInfo.of(detail.mentor()),
+					CategoryInfo.of(detail.category()), detail.status(), detail.format(),
+					detail.mentoringType(), detail.duration(), detail.sessionCount(),
+					detail.maxParticipants(), detail.excludeHolidays(), detail.price(),
+					detail.endDate());
+		}
+
 		public record MentorInfo(String name, String field) {
 			public static MentorInfo of(MentoringResult.Detail.MentorInfo mentorInfo) {
 				return new MentorInfo(mentorInfo.name(), mentorInfo.field());
@@ -31,18 +40,21 @@ public class MentoringResponse {
 			}
 		}
 
-		public static Detail of(MentoringResult.Detail detail) {
-			return new Detail(detail.mentoringId(), detail.title(), detail.subtitle(),
-					detail.description(), MentorInfo.of(detail.mentor()),
-					CategoryInfo.of(detail.category()), detail.status(), detail.format(),
-					detail.mentoringType(), detail.duration(), detail.sessionCount(),
-					detail.maxParticipants(), detail.excludeHolidays(), detail.price(),
-					detail.endDate());
-		}
-
 	}
 
 	public record Schedules(List<RepeatPatternDto> repeatPatterns, List<SessionDto> sessions) {
+		public static Schedules of(MentoringResult.Schedules schedules) {
+			List<RepeatPatternDto> patterns = schedules.repeatPatterns()
+					.stream()
+					.map(RepeatPatternDto::of)
+					.toList();
+			List<SessionDto> sessions = schedules.sessions()
+					.stream()
+					.map(SessionDto::of)
+					.toList();
+			return new Schedules(patterns, sessions);
+		}
+
 		public record RepeatPatternDto(DayOfWeek dayOfWeek, LocalTime startTime,
 									   LocalTime endTime) {
 			public static RepeatPatternDto of(
@@ -59,18 +71,6 @@ public class MentoringResponse {
 				return new SessionDto(sessionDto.date(), sessionDto.startTime(),
 						sessionDto.endTime(), sessionDto.status());
 			}
-		}
-
-		public static Schedules of(MentoringResult.Schedules schedules) {
-			List<RepeatPatternDto> patterns = schedules.repeatPatterns()
-					.stream()
-					.map(RepeatPatternDto::of)
-					.toList();
-			List<SessionDto> sessions = schedules.sessions()
-					.stream()
-					.map(SessionDto::of)
-					.toList();
-			return new Schedules(patterns, sessions);
 		}
 
 	}

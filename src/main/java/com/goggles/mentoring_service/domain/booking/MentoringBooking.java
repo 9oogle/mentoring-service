@@ -1,10 +1,10 @@
 package com.goggles.mentoring_service.domain.booking;
 
 import com.goggles.common.domain.BaseAudit;
+import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.booking.exception.CancellationDeadlineExceededException;
 import com.goggles.mentoring_service.domain.booking.exception.CancellationReasonRequiredException;
 import com.goggles.mentoring_service.domain.booking.exception.UnauthorizedBookingAccessException;
-import com.goggles.mentoring_service.domain._common.UserType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
