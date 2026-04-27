@@ -20,7 +20,7 @@ public class MentoringSession {
 	private LocalTime sessionEndTime;
 	private SessionStatus status = SessionStatus.AVAILABLE;
 
-	static MentoringSession of(LocalDate date, LocalTime startTime, LocalTime endTime) {
+	public static MentoringSession of(LocalDate date, LocalTime startTime, LocalTime endTime) {
 		if (startTime.isAfter(endTime) || startTime.equals(endTime)) {
 			throw InvalidTimeRangeException.forSession();
 		}

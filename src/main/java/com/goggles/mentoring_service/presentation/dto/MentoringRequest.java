@@ -3,10 +3,10 @@ package com.goggles.mentoring_service.presentation.dto;
 import com.goggles.mentoring_service.application.command.MentoringCommand;
 import com.goggles.mentoring_service.application.command.SessionSlot;
 import com.goggles.mentoring_service.application.command.TimeSchedules;
-import com.goggles.mentoring_service.domain.mentoring.Format;
-import com.goggles.mentoring_service.domain.mentoring.MentoringDuration;
-import com.goggles.mentoring_service.domain.mentoring.MentoringType;
+import com.goggles.mentoring_service.domain.mentoring.*;
+import com.goggles.mentoring_service.domain.mentoring.exception.InvalidConditionException;
 import com.goggles.mentoring_service.presentation.support.UserContext;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
 import java.time.DayOfWeek;
@@ -48,4 +48,48 @@ public class MentoringRequest {
 		public record RepeatPatternDto(@NotNull DayOfWeek dayOfWeek, @NotNull LocalTime startTime,
 									   @NotNull LocalTime endTime) {}
 	}
+
+	public record Search(
+			String keyword,
+			UUID categoryId,
+			UUID mentorId,
+			String status,
+			String mentoringType,
+			String sortBy
+	) {
+		public MentoringSearchCondition toCondition() {
+			return new MentoringSearchCondition(
+					keyword, categoryId, mentorId,
+					toStatus(), toType(), toSort()
+			);
+		}
+
+		private MentoringStatus toStatus() {
+			if (status == null) return null;
+			try {
+				return MentoringStatus.valueOf(status.toUpperCase());
+			} catch (IllegalArgumentException e) {
+				throw InvalidConditionException.forStatus();
+			}
+		}
+
+		private MentoringType toType() {
+			if (mentoringType == null) return null;
+			try {
+				return MentoringType.valueOf(mentoringType.toUpperCase());
+			} catch (IllegalArgumentException e) {
+				throw InvalidConditionException.forType();
+			}
+		}
+
+		private MentoringSort toSort() {
+			if (sortBy == null) return null;
+			try {
+				return MentoringSort.valueOf(sortBy.toUpperCase());
+			} catch (IllegalArgumentException e) {
+				throw InvalidConditionException.forSort();
+			}
+		}
+	}
+
 }

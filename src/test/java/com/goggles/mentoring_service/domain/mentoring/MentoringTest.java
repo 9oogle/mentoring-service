@@ -4,6 +4,8 @@ import com.goggles.mentoring_service.domain.mentoring.exception.MentoringPolicyV
 import com.goggles.mentoring_service.domain.mentoring.exception.RepeatPatternRequiredException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -15,6 +17,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class MentoringTest {
+
+    private static final Logger log = LoggerFactory.getLogger(MentoringTest.class);
 
     private Mentoring mentoring;
 
@@ -130,15 +134,17 @@ class MentoringTest {
                 .build();
         multiMentoring.updateRepeatPatterns(List.of(repeatPattern(DayOfWeek.MONDAY)));
 
-        // 2026-05-01(금) ~ 2026-05-31(일), 월요일: 5/4, 5/11, 5/18, 5/25 → 4개
-        List<MentoringSession> generated = multiMentoring.generateSessions(
-                LocalDate.of(2026, 5, 1),
-                LocalDate.of(2026, 5, 31),
-                date -> false
-        );
+        LocalDate from = LocalDate.of(2026, 5, 1);
+        LocalDate to = LocalDate.of(2026, 5, 31);
+        List<MentoringSession> generated = multiMentoring.generateSessions(from, to, date -> false);
+
+        log.info("세션 자동 생성: {} ~ {}, 월요일 → {}개 (5/4, 5/11, 5/18, 5/25)",
+                from, to, generated.size());
+        generated.forEach(s ->
+                log.info("  생성된 세션: {} {} ~ {}", s.getSessionDate(), s.getSessionStartTime(), s.getSessionEndTime()));
 
         assertThat(generated).hasSize(4);
-        assertThat(generated.get(0).getSessionDate()).isEqualTo(LocalDate.of(2026, 5, 4));
+        assertThat(generated.getFirst().getSessionDate()).isEqualTo(LocalDate.of(2026, 5, 4));
     }
 
     @Test
@@ -150,15 +156,19 @@ class MentoringTest {
                 .build();
         multiMentoring.updateRepeatPatterns(List.of(repeatPattern(DayOfWeek.TUESDAY)));
 
-        // 5/5(어린이날, 화), 5/12, 5/19, 5/26 중 5/5 제외 → 3개
+        LocalDate from = LocalDate.of(2026, 5, 1);
+        LocalDate to = LocalDate.of(2026, 5, 31);
+        LocalDate holiday = LocalDate.of(2026, 5, 5);
         List<MentoringSession> generated = multiMentoring.generateSessions(
-                LocalDate.of(2026, 5, 1),
-                LocalDate.of(2026, 5, 31),
-                date -> date.equals(LocalDate.of(2026, 5, 5))
-        );
+                from, to, date -> date.equals(holiday));
+
+        log.info("세션 자동 생성 (공휴일 제외): {} ~ {}, 화요일 후보 5/5·5/12·5/19·5/26 중 {}(어린이날) 제외 → {}개",
+                from, to, holiday, generated.size());
+        generated.forEach(s ->
+                log.info("  생성된 세션: {}", s.getSessionDate()));
 
         assertThat(generated).hasSize(3);
-        assertThat(generated).noneMatch(s -> s.getSessionDate().equals(LocalDate.of(2026, 5, 5)));
+        assertThat(generated).noneMatch(s -> s.getSessionDate().equals(holiday));
     }
 
     @Test

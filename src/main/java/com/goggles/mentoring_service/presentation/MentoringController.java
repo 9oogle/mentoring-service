@@ -1,12 +1,21 @@
 package com.goggles.mentoring_service.presentation;
 
+import com.goggles.common.pagination.CommonPageRequest;
+import com.goggles.common.pagination.CommonPageResponse;
 import com.goggles.mentoring_service.application.command.MentoringCommand;
+import com.goggles.mentoring_service.domain.mentoring.MentoringSearchCondition;
+import com.goggles.mentoring_service.domain.mentoring.MentoringSort;
+import com.goggles.mentoring_service.domain.mentoring.MentoringStatus;
+import com.goggles.mentoring_service.domain.mentoring.MentoringType;
+import com.goggles.mentoring_service.domain.mentoring.exception.InvalidConditionException;
+import com.goggles.mentoring_service.application.result.MentoringResult;
 import com.goggles.mentoring_service.application.service.MentoringService;
 import com.goggles.mentoring_service.presentation.dto.MentoringRequest;
 import com.goggles.mentoring_service.presentation.dto.MentoringResponse;
 import com.goggles.mentoring_service.presentation.support.UserContext;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,4 +36,26 @@ public class MentoringController {
 		UUID mentoringId = mentoringService.createMentoring(command);
 		return new MentoringResponse.Create(mentoringId);
 	}
+
+	@GetMapping("/{mentoringId}")
+	public MentoringResponse.Detail getMentoring(@PathVariable UUID mentoringId) {
+		MentoringResult.Detail detailDto = mentoringService.getMentoring(mentoringId);
+		return MentoringResponse.Detail.of(detailDto);
+	}
+
+	@GetMapping("/{mentoringId}/schedules")
+	public MentoringResponse.Schedules getMentoringSchedules(@PathVariable UUID mentoringId) {
+		MentoringResult.Schedules schedule = mentoringService.getMentoringSchedules(mentoringId);
+		return MentoringResponse.Schedules.of(schedule);
+	}
+
+	@GetMapping
+	public CommonPageResponse<MentoringResponse.Summary> searchMentorings(
+			@ModelAttribute MentoringRequest.Search request,
+			CommonPageRequest pageRequest) {
+		Page<MentoringResult.Summary> summary = mentoringService.searchMentorings(request.toCondition(), pageRequest);
+		return CommonPageResponse.of(summary.map(MentoringResponse.Summary::of));
+	}
+
+
 }
