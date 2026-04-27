@@ -10,6 +10,7 @@ import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.booking.BookingSearchCondition;
 import com.goggles.mentoring_service.domain.booking.MentoringBooking;
 import com.goggles.mentoring_service.domain.booking.MentoringBookingId;
+import com.goggles.mentoring_service.domain.booking.SessionReschedule;
 import com.goggles.mentoring_service.domain.booking.SessionSlot;
 import com.goggles.mentoring_service.domain.booking.event.BookingAcceptedEvent;
 import com.goggles.mentoring_service.domain.booking.event.BookingCanceledEvent;
@@ -142,12 +143,6 @@ public class BookingService {
     return BookingResult.SessionList.from(booking);
   }
 
-	private MentoringBooking findBooking(UUID bookingId) {
-		MentoringBookingId id = new MentoringBookingId(bookingId);
-		return bookingRepository.findById(id)
-				.orElseThrow(() -> new BookingNotFoundException(id));
-	}
-
 
   @Transactional
   public void completeSession(BookingCommand.CompleteSession command) {
@@ -155,6 +150,34 @@ public class BookingService {
     booking.completeSession(command.sessionId(), command.userId(), command.userType());
   }
 
+  @Transactional
+  public void rescheduleSession(BookingCommand.RescheduleSession command) {
+    MentoringBooking booking = findBooking(command.bookingId());
+    MentoringId mentoringId = new MentoringId(booking.getBookedMentoring().getMentoringId());
+    Mentoring mentoring =
+        mentoringRepository
+            .findById(mentoringId)
+            .orElseThrow(() -> new MentoringNotFoundException(mentoringId));
+
+    SessionReschedule reschedule =
+        booking.rescheduleSession(
+            command.sessionId(),
+            command.newDate(),
+            command.newStartTime(),
+            command.newEndTime(),
+            command.userId(),
+            command.userType(),
+            command.now());
+
+    mentoring.unbookSession(reschedule.oldSlot().date(), reschedule.oldSlot().startTime());
+    mentoring.bookSession(command.newDate(), command.newStartTime());
+  }
+
+  private MentoringBooking findBooking(UUID bookingId) {
+    return bookingRepository
+        .findById(new MentoringBookingId(bookingId))
+        .orElseThrow(() -> new BookingNotFoundException(new MentoringBookingId(bookingId)));
+  }
 
   private void checkAccess(MentoringBooking booking, UUID userId, UserType userType) {
     boolean isMentee = userType == UserType.STUDENT && booking.getMentee().isMentee(userId);

@@ -12,6 +12,9 @@ import com.goggles.mentoring_service.presentation.dto.BookingRequest;
 import com.goggles.mentoring_service.presentation.dto.BookingResponse;
 import com.goggles.mentoring_service.presentation.support.UserContext;
 import jakarta.validation.Valid;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -82,6 +85,25 @@ public class BookingController {
     bookingService.completeSession(
         new BookingCommand.CompleteSession(
             bookingId, sessionId, userContext.userId(), userContext.userType()));
+  }
+
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @PatchMapping("/{bookingId}/sessions/{sessionId}/reschedule")
+  public void rescheduleSession(
+      UserContext userContext,
+      @PathVariable UUID bookingId,
+      @PathVariable UUID sessionId,
+      @Valid @RequestBody BookingRequest.RescheduleSession request) {
+    bookingService.rescheduleSession(
+        new BookingCommand.RescheduleSession(
+            bookingId,
+            sessionId,
+            request.newDate(),
+            request.newStartTime(),
+            request.newEndTime(),
+            userContext.userId(),
+            userContext.userType(),
+            LocalDateTime.now()));
   }
 
   @GetMapping

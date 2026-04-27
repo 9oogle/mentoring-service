@@ -30,9 +30,6 @@ public class BookingRequest {
 		}
 	}
 
-	public record BookingTimeSlot(@NotNull LocalDate date, @NotNull LocalTime startTime,
-								  @NotNull LocalTime endTime) {}
-
 	public record Reject(@NotBlank String reason) {
 		public BookingCommand.Reject toCommand(UUID bookingId, UserContext userContext) {
 			return new BookingCommand.Reject(bookingId, userContext.userId(),
@@ -54,4 +51,11 @@ public class BookingRequest {
 					userContext.userType(), reason());
 		}
 	}
+  public record BookingTimeSlot(
+      @NotNull LocalDate date, @NotNull LocalTime startTime, @NotNull LocalTime endTime) {}
+
+  public record RescheduleSession(
+      @NotNull LocalDate newDate,
+      @NotNull LocalTime newStartTime,
+      @NotNull LocalTime newEndTime) {}
 }
