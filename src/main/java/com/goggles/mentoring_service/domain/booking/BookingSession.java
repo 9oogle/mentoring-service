@@ -1,6 +1,11 @@
 package com.goggles.mentoring_service.domain.booking;
 
+import com.goggles.mentoring_service.domain.booking.exception.InvalidRescheduleException;
 import jakarta.persistence.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -41,4 +46,18 @@ public class BookingSession {
 		this.progressStatus = SessionProgressStatus.COMPLETED;
 	}
 
+  void reschedule(LocalDate newDate, LocalTime newStartTime, LocalTime newEndTime, LocalDateTime now) {
+    if (progressStatus == SessionProgressStatus.COMPLETED) {
+      throw InvalidRescheduleException.sessionAlreadyCompleted();
+    }
+    if (LocalDateTime.of(sessionDate, sessionStartTime).isBefore(now)) {
+      throw InvalidRescheduleException.sessionAlreadyPassed();
+    }
+    if (LocalDateTime.of(newDate, newStartTime).isBefore(now)) {
+      throw InvalidRescheduleException.newTimeIsInPast();
+    }
+    this.sessionDate = newDate;
+    this.sessionStartTime = newStartTime;
+    this.sessionEndTime = newEndTime;
+  }
 }

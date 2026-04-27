@@ -2,9 +2,7 @@ package com.goggles.mentoring_service.domain.booking;
 
 import com.goggles.common.domain.BaseAudit;
 import com.goggles.mentoring_service.domain._common.UserType;
-import com.goggles.mentoring_service.domain.booking.exception.CancellationDeadlineExceededException;
-import com.goggles.mentoring_service.domain.booking.exception.CancellationReasonRequiredException;
-import com.goggles.mentoring_service.domain.booking.exception.UnauthorizedBookingAccessException;
+import com.goggles.mentoring_service.domain.booking.exception.*;
 import com.goggles.mentoring_service.domain.mentoring.Mentoring;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -12,7 +10,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -117,6 +117,25 @@ public class MentoringBooking extends BaseAudit {
       throw SessionOperationNotAllowedException.completionNotAllowed(status);
     }
     findBookingSession(sessionId).complete();
+  }
+
+  public SessionReschedule rescheduleSession(
+      UUID sessionId,
+      LocalDate newDate,
+      LocalTime newStartTime,
+      LocalTime newEndTime,
+      UUID userId,
+      UserType userType,
+      LocalDateTime now) {
+    checkIfUserIsMentor(userId, userType);
+    if (status != BookingStatus.ACCEPTED) {
+      throw InvalidRescheduleException.bookingNotAccepted();
+    }
+    BookingSession session = findBookingSession(sessionId);
+    SessionSlot oldSlot = new SessionSlot(session.getSessionDate(), session.getSessionStartTime(), session.getSessionEndTime());
+    session.reschedule(newDate, newStartTime, newEndTime, now);
+    SessionSlot newSlot = new SessionSlot(newDate, newStartTime, newEndTime);
+    return new SessionReschedule(oldSlot, newSlot);
   }
 
   private BookingSession findBookingSession(UUID sessionId) {
