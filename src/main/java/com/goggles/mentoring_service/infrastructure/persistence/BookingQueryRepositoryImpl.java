@@ -23,7 +23,7 @@ public class BookingQueryRepositoryImpl implements BookingQueryRepository {
 	@Override
 	public Page<MentoringBooking> findByUser(BookingSearchCondition condition, Pageable pageable) {
 		QMentoringBooking b = QMentoringBooking.mentoringBooking;
-		QBookedTime bt = new QBookedTime("bt");
+		QBookingSession bt = new QBookingSession("bt");
 
 		BooleanBuilder where = buildWhere(b, condition);
 		OrderSpecifier<?> order = buildOrder(b, bt, condition.sort());
@@ -36,7 +36,7 @@ public class BookingQueryRepositoryImpl implements BookingQueryRepository {
 
 		if (sortBySession) {
 			content = queryFactory.selectFrom(b)
-					.leftJoin(b.bookedTimes, bt)
+					.leftJoin(b.bookingSessions, bt)
 					.where(where)
 					.groupBy(b.mentoringBookingId)
 					.orderBy(order)
@@ -78,7 +78,8 @@ public class BookingQueryRepositoryImpl implements BookingQueryRepository {
 		return where;
 	}
 
-	private OrderSpecifier<?> buildOrder(QMentoringBooking b, QBookedTime bt, BookingSort sort) {
+	private OrderSpecifier<?> buildOrder(QMentoringBooking b, QBookingSession bt,
+			BookingSort sort) {
 		if (sort == null) return b.createdAt.desc();
 		return switch (sort) {
 			case SESSION_DATE_ASC -> bt.sessionDate.min()

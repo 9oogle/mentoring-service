@@ -36,9 +36,9 @@ public class MentoringBooking extends BaseAudit {
 	@Embedded
 	private Mentee mentee;
 
-	@ElementCollection
-	@CollectionTable(name = "P_BOOKED_TIME", joinColumns = @JoinColumn(name = "booking_id"))
-	private final List<BookedTime> bookedTimes = new ArrayList<>();
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+	@JoinColumn(name = "booking_id", nullable = false)
+	private final List<BookingSession> bookingSessions = new ArrayList<>();
 
 	@Enumerated(EnumType.STRING)
 	@Column(length = 30, nullable = false)
@@ -53,11 +53,11 @@ public class MentoringBooking extends BaseAudit {
 	private UUID orderId;
 
 	private MentoringBooking(BookedMentoring bookedMentoring, Mentee mentee,
-			List<BookedTime> bookedTimes, String requestMessage, UUID orderId) {
+			List<BookingSession> bookingSessions, String requestMessage, UUID orderId) {
 		this.mentoringBookingId = MentoringBookingId.of();
 		this.bookedMentoring = bookedMentoring;
 		this.mentee = mentee;
-		this.bookedTimes.addAll(bookedTimes);
+		this.bookingSessions.addAll(bookingSessions);
 		this.requestMessage = requestMessage;
 		this.orderId = orderId;
 	}
@@ -67,10 +67,11 @@ public class MentoringBooking extends BaseAudit {
 			UUID orderId) {
 		Mentee mentee = Mentee.of(menteeId, menteeUserType, menteeName);
 		BookedMentoring bookedMentoring = BookedMentoring.of(mentoring);
-		List<BookedTime> bookedTimes = sessionSlots.stream()
-				.map(BookedTime::of)
+		List<BookingSession> bookingSessions = sessionSlots.stream()
+				.map(BookingSession::of)
 				.toList();
-		return new MentoringBooking(bookedMentoring, mentee, bookedTimes, requestMessage, orderId);
+		return new MentoringBooking(bookedMentoring, mentee, bookingSessions, requestMessage,
+				orderId);
 	}
 
 	public void completePayment() {
@@ -148,7 +149,7 @@ public class MentoringBooking extends BaseAudit {
 	}
 
 	private void checkCancellationDeadline(LocalDateTime now) {
-		for (BookedTime session : this.bookedTimes) {
+		for (BookingSession session : this.bookingSessions) {
 			LocalDateTime sessionStart =
 					LocalDateTime.of(session.getSessionDate(), session.getSessionStartTime());
 			if (now.isAfter(sessionStart.minusHours(CANCELLATION_DEADLINE_HOURS))) {

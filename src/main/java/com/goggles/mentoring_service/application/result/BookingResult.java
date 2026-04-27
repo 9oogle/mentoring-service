@@ -1,7 +1,9 @@
 package com.goggles.mentoring_service.application.result;
 
+import com.goggles.mentoring_service.domain.booking.BookingSession;
 import com.goggles.mentoring_service.domain.booking.BookingStatus;
 import com.goggles.mentoring_service.domain.booking.MentoringBooking;
+import com.goggles.mentoring_service.domain.booking.SessionProgressStatus;
 import com.goggles.mentoring_service.domain.mentoring.Mentoring;
 
 import java.time.LocalDate;
@@ -27,14 +29,12 @@ public class BookingResult {
 
 	public record Summary(UUID bookingId, String mentoringTitle, String mentorName,
 						  String menteeName, BookingStatus status,
-						  List<BookedTimeInfo> requestedSessions, LocalDateTime createdAt) {
+						  List<SessionInfo> requestedSessions, LocalDateTime createdAt) {
 
 		public static Summary from(MentoringBooking booking) {
-
-			List<BookedTimeInfo> sessionInfos = booking.getBookedTimes()
+			List<SessionInfo> sessionInfos = booking.getBookingSessions()
 					.stream()
-					.map(t -> new BookedTimeInfo(t.getSessionDate(), t.getSessionStartTime(),
-							t.getSessionEndTime()))
+					.map(SessionInfo::from)
 					.toList();
 			return new Summary(booking.getMentoringBookingId()
 					.bookingId(), booking.getBookedMentoring()
@@ -45,8 +45,8 @@ public class BookingResult {
 	}
 
 	public record Detail(UUID bookingId, MentoringInfo mentoring, MenteeInfo mentee,
-						 List<BookedTimeInfo> bookedTimes, BookingStatus status,
-						 String requestMessage, ClosureInfo closure, LocalDateTime createdAt) {
+						 List<SessionInfo> sessions, BookingStatus status, String requestMessage,
+						 ClosureInfo closure, LocalDateTime createdAt) {
 
 		public static Detail from(MentoringBooking booking) {
 			MentoringInfo mentoringInfo = new MentoringInfo(booking.getBookedMentoring()
@@ -60,10 +60,9 @@ public class BookingResult {
 					.getId(), booking.getMentee()
 					.getName());
 
-			List<BookedTimeInfo> times = booking.getBookedTimes()
+			List<SessionInfo> sessions = booking.getBookingSessions()
 					.stream()
-					.map(time -> new BookedTimeInfo(time.getSessionDate(),
-							time.getSessionStartTime(), time.getSessionEndTime()))
+					.map(SessionInfo::from)
 					.toList();
 
 			ClosureInfo closureInfo = booking.getClosedBy() != null ?
@@ -71,7 +70,7 @@ public class BookingResult {
 							booking.getClosedAt()) : null;
 
 			return new Detail(booking.getMentoringBookingId()
-					.bookingId(), mentoringInfo, menteeInfo, times, booking.getStatus(),
+					.bookingId(), mentoringInfo, menteeInfo, sessions, booking.getStatus(),
 					booking.getRequestMessage(), closureInfo, booking.getCreatedAt());
 		}
 
@@ -83,5 +82,25 @@ public class BookingResult {
 		public record ClosureInfo(UUID closedBy, String reason, LocalDateTime closedAt) {}
 	}
 
-	public record BookedTimeInfo(LocalDate sessionDate, LocalTime startTime, LocalTime endTime) {}
+	public record SessionInfo(UUID sessionId, LocalDate sessionDate, LocalTime startTime,
+							  LocalTime endTime, SessionProgressStatus progressStatus) {
+
+		public static SessionInfo from(BookingSession bookingSession) {
+			return new SessionInfo(bookingSession.getId(), bookingSession.getSessionDate(),
+					bookingSession.getSessionStartTime(), bookingSession.getSessionEndTime(),
+					bookingSession.getProgressStatus());
+		}
+	}
+
+	public record SessionList(UUID bookingId, List<SessionInfo> sessions) {
+
+		public static SessionList from(MentoringBooking booking) {
+			List<SessionInfo> sessions = booking.getBookingSessions()
+					.stream()
+					.map(SessionInfo::from)
+					.toList();
+			return new SessionList(booking.getMentoringBookingId()
+					.bookingId(), sessions);
+		}
+	}
 }

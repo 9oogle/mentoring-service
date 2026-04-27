@@ -107,7 +107,7 @@ public class BookingService {
 						.getId(), booking.getBookedMentoring()
 						.getMentorId(), booking.getBookedMentoring()
 						.getMentorName(), booking.getBookedMentoring()
-						.getTitle(), booking.getBookedTimes()));
+						.getTitle(), booking.getBookingSessions()));
 	}
 
 	@Transactional
@@ -123,7 +123,7 @@ public class BookingService {
 						.getId(), booking.getBookedMentoring()
 						.getMentorId(), booking.getBookedMentoring()
 						.getMentorName(), booking.getBookedMentoring()
-						.getTitle(), command.reason(), booking.getBookedTimes(),
+						.getTitle(), command.reason(), booking.getBookingSessions(),
 						booking.getOrderId()));
 	}
 
@@ -139,7 +139,7 @@ public class BookingService {
 						.bookingId(), command.userId(), booking.getMentee()
 						.getId(), booking.getBookedMentoring()
 						.getMentorId(), booking.getBookedMentoring()
-						.getTitle(), command.reason(), booking.getBookedTimes(),
+						.getTitle(), command.reason(), booking.getBookingSessions(),
 						booking.getOrderId()));
 	}
 }

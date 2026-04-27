@@ -19,7 +19,7 @@ public class BookingResponse {
 
 	public record Summary(UUID bookingId, String mentoringTitle, String mentorName,
 						  String menteeName, BookingStatus status,
-						  List<BookingResult.BookedTimeInfo> requestedSessions,
+						  List<BookingResult.SessionInfo> requestedSessions,
 						  LocalDateTime createdAt) {
 
 		public static Summary of(BookingResult.Summary result) {
@@ -31,14 +31,14 @@ public class BookingResponse {
 
 	public record Detail(UUID bookingId, BookingResult.Detail.MentoringInfo mentoring,
 						 BookingResult.Detail.MenteeInfo mentee,
-						 List<BookingResult.BookedTimeInfo> bookedTimes, BookingStatus status,
+						 List<BookingResult.SessionInfo> sessions, BookingStatus status,
 						 String requestMessage, BookingResult.Detail.ClosureInfo closure,
 						 LocalDateTime createdAt) {
 
 		public static Detail of(BookingResult.Detail result) {
 			return new Detail(result.bookingId(), result.mentoring(), result.mentee(),
-					result.bookedTimes(), result.status(), result.requestMessage(),
-					result.closure(), result.createdAt());
+					result.sessions(), result.status(), result.requestMessage(), result.closure(),
+					result.createdAt());
 		}
 	}
 }
