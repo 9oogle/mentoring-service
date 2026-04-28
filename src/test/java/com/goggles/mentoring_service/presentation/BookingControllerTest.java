@@ -59,12 +59,16 @@ class BookingControllerTest {
 
   @Test
   void createBooking_fails_without_mentoringId() throws Exception {
+    String body =
+        """
+        {"bookingTimeSlots":[{"date":"2026-06-01","startTime":"10:00:00","endTime":"11:00:00"}]}
+        """;
     mockMvc
         .perform(
             post("/api/v1/mentoring-bookings")
                 .contentType(MediaType.APPLICATION_JSON)
                 .headers(TestHeaders.headersFor(UserType.STUDENT))
-                .content("{}"))
+                .content(body))
         .andExpect(status().isBadRequest());
   }
 
