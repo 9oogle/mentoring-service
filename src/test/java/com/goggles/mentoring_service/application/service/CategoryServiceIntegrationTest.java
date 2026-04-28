@@ -1,6 +1,8 @@
 package com.goggles.mentoring_service.application.service;
 
 import com.goggles.common.exception.ForbiddenException;
+import com.goggles.mentoring_service.domain.category.exception.CategoryNotFoundException;
+import com.goggles.mentoring_service.domain.category.exception.CategoryValidationException;
 import com.goggles.mentoring_service.application.command.CategoryCommand;
 import com.goggles.mentoring_service.application.result.CategoryResult;
 import com.goggles.mentoring_service.config.TestAuditConfig;
@@ -44,7 +46,7 @@ class CategoryServiceIntegrationTest {
 	// ── getActiveCategories ───────────────────────────────────────────────────
 
 	@Test
-	void getActiveCategories_returns_only_active_ordered_by_sortOrder() {
+	void getActive_orderedBySortOrder() {
 		MentoringCategory third = categoryRepository.save(createActive(2));
 		MentoringCategory first = categoryRepository.save(createActive(0));
 		MentoringCategory second = categoryRepository.save(createActive(1));
@@ -71,7 +73,7 @@ class CategoryServiceIntegrationTest {
 	}
 
 	@Test
-	void getActiveCategories_returns_empty_when_no_active_categories() {
+	void getActive_returnsEmpty() {
 		categoryRepository.save(createInactive());
 
 		List<CategoryResult.Info> result = categoryService.getActiveCategories();
@@ -83,7 +85,7 @@ class CategoryServiceIntegrationTest {
 	// ── getAllCategories ──────────────────────────────────────────────────────
 
 	@Test
-	void getAllCategories_returns_all_including_inactive() {
+	void getAll_includesInactive() {
 		categoryRepository.save(createActive(0));
 		categoryRepository.save(createActive(1));
 		categoryRepository.save(createInactive());
@@ -104,7 +106,7 @@ class CategoryServiceIntegrationTest {
 	}
 
 	@Test
-	void getAllCategories_throws_forbidden_when_not_master() {
+	void getAll_forbidden_if_not_master() {
 		assertThatThrownBy(() -> categoryService.getAllCategories(
 				new CategoryCommand.GetList(UUID.randomUUID(), UserType.INSTRUCTOR))).isInstanceOf(
 				ForbiddenException.class);
@@ -113,7 +115,7 @@ class CategoryServiceIntegrationTest {
 	// ── createCategory ────────────────────────────────────────────────────────
 
 	@Test
-	void createCategory_saves_inactive_category() {
+	void create_savesInactive() {
 		CategoryCommand.Create command = new CategoryCommand.Create("Java", "JAVA", 0,
 				UUID.randomUUID(), UserType.MASTER);
 
@@ -128,11 +130,144 @@ class CategoryServiceIntegrationTest {
 	}
 
 	@Test
-	void createCategory_throws_forbidden_when_not_master() {
+	void create_forbidden_if_not_master() {
 		CategoryCommand.Create command = new CategoryCommand.Create("Java", "JAVA", 0,
 				UUID.randomUUID(), UserType.INSTRUCTOR);
 
 		assertThatThrownBy(() -> categoryService.createCategory(command))
+				.isInstanceOf(ForbiddenException.class);
+	}
+
+	// ── updateActiveCategories ────────────────────────────────────────────────
+
+	@Test
+	void updateActive_success() {
+		UUID adminId = UUID.randomUUID();
+		MentoringCategory c0 = categoryRepository.save(createActive(0));
+		MentoringCategory c1 = categoryRepository.save(createActive(1));
+		MentoringCategory c2 = categoryRepository.save(createInactive());
+
+		// c2를 0번, c0을 1번으로 재배치, c1은 비활성화
+		categoryService.updateActiveCategories(new CategoryCommand.UpdateActive(adminId,
+				UserType.MASTER, List.of(c2.getMentoringCategoryId().categoryId(),
+						c0.getMentoringCategoryId().categoryId())));
+
+		List<CategoryResult.Info> active = categoryService.getActiveCategories();
+		log.info("==== 활성 카테고리 재배치 결과 ====");
+		active.forEach(c -> log.info("  sortOrder={} id={}", c.getSortOrder(), c.getCategoryId()));
+
+		assertThat(active).hasSize(2);
+		assertThat(active.get(0).getCategoryId()).isEqualTo(c2.getMentoringCategoryId().categoryId());
+		assertThat(active.get(0).getSortOrder()).isEqualTo(0);
+		assertThat(active.get(1).getCategoryId()).isEqualTo(c0.getMentoringCategoryId().categoryId());
+		assertThat(active.get(1).getSortOrder()).isEqualTo(1);
+	}
+
+	@Test
+	void updateActive_empty_list() {
+		UUID adminId = UUID.randomUUID();
+		categoryRepository.save(createActive(0));
+		categoryRepository.save(createActive(1));
+
+		categoryService.updateActiveCategories(
+				new CategoryCommand.UpdateActive(adminId, UserType.MASTER, List.of()));
+
+		assertThat(categoryService.getActiveCategories()).isEmpty();
+	}
+
+	@Test
+	void updateActive_not_found() {
+		UUID adminId = UUID.randomUUID();
+
+		assertThatThrownBy(() -> categoryService.updateActiveCategories(
+				new CategoryCommand.UpdateActive(adminId, UserType.MASTER,
+						List.of(UUID.randomUUID())))).isInstanceOf(CategoryNotFoundException.class);
+	}
+
+	@Test
+	void updateActive_forbidden_if_not_master() {
+		assertThatThrownBy(() -> categoryService.updateActiveCategories(
+				new CategoryCommand.UpdateActive(UUID.randomUUID(), UserType.INSTRUCTOR,
+						List.of()))).isInstanceOf(ForbiddenException.class);
+	}
+
+	// ── updateCategory ────────────────────────────────────────────────────────
+
+	@Test
+	void update_success() {
+		MentoringCategory category = categoryRepository.save(createActive(0));
+		MentoringCategoryId id = category.getMentoringCategoryId();
+
+		categoryService.updateCategory(
+				new CategoryCommand.Update(id, "NewName", "NEWCODE", UUID.randomUUID(), UserType.MASTER));
+
+		assertThat(category.getName()).isEqualTo("NewName");
+		assertThat(category.getCode()).isEqualTo("NEWCODE");
+	}
+
+	@Test
+	void update_nameConflict() {
+		MentoringCategory first = categoryRepository.save(createActive(0));
+		MentoringCategory second = categoryRepository.save(createActive(1));
+
+		assertThatThrownBy(() -> categoryService.updateCategory(
+				new CategoryCommand.Update(first.getMentoringCategoryId(), second.getName(),
+						first.getCode(), UUID.randomUUID(), UserType.MASTER)))
+				.isInstanceOf(CategoryValidationException.class)
+				.hasMessageContaining("이름");
+	}
+
+	@Test
+	void update_codeConflict() {
+		MentoringCategory first = categoryRepository.save(createActive(0));
+		MentoringCategory second = categoryRepository.save(createActive(1));
+
+		assertThatThrownBy(() -> categoryService.updateCategory(
+				new CategoryCommand.Update(first.getMentoringCategoryId(), first.getName(),
+						second.getCode(), UUID.randomUUID(), UserType.MASTER)))
+				.isInstanceOf(CategoryValidationException.class)
+				.hasMessageContaining("코드");
+	}
+
+	@Test
+	void update_notFound() {
+		MentoringCategoryId id = new MentoringCategoryId(UUID.randomUUID());
+
+		assertThatThrownBy(() -> categoryService.updateCategory(
+				new CategoryCommand.Update(id, "Name", "CODE", UUID.randomUUID(), UserType.MASTER)))
+				.isInstanceOf(CategoryNotFoundException.class);
+	}
+
+	// ── deleteCategory ────────────────────────────────────────────────────────
+
+	@Test
+	void delete_success() {
+		MentoringCategory category = categoryRepository.save(createActive(0));
+
+		categoryService.deleteCategory(
+				new CategoryCommand.Delete(UUID.randomUUID(), UserType.MASTER,
+						category.getMentoringCategoryId()));
+
+		assertThat(category.isActive()).isFalse();
+		assertThat(category.getSortOrder()).isNull();
+	}
+
+	@Test
+	void delete_notFound() {
+		MentoringCategoryId id = new MentoringCategoryId(UUID.randomUUID());
+
+		assertThatThrownBy(() -> categoryService.deleteCategory(
+				new CategoryCommand.Delete(UUID.randomUUID(), UserType.MASTER, id)))
+				.isInstanceOf(CategoryNotFoundException.class);
+	}
+
+	@Test
+	void delete_forbidden_if_not_master() {
+		MentoringCategory category = categoryRepository.save(createActive(0));
+
+		assertThatThrownBy(() -> categoryService.deleteCategory(
+				new CategoryCommand.Delete(UUID.randomUUID(), UserType.INSTRUCTOR,
+						category.getMentoringCategoryId())))
 				.isInstanceOf(ForbiddenException.class);
 	}
 }

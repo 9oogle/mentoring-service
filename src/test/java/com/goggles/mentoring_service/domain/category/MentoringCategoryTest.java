@@ -2,7 +2,6 @@ package com.goggles.mentoring_service.domain.category;
 
 import com.goggles.common.exception.ForbiddenException;
 import com.goggles.mentoring_service.domain._common.UserType;
-import com.goggles.mentoring_service.domain.category.exception.InactiveCategoryCannotMoveException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -34,7 +33,7 @@ class MentoringCategoryTest {
 	}
 
 	@Test
-	void create_throws_forbidden_when_not_master() {
+	void create_forbidden_if_not_master() {
 		assertThatThrownBy(
 				() -> MentoringCategory.create(UUID.randomUUID(), UserType.INSTRUCTOR, "Java", "JAVA"))
 				.isInstanceOf(ForbiddenException.class);
@@ -43,7 +42,7 @@ class MentoringCategoryTest {
 	// ── activate / deactivate ────────────────────────────────────────────────
 
 	@Test
-	void activate_sets_active_and_sort_order() {
+	void activate_success() {
 		MentoringCategory category = MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
 
 		category.activate(adminId, UserType.MASTER, 2);
@@ -53,7 +52,7 @@ class MentoringCategoryTest {
 	}
 
 	@Test
-	void deactivate_clears_active_and_sort_order() {
+	void deactivate_success() {
 		MentoringCategory category = MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
 		category.activate(adminId, UserType.MASTER, 2);
 
@@ -66,7 +65,7 @@ class MentoringCategoryTest {
 	// ── move ─────────────────────────────────────────────────────────────────
 
 	@Test
-	void move_updates_sort_order_when_active() {
+	void move_success() {
 		MentoringCategory category = MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
 		category.activate(adminId, UserType.MASTER, 0);
 
@@ -76,7 +75,7 @@ class MentoringCategoryTest {
 	}
 
 	@Test
-	void move_throws_when_inactive() {
+	void move_throws_if_inactive() {
 		MentoringCategory category = MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
 
 		assertThatThrownBy(() -> category.move(adminId, UserType.MASTER, 1))
@@ -96,7 +95,7 @@ class MentoringCategoryTest {
 	}
 
 	@Test
-	void updateNameAndCode_throws_forbidden_when_not_master() {
+	void updateNameAndCode_forbidden_if_not_master() {
 		MentoringCategory category = MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
 
 		assertThatThrownBy(
@@ -107,7 +106,7 @@ class MentoringCategoryTest {
 	// ── softDelete ───────────────────────────────────────────────────────────
 
 	@Test
-	void softDelete_sets_inactive_and_null_sort_order() {
+	void softDelete_success() {
 		MentoringCategory category = MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
 		category.activate(adminId, UserType.MASTER, 1);
 
@@ -118,7 +117,7 @@ class MentoringCategoryTest {
 	}
 
 	@Test
-	void softDelete_throws_forbidden_when_not_master() {
+	void softDelete_forbidden_if_not_master() {
 		MentoringCategory category = MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
 
 		assertThatThrownBy(

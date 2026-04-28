@@ -1,15 +1,12 @@
 package com.goggles.mentoring_service.presentation.dto;
 
 import com.goggles.mentoring_service.application.command.CategoryCommand;
-import com.goggles.mentoring_service.application.command.MentoringCommand;
-import com.goggles.mentoring_service.application.command.SessionSlot;
-import com.goggles.mentoring_service.application.command.TimeSchedules;
 import com.goggles.mentoring_service.domain.category.MentoringCategoryId;
-import com.goggles.mentoring_service.domain.mentoring.Format;
-import com.goggles.mentoring_service.domain.mentoring.MentoringDuration;
-import com.goggles.mentoring_service.domain.mentoring.MentoringType;
 import com.goggles.mentoring_service.presentation.support.UserContext;
 import jakarta.validation.constraints.*;
+
+import java.util.List;
+import java.util.UUID;
 
 
 public class CategoryRequest {
