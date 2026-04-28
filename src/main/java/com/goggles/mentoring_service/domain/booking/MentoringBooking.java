@@ -77,10 +77,10 @@ public class MentoringBooking extends BaseAudit {
     this.status = BookingStatus.PAYMENT_COMPLETED;
   }
 
-  public void failPayment(String failureReason) {
+  public void failPayment(String failureReason, LocalDateTime now) {
     validateStatus(BookingStatus.PAYMENT_FAILED);
     this.status = BookingStatus.PAYMENT_FAILED;
-    this.closure = BookingClosure.close(mentee.getId(), failureReason, LocalDateTime.now());
+    this.closure = BookingClosure.close(mentee.getId(), failureReason,now );
   }
 
   public void accept(UUID userId, UserType userType) {

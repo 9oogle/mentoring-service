@@ -58,7 +58,7 @@ class MentoringBookingTest {
   @Test
   void failPayment_success() {
     MentoringBooking booking = pendingBooking();
-    booking.failPayment( "결제 실패 사유");
+    booking.failPayment( "결제 실패 사유", LocalDateTime.now());
 
     assertThat(booking.getStatus()).isEqualTo(BookingStatus.PAYMENT_FAILED);
   }
