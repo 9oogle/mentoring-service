@@ -39,4 +39,8 @@ public class MentoringPolicyViolationException extends MentoringValidationExcept
 	public static MentoringPolicyViolationException generateSessionsOnlyForAutoRepeat() {
 		return new MentoringPolicyViolationException("세션 자동 생성은 MULTI 포맷 멘토링만 가능합니다.");
 	}
+
+	public static MentoringPolicyViolationException noPermissionToDeactivate() {
+		return new MentoringPolicyViolationException("멘토링을 비활성화할 권한이 없습니다.");
+	}
 }

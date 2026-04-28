@@ -47,4 +47,7 @@ public class Mentor {
 		}
 	}
 
+	public boolean isSameUser(UUID userId, UserType userType) {
+		return this.id.equals(userId) && userType == ALLOWED_USER_TYPE;
+	}
 }

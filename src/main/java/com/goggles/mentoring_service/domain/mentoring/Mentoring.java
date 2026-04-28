@@ -165,10 +165,16 @@ public class Mentoring extends BaseAudit {
 		this.status = MentoringStatus.ACTIVE;
 	}
 
-	public void deactivate() {
+	public void deactivate(UUID userId, UserType userType) {
+		checkIfUserIsOwnerOrManager(userId, userType);
 		this.status = MentoringStatus.INACTIVE;
 	}
 
+	private void checkIfUserIsOwnerOrManager(UUID userId, UserType userType) {
+		if (!mentor.isSameUser(userId, userType) && userType != UserType.MASTER) {
+			throw MentoringPolicyViolationException.noPermissionToDeactivate();
+		}
+	}
 
 	public void updateInfo(UUID userId, UserType userType, String title, String subtitle,
 			String description, Integer price, LocalDate endDate, List<RepeatPattern> newPatterns) {

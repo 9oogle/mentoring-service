@@ -79,6 +79,10 @@ public class MentoringService {
 	}
 
 
+	public void deactivateMentoring(UUID mentoringId, UUID userId, UserType userType) {
+		Mentoring mentoring = getOrThrow(mentoringId);
+		mentoring.deactivate(userId, userType);
+	}
 	private Mentoring getOrThrow(UUID mentoringId) {
 		MentoringId id = new MentoringId(mentoringId);
 		return mentoringRepository.findById(id)
