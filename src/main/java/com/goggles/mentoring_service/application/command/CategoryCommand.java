@@ -15,6 +15,7 @@ public class CategoryCommand {
 	public record Create(String title, String code, int sortOrder, UUID creatorId,
 						 UserType creatorType) {}
 
+	public record UpdateActive(UUID userId, UserType userType, List<MentoringCategoryId> categoryIds) {}
 
 	public record Update(MentoringCategoryId mentoringCategoryId, String name, String code,
 						 UUID userId, UserType userType) {

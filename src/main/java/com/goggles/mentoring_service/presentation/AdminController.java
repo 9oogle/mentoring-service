@@ -38,6 +38,13 @@ public class AdminController {
 		return new CategoryResponse.Create(categoryId);
 	}
 
+	@PutMapping("mentoring-categories/active")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void updateActiveCategories(UserContext userContext,
+			@Valid @RequestBody CategoryRequest.UpdateActive request) {
+		categoryService.updateActiveCategories(request.toCommand(userContext));
+	}
+
 	@PatchMapping("mentoring-categories/{categoryId}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void updateCategory(UserContext userContext, @PathVariable UUID categoryId,

@@ -29,4 +29,14 @@ public class CategoryRequest {
 			return new CategoryCommand.Update(mentoringCategoryId, title(), code(), userContext);
 		}
 	}
+
+	public record UpdateActive(@NotNull List<UUID> categoryIds) {
+		public CategoryCommand.UpdateActive toCommand(UserContext userContext) {
+			List<MentoringCategoryId> categoryIds = categoryIds().stream()
+					.map(MentoringCategoryId::new)
+					.toList();
+			return new CategoryCommand.UpdateActive(userContext.userId(), userContext.userType(),
+					categoryIds);
+		}
+	}
 }
