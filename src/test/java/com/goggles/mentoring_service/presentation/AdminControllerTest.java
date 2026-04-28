@@ -52,31 +52,31 @@ class AdminControllerTest {
                     null,
                     false)));
 
-    mockMvc
-        .perform(get("/api/v1/admin/mentorings-categories").headers(headersFor(UserType.MASTER)))
-        .andDo(print())
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.categories").isArray())
-        .andExpect(jsonPath("$.categories.length()").value(2))
-        .andExpect(jsonPath("$.categories[0].categoryId").value(activeId.toString()))
-        .andExpect(jsonPath("$.categories[0].name").value(activeName))
-        .andExpect(jsonPath("$.categories[0].active").value(true))
-        .andExpect(jsonPath("$.categories[0].sortOrder").value(0))
-        .andExpect(jsonPath("$.categories[1].active").value(false))
-        .andExpect(jsonPath("$.categories[1].sortOrder").isEmpty());
-  }
+		mockMvc.perform(
+						get("/api/v1/admin/mentoring-categories").headers(headersFor(UserType.MASTER)))
+				.andDo(print())
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.categories").isArray())
+				.andExpect(jsonPath("$.categories.length()").value(2))
+				.andExpect(jsonPath("$.categories[0].categoryId").value(activeId.toString()))
+				.andExpect(jsonPath("$.categories[0].name").value(activeName))
+				.andExpect(jsonPath("$.categories[0].active").value(true))
+				.andExpect(jsonPath("$.categories[0].sortOrder").value(0))
+				.andExpect(jsonPath("$.categories[1].active").value(false))
+				.andExpect(jsonPath("$.categories[1].sortOrder").isEmpty());
+	}
 
   @Test
   void getAllCategories_forbidden_if_not_master() throws Exception {
     String errorMessage = "관리자 권한이 필요합니다.";
     willThrow(new ForbiddenException(errorMessage)).given(categoryService).getAllCategories(any());
 
-    mockMvc
-        .perform(
-            get("/api/v1/admin/mentorings-categories").headers(headersFor(UserType.INSTRUCTOR)))
-        .andDo(print())
-        .andExpect(status().isForbidden())
-        .andExpect(jsonPath("$.title").value("Forbidden"))
-        .andExpect(jsonPath("$.detail").value(errorMessage));
-  }
+		mockMvc.perform(
+						get("/api/v1/admin/mentoring-categories").headers(headersFor(UserType.INSTRUCTOR)))
+				.andDo(print())
+				.andExpect(status().isForbidden())
+				.andExpect(jsonPath("$.title").value("Forbidden"))
+				.andExpect(jsonPath("$.detail").value(errorMessage));
+	}
+
 }

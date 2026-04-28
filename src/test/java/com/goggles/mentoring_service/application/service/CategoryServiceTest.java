@@ -19,7 +19,10 @@ import static com.goggles.mentoring_service.domain.category.CategoryFixture.crea
 import static com.goggles.mentoring_service.domain.category.CategoryFixture.createInactive;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
 class CategoryServiceTest {
@@ -84,12 +87,33 @@ class CategoryServiceTest {
 				.getSortOrder()).isNull();
 	}
 
-  @Test
-  void getAllCategories_forbidden_if_not_master() {
-    assertThatThrownBy(
-            () ->
-                categoryService.getAllCategories(
-                    new CategoryCommand.GetList(UUID.randomUUID(), UserType.INSTRUCTOR)))
-        .isInstanceOf(ForbiddenException.class);
-  }
+	@Test
+	void getAllCategories_throws_forbidden_when_not_master() {
+		assertThatThrownBy(() -> categoryService.getAllCategories(
+				new CategoryCommand.GetList(UUID.randomUUID(), UserType.INSTRUCTOR))).isInstanceOf(
+				ForbiddenException.class);
+	}
+
+	// ── createCategory ────────────────────────────────────────────────────────
+
+	@Test
+	void createCategory_success_when_master() {
+		CategoryCommand.Create command = new CategoryCommand.Create("Java", "JAVA", 0,
+				UUID.randomUUID(), UserType.MASTER);
+
+		UUID result = categoryService.createCategory(command);
+
+		verify(categoryRepository).save(any(MentoringCategory.class));
+		assertThat(result).isNotNull();
+	}
+
+	@Test
+	void createCategory_throws_forbidden_when_not_master() {
+		CategoryCommand.Create command = new CategoryCommand.Create("Java", "JAVA", 0,
+				UUID.randomUUID(), UserType.INSTRUCTOR);
+
+		assertThatThrownBy(() -> categoryService.createCategory(command))
+				.isInstanceOf(ForbiddenException.class);
+		verifyNoInteractions(categoryRepository);
+	}
 }

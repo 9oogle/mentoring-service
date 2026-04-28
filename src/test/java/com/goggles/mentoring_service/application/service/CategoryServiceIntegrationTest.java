@@ -6,6 +6,7 @@ import com.goggles.mentoring_service.application.result.CategoryResult;
 import com.goggles.mentoring_service.config.TestAuditConfig;
 import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.category.MentoringCategory;
+import com.goggles.mentoring_service.domain.category.MentoringCategoryId;
 import com.goggles.mentoring_service.domain.category.repository.MentoringCategoryRepository;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -107,5 +108,31 @@ class CategoryServiceIntegrationTest {
 		assertThatThrownBy(() -> categoryService.getAllCategories(
 				new CategoryCommand.GetList(UUID.randomUUID(), UserType.INSTRUCTOR))).isInstanceOf(
 				ForbiddenException.class);
+	}
+
+	// ── createCategory ────────────────────────────────────────────────────────
+
+	@Test
+	void createCategory_saves_inactive_category() {
+		CategoryCommand.Create command = new CategoryCommand.Create("Java", "JAVA", 0,
+				UUID.randomUUID(), UserType.MASTER);
+
+		UUID categoryId = categoryService.createCategory(command);
+
+		MentoringCategory saved = categoryRepository.findById(new MentoringCategoryId(categoryId))
+				.orElseThrow();
+		assertThat(saved.getName()).isEqualTo("Java");
+		assertThat(saved.getCode()).isEqualTo("JAVA");
+		assertThat(saved.isActive()).isFalse();
+		assertThat(saved.getSortOrder()).isNull();
+	}
+
+	@Test
+	void createCategory_throws_forbidden_when_not_master() {
+		CategoryCommand.Create command = new CategoryCommand.Create("Java", "JAVA", 0,
+				UUID.randomUUID(), UserType.INSTRUCTOR);
+
+		assertThatThrownBy(() -> categoryService.createCategory(command))
+				.isInstanceOf(ForbiddenException.class);
 	}
 }
