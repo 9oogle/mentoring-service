@@ -17,13 +17,13 @@ import com.goggles.mentoring_service.presentation.support.UserContextArgumentRes
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -76,7 +76,7 @@ class BookingControllerTest {
 	@Test
 	void createBooking_fails_without_mentoringId() throws Exception {
 		String body = """
-				{"bookingTimeSlots":[{"date":"2026-06-01","startTime":"10:00:00","endTime":"11:00:00"}]}
+				{"timeSlots":[{"date":"2026-06-01","startTime":"10:00:00","endTime":"11:00:00"}]}
 				""";
 		mockMvc.perform(post("/api/v1/mentoring-bookings").contentType(MediaType.APPLICATION_JSON)
 						.headers(TestHeaders.headersFor(UserType.STUDENT))

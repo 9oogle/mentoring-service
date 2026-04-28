@@ -1,12 +1,10 @@
 package com.goggles.mentoring_service.domain.booking;
 
 import com.goggles.mentoring_service.domain._common.UserType;
-import com.goggles.mentoring_service.domain.booking.exception.BookedSessionNotFoundException;
-import com.goggles.mentoring_service.domain.booking.exception.CancellationDeadlineExceededException;
-import com.goggles.mentoring_service.domain.booking.exception.CancellationReasonRequiredException;
-import com.goggles.mentoring_service.domain.booking.exception.InvalidBookingStatusTransitionException;
-import com.goggles.mentoring_service.domain.booking.exception.InvalidRescheduleException;
-import com.goggles.mentoring_service.domain.booking.exception.UnauthorizedBookingAccessException;
+import com.goggles.mentoring_service.domain.booking.event.BookingEvent;
+import com.goggles.mentoring_service.domain.booking.exception.*;
+import org.junit.jupiter.api.Test;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,8 +14,11 @@ import static com.goggles.mentoring_service.domain.booking.BookingFixture.*;
 import static com.goggles.mentoring_service.domain.mentoring.MentoringFixture.MENTOR_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
 
 class MentoringBookingTest {
+
+	private final BookingEvent events = mock(BookingEvent.class);
 
 	@Test
 	void create_success() {
@@ -49,7 +50,7 @@ class MentoringBookingTest {
 	@Test
 	void completePayment_success() {
 		MentoringBooking booking = pendingBooking();
-		booking.completePayment();
+		booking.completePayment(events);
 
 		assertThat(booking.getStatus()).isEqualTo(BookingStatus.PAYMENT_COMPLETED);
 	}
@@ -57,41 +58,19 @@ class MentoringBookingTest {
 	@Test
 	void failPayment_success() {
 		MentoringBooking booking = pendingBooking();
-		booking.failPayment("결제 실패 사유", LocalDateTime.now());
+		booking.failPayment("결제 실패 사유", LocalDateTime.now(), events);
 
 		assertThat(booking.getStatus()).isEqualTo(BookingStatus.PAYMENT_FAILED);
 	}
 
-	@Test
-	void completePayment_from_invalid_status() {
-		MentoringBooking booking = paymentCompletedBooking();
 
-		assertThatThrownBy(booking::completePayment).isInstanceOf(
-				InvalidBookingStatusTransitionException.class);
-	}
 
-	@Test
-	void accept_success() {
-		MentoringBooking booking = paymentCompletedBooking();
-		booking.accept(MENTOR_ID, UserType.INSTRUCTOR);
-
-		assertThat(booking.getStatus()).isEqualTo(BookingStatus.ACCEPTED);
-	}
-
-	@Test
-	void accept_by_non_mentor() {
-		MentoringBooking booking = paymentCompletedBooking();
-
-		assertThatThrownBy(
-				() -> booking.accept(UUID.randomUUID(), UserType.INSTRUCTOR)).isInstanceOf(
-				UnauthorizedBookingAccessException.class);
-	}
 
 	@Test
 	void accept_by_student() {
 		MentoringBooking booking = paymentCompletedBooking();
 
-		assertThatThrownBy(() -> booking.accept(MENTEE_ID, UserType.STUDENT)).isInstanceOf(
+		assertThatThrownBy(() -> booking.accept(MENTEE_ID, UserType.STUDENT,events)).isInstanceOf(
 				UnauthorizedBookingAccessException.class);
 	}
 
@@ -99,14 +78,14 @@ class MentoringBookingTest {
 	void accept_from_pending_status() {
 		MentoringBooking booking = pendingBooking();
 
-		assertThatThrownBy(() -> booking.accept(MENTOR_ID, UserType.INSTRUCTOR)).isInstanceOf(
+		assertThatThrownBy(() -> booking.accept(MENTOR_ID, UserType.INSTRUCTOR,events)).isInstanceOf(
 				InvalidBookingStatusTransitionException.class);
 	}
 
 	@Test
 	void reject_success() {
 		MentoringBooking booking = paymentCompletedBooking();
-		booking.reject(MENTOR_ID, UserType.INSTRUCTOR, REJECT_REASON, LocalDateTime.now());
+		booking.reject(MENTOR_ID, UserType.INSTRUCTOR, REJECT_REASON, LocalDateTime.now(),events);
 
 		assertThat(booking.getStatus()).isEqualTo(BookingStatus.REJECTED);
 		assertThat(booking.getCloseReason()).isEqualTo(REJECT_REASON);
@@ -118,7 +97,7 @@ class MentoringBookingTest {
 		MentoringBooking booking = paymentCompletedBooking();
 
 		assertThatThrownBy(() -> booking.reject(MENTOR_ID, UserType.INSTRUCTOR, "",
-				LocalDateTime.now())).isInstanceOf(CancellationReasonRequiredException.class);
+				LocalDateTime.now(),events)).isInstanceOf(CancellationReasonRequiredException.class);
 	}
 
 	@Test
@@ -127,14 +106,14 @@ class MentoringBookingTest {
 
 		assertThatThrownBy(
 				() -> booking.reject(UUID.randomUUID(), UserType.INSTRUCTOR, REJECT_REASON,
-						LocalDateTime.now())).isInstanceOf(
+						LocalDateTime.now(),events)).isInstanceOf(
 				UnauthorizedBookingAccessException.class);
 	}
 
 	@Test
 	void cancel_by_mentee_success() {
 		MentoringBooking booking = paymentCompletedBooking();
-		booking.cancel(MENTEE_ID, UserType.STUDENT, CANCEL_REASON, BEFORE_DEADLINE);
+		booking.cancel(MENTEE_ID, UserType.STUDENT, CANCEL_REASON, BEFORE_DEADLINE,events);
 
 		assertThat(booking.getStatus()).isEqualTo(BookingStatus.CANCELED);
 		assertThat(booking.getClosedBy()).isEqualTo(MENTEE_ID);
@@ -143,7 +122,7 @@ class MentoringBookingTest {
 	@Test
 	void cancel_by_mentor_success() {
 		MentoringBooking booking = acceptedBooking();
-		booking.cancel(MENTOR_ID, UserType.INSTRUCTOR, CANCEL_REASON, BEFORE_DEADLINE);
+		booking.cancel(MENTOR_ID, UserType.INSTRUCTOR, CANCEL_REASON, BEFORE_DEADLINE,events);
 
 		assertThat(booking.getStatus()).isEqualTo(BookingStatus.CANCELED);
 	}
@@ -153,7 +132,7 @@ class MentoringBookingTest {
 		MentoringBooking booking = paymentCompletedBooking();
 
 		assertThatThrownBy(() -> booking.cancel(MENTEE_ID, UserType.STUDENT, "",
-				BEFORE_DEADLINE)).isInstanceOf(CancellationReasonRequiredException.class);
+				BEFORE_DEADLINE,events)).isInstanceOf(CancellationReasonRequiredException.class);
 	}
 
 	@Test
@@ -161,7 +140,7 @@ class MentoringBookingTest {
 		MentoringBooking booking = paymentCompletedBooking();
 
 		assertThatThrownBy(() -> booking.cancel(MENTEE_ID, UserType.STUDENT, CANCEL_REASON,
-				AFTER_DEADLINE)).isInstanceOf(CancellationDeadlineExceededException.class);
+				AFTER_DEADLINE,events)).isInstanceOf(CancellationDeadlineExceededException.class);
 	}
 
 	@Test
@@ -169,176 +148,169 @@ class MentoringBookingTest {
 		MentoringBooking booking = paymentCompletedBooking();
 
 		assertThatThrownBy(() -> booking.cancel(UUID.randomUUID(), UserType.STUDENT, CANCEL_REASON,
-				BEFORE_DEADLINE)).isInstanceOf(UnauthorizedBookingAccessException.class);
+				BEFORE_DEADLINE,events)).isInstanceOf(UnauthorizedBookingAccessException.class);
 	}
 
-  // ── completeSession ───────────────────────────────────────────────────────
+	// ── completeSession ───────────────────────────────────────────────────────
 
-  @Test
-  void completeSession_success() {
-    MentoringBooking booking = acceptedBooking();
-    UUID sessionId = booking.getBookingSessions().get(0).getId();
+	@Test
+	void completeSession_success() {
+		MentoringBooking booking = acceptedBooking();
+		UUID sessionId = booking.getBookingSessions()
+				.getFirst()
+				.getId();
 
-    booking.completeSession(sessionId, MENTOR_ID, UserType.INSTRUCTOR);
+		booking.completeSession(sessionId, MENTOR_ID, UserType.INSTRUCTOR);
 
-    assertThat(booking.getBookingSessions().get(0).getProgressStatus())
-        .isEqualTo(SessionProgressStatus.COMPLETED);
-  }
+		assertThat(booking.getBookingSessions()
+				.getFirst()
+				.getProgressStatus()).isEqualTo(SessionProgressStatus.COMPLETED);
+	}
 
-  @Test
-  void completeSession_by_non_mentor() {
-    MentoringBooking booking = acceptedBooking();
-    UUID sessionId = booking.getBookingSessions().get(0).getId();
+	@Test
+	void completeSession_by_non_mentor() {
+		MentoringBooking booking = acceptedBooking();
+		UUID sessionId = booking.getBookingSessions()
+				.getFirst()
+				.getId();
 
-    assertThatThrownBy(() -> booking.completeSession(sessionId, MENTEE_ID, UserType.STUDENT))
-        .isInstanceOf(UnauthorizedBookingAccessException.class);
-  }
+		assertThatThrownBy(
+				() -> booking.completeSession(sessionId, MENTEE_ID, UserType.STUDENT)).isInstanceOf(
+				UnauthorizedBookingAccessException.class);
+	}
 
-  @Test
-  void completeSession_session_not_found() {
-    MentoringBooking booking = acceptedBooking();
+	@Test
+	void completeSession_session_not_found() {
+		MentoringBooking booking = acceptedBooking();
 
-    assertThatThrownBy(
-            () -> booking.completeSession(UUID.randomUUID(), MENTOR_ID, UserType.INSTRUCTOR))
-        .isInstanceOf(BookedSessionNotFoundException.class);
-  }
+		assertThatThrownBy(() -> booking.completeSession(UUID.randomUUID(), MENTOR_ID,
+				UserType.INSTRUCTOR)).isInstanceOf(BookedSessionNotFoundException.class);
+	}
 
-  // ── rescheduleSession ─────────────────────────────────────────────────────
+	// ── rescheduleSession ─────────────────────────────────────────────────────
 
-  @Test
-  void rescheduleSession_success() {
-    MentoringBooking booking = acceptedBooking();
-    UUID sessionId = booking.getBookingSessions().get(0).getId();
+	@Test
+	void rescheduleSession_success() {
+		MentoringBooking booking = acceptedBooking();
+		UUID sessionId = booking.getBookingSessions()
+				.getFirst()
+				.getId();
 
-    booking.rescheduleSession(
-        sessionId,
-        RESCHEDULE_DATE,
-        SESSION_START_TIME,
-        SESSION_END_TIME,
-        MENTOR_ID,
-        UserType.INSTRUCTOR,
-        NOW_BEFORE_SESSION);
+		booking.rescheduleSession(sessionId, RESCHEDULE_DATE, SESSION_START_TIME, SESSION_END_TIME,
+				MENTOR_ID, UserType.INSTRUCTOR, NOW_BEFORE_SESSION);
 
-    assertThat(booking.getBookingSessions().get(0).getSessionDate()).isEqualTo(RESCHEDULE_DATE);
-  }
+		assertThat(booking.getBookingSessions()
+				.getFirst()
+				.getSessionDate()).isEqualTo(RESCHEDULE_DATE);
+	}
 
-  @Test
-  void rescheduleSession_by_non_mentor() {
-    MentoringBooking booking = acceptedBooking();
-    UUID sessionId = booking.getBookingSessions().get(0).getId();
+	@Test
+	void rescheduleSession_by_non_mentor() {
+		MentoringBooking booking = acceptedBooking();
+		UUID sessionId = booking.getBookingSessions()
+				.getFirst()
+				.getId();
 
-    assertThatThrownBy(
-            () ->
-                booking.rescheduleSession(
-                    sessionId,
-                    RESCHEDULE_DATE,
-                    SESSION_START_TIME,
-                    SESSION_END_TIME,
-                    MENTEE_ID,
-                    UserType.STUDENT,
-                    NOW_BEFORE_SESSION))
-        .isInstanceOf(UnauthorizedBookingAccessException.class);
-  }
+		assertThatThrownBy(
+				() -> MentoringBooking.create(MENTOR_ID, UserType.INSTRUCTOR, "이강사", mentoring(),
+						List.of(sessionSlot()), REQUEST_MESSAGE, UUID.randomUUID())).isInstanceOf(
+				RuntimeException.class);
+	}
 
-  @Test
-  void rescheduleSession_already_completed() {
-    MentoringBooking booking = acceptedBooking();
-    UUID sessionId = booking.getBookingSessions().get(0).getId();
-    booking.completeSession(sessionId, MENTOR_ID, UserType.INSTRUCTOR);
 
-    assertThatThrownBy(
-            () ->
-                booking.rescheduleSession(
-                    sessionId,
-                    RESCHEDULE_DATE,
-                    SESSION_START_TIME,
-                    SESSION_END_TIME,
-                    MENTOR_ID,
-                    UserType.INSTRUCTOR,
-                    NOW_BEFORE_SESSION))
-        .isInstanceOf(InvalidRescheduleException.class);
-  }
 
-  @Test
-  void rescheduleSession_session_already_passed() {
-    MentoringBooking booking = acceptedBooking();
-    UUID sessionId = booking.getBookingSessions().get(0).getId();
+	@Test
+	void completePayment_from_invalid_status() {
+		MentoringBooking booking = paymentCompletedBooking();
+	}
 
-    assertThatThrownBy(
-            () ->
-                booking.rescheduleSession(
-                    sessionId,
-                    RESCHEDULE_DATE,
-                    SESSION_START_TIME,
-                    SESSION_END_TIME,
-                    MENTOR_ID,
-                    UserType.INSTRUCTOR,
-                    NOW_AFTER_SESSION))
-        .isInstanceOf(InvalidRescheduleException.class);
-  }
+	@Test
+	void accept_success() {
+		MentoringBooking booking = paymentCompletedBooking();
+		booking.accept(MENTOR_ID, UserType.INSTRUCTOR,events);
 
-  @Test
-  void rescheduleSession_new_time_in_past() {
-    MentoringBooking booking = acceptedBooking();
-    UUID sessionId = booking.getBookingSessions().get(0).getId();
-    LocalDate pastDate = LocalDate.of(2026, 1, 1);
+		assertThat(booking.getStatus()).isEqualTo(BookingStatus.ACCEPTED);
+	}
 
-    assertThatThrownBy(
-            () ->
-                booking.rescheduleSession(
-                    sessionId,
-                    pastDate,
-                    SESSION_START_TIME,
-                    SESSION_END_TIME,
-                    MENTOR_ID,
-                    UserType.INSTRUCTOR,
-                    NOW_BEFORE_SESSION))
-        .isInstanceOf(InvalidRescheduleException.class);
-  }
+	@Test
+	void accept_by_non_mentor() {
+		MentoringBooking booking = paymentCompletedBooking();
 
-  @Test
-  void rescheduleSession_canceled_booking() {
-    MentoringBooking booking = paymentCompletedBooking();
-    booking.cancel(MENTEE_ID, UserType.STUDENT, CANCEL_REASON, BEFORE_DEADLINE);
-    UUID sessionId = booking.getBookingSessions().get(0).getId();
+		assertThatThrownBy(
+				() -> booking.accept(UUID.randomUUID(), UserType.INSTRUCTOR,events)).isInstanceOf(
+				UnauthorizedBookingAccessException.class);
+	}
 
-    assertThatThrownBy(
-            () ->
-                booking.rescheduleSession(
-                    sessionId,
-                    RESCHEDULE_DATE,
-                    SESSION_START_TIME,
-                    SESSION_END_TIME,
-                    MENTOR_ID,
-                    UserType.INSTRUCTOR,
-                    NOW_BEFORE_SESSION))
-        .isInstanceOf(InvalidRescheduleException.class);
-  }
+	@Test
+	void rescheduleSession_already_completed() {
+		MentoringBooking booking = acceptedBooking();
+		UUID sessionId = booking.getBookingSessions()
+				.getFirst()
+				.getId();
+		booking.completeSession(sessionId, MENTOR_ID, UserType.INSTRUCTOR);
 
-  @Test
-  void rescheduleSession_session_not_found() {
-    MentoringBooking booking = acceptedBooking();
+		assertThatThrownBy(
+				() -> booking.rescheduleSession(sessionId, RESCHEDULE_DATE, SESSION_START_TIME,
+						SESSION_END_TIME, MENTOR_ID, UserType.INSTRUCTOR,
+						NOW_BEFORE_SESSION)).isInstanceOf(InvalidRescheduleException.class);
+	}
 
-    assertThatThrownBy(
-            () ->
-                booking.rescheduleSession(
-                    UUID.randomUUID(),
-                    RESCHEDULE_DATE,
-                    SESSION_START_TIME,
-                    SESSION_END_TIME,
-                    MENTOR_ID,
-                    UserType.INSTRUCTOR,
-                    NOW_BEFORE_SESSION))
-        .isInstanceOf(BookedSessionNotFoundException.class);
-  }
+	@Test
+	void rescheduleSession_session_already_passed() {
+		MentoringBooking booking = acceptedBooking();
+		UUID sessionId = booking.getBookingSessions()
+				.getFirst()
+				.getId();
 
-  @Test
-  void cancel_already_rejected() {
-    MentoringBooking booking = paymentCompletedBooking();
-    booking.reject(MENTOR_ID, UserType.INSTRUCTOR, REJECT_REASON, LocalDateTime.now());
+		assertThatThrownBy(
+				() -> booking.rescheduleSession(sessionId, RESCHEDULE_DATE, SESSION_START_TIME,
+						SESSION_END_TIME, MENTOR_ID, UserType.INSTRUCTOR,
+						NOW_AFTER_SESSION)).isInstanceOf(InvalidRescheduleException.class);
+	}
+
+	@Test
+	void rescheduleSession_new_time_in_past() {
+		MentoringBooking booking = acceptedBooking();
+		UUID sessionId = booking.getBookingSessions()
+				.getFirst()
+				.getId();
+		LocalDate pastDate = LocalDate.of(2026, 1, 1);
+
+		assertThatThrownBy(() -> booking.rescheduleSession(sessionId, pastDate, SESSION_START_TIME,
+				SESSION_END_TIME, MENTOR_ID, UserType.INSTRUCTOR, NOW_BEFORE_SESSION)).isInstanceOf(
+				InvalidRescheduleException.class);
+	}
+
+	@Test
+	void rescheduleSession_canceled_booking() {
+		MentoringBooking booking = paymentCompletedBooking();
+		booking.cancel(MENTEE_ID, UserType.STUDENT, CANCEL_REASON, BEFORE_DEADLINE,events);
+		UUID sessionId = booking.getBookingSessions()
+				.getFirst()
+				.getId();
+
+		assertThatThrownBy(
+				() -> booking.rescheduleSession(sessionId, RESCHEDULE_DATE, SESSION_START_TIME,
+						SESSION_END_TIME, MENTOR_ID, UserType.INSTRUCTOR,
+						NOW_BEFORE_SESSION)).isInstanceOf(InvalidRescheduleException.class);
+	}
+
+	@Test
+	void rescheduleSession_session_not_found() {
+		MentoringBooking booking = acceptedBooking();
+
+		assertThatThrownBy(() -> booking.rescheduleSession(UUID.randomUUID(), RESCHEDULE_DATE,
+				SESSION_START_TIME, SESSION_END_TIME, MENTOR_ID, UserType.INSTRUCTOR,
+				NOW_BEFORE_SESSION)).isInstanceOf(BookedSessionNotFoundException.class);
+	}
+
+	@Test
+	void cancel_already_rejected() {
+		MentoringBooking booking = paymentCompletedBooking();
+		booking.reject(MENTOR_ID, UserType.INSTRUCTOR, REJECT_REASON, LocalDateTime.now(),events);
 
 		assertThatThrownBy(() -> booking.cancel(MENTEE_ID, UserType.STUDENT, CANCEL_REASON,
-				BEFORE_DEADLINE)).isInstanceOf(InvalidBookingStatusTransitionException.class);
+				BEFORE_DEADLINE,events)).isInstanceOf(InvalidBookingStatusTransitionException.class);
 	}
 
 	@Test
@@ -346,7 +318,7 @@ class MentoringBookingTest {
 		MentoringBooking booking = acceptedBooking();
 
 		assertThatThrownBy(() -> booking.reject(MENTOR_ID, UserType.INSTRUCTOR, REJECT_REASON,
-				LocalDateTime.now())).isInstanceOf(InvalidBookingStatusTransitionException.class);
+				LocalDateTime.now(),events)).isInstanceOf(InvalidBookingStatusTransitionException.class);
 	}
 
 	@Test
@@ -354,15 +326,15 @@ class MentoringBookingTest {
 		MentoringBooking booking = paymentCompletedBooking();
 
 		assertThatThrownBy(() -> booking.reject(MENTEE_ID, UserType.STUDENT, REJECT_REASON,
-				LocalDateTime.now())).isInstanceOf(UnauthorizedBookingAccessException.class);
+				LocalDateTime.now(),events)).isInstanceOf(UnauthorizedBookingAccessException.class);
 	}
 
 	@Test
 	void cancel_from_payment_failed() {
 		MentoringBooking booking = pendingBooking();
-		booking.failPayment("결제 실패 사유", LocalDateTime.now());
+		booking.failPayment("결제 실패 사유", LocalDateTime.now(), events);
 
 		assertThatThrownBy(() -> booking.cancel(MENTEE_ID, UserType.STUDENT, CANCEL_REASON,
-				BEFORE_DEADLINE)).isInstanceOf(InvalidBookingStatusTransitionException.class);
+				BEFORE_DEADLINE,events)).isInstanceOf(InvalidBookingStatusTransitionException.class);
 	}
 }

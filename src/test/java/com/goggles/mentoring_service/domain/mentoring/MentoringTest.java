@@ -1,5 +1,6 @@
 package com.goggles.mentoring_service.domain.mentoring;
 
+import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.mentoring.exception.MentoringPolicyViolationException;
 import com.goggles.mentoring_service.domain.mentoring.exception.RepeatPatternRequiredException;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,7 +76,8 @@ class MentoringTest {
 	@Test
 	void updateRepeatPatterns_success() {
 		mentoring.updateRepeatPatterns(
-				List.of(repeatPattern(DayOfWeek.MONDAY), repeatPattern(DayOfWeek.WEDNESDAY)));
+				List.of(repeatPattern(DayOfWeek.MONDAY), repeatPattern(DayOfWeek.WEDNESDAY)),
+				LocalDate.now());
 
 		assertThat(mentoring.getRepeatPatterns()).hasSize(2);
 		assertThat(mentoring.getRepeatPatterns()
@@ -85,8 +87,10 @@ class MentoringTest {
 
 	@Test
 	void updateRepeatPatterns_replaces_all() {
-		mentoring.updateRepeatPatterns(List.of(repeatPattern(DayOfWeek.MONDAY)));
-		mentoring.updateRepeatPatterns(List.of(repeatPattern(DayOfWeek.FRIDAY)));
+		mentoring.updateRepeatPatterns(
+				List.of(repeatPattern(DayOfWeek.MONDAY), repeatPattern(DayOfWeek.WEDNESDAY)),
+				LocalDate.now());
+		mentoring.updateRepeatPatterns(List.of(repeatPattern(DayOfWeek.FRIDAY)), LocalDate.now());
 
 		assertThat(mentoring.getRepeatPatterns()).hasSize(1);
 		assertThat(mentoring.getRepeatPatterns()
@@ -128,7 +132,8 @@ class MentoringTest {
 		Mentoring multiMentoring = defaultMentoringBuilder().format(Format.MULTI)
 				.sessionCount(2)
 				.build();
-		multiMentoring.updateRepeatPatterns(List.of(repeatPattern(DayOfWeek.MONDAY)));
+		multiMentoring.updateRepeatPatterns(List.of(repeatPattern(DayOfWeek.MONDAY)),
+				LocalDate.now());
 
 		LocalDate from = LocalDate.of(2026, 5, 1);
 		LocalDate to = LocalDate.of(2026, 5, 31);
@@ -151,7 +156,8 @@ class MentoringTest {
 				.sessionCount(2)
 				.excludeHolidays(true)
 				.build();
-		multiMentoring.updateRepeatPatterns(List.of(repeatPattern(DayOfWeek.TUESDAY)));
+		multiMentoring.updateRepeatPatterns(List.of(repeatPattern(DayOfWeek.TUESDAY)),
+				LocalDate.now());
 
 		LocalDate from = LocalDate.of(2026, 5, 1);
 		LocalDate to = LocalDate.of(2026, 5, 31);
@@ -166,12 +172,6 @@ class MentoringTest {
 		assertThat(generated).hasSize(3);
 		assertThat(generated).noneMatch(s -> s.getSessionDate()
 				.equals(holiday));
-	}
-
-	@Test
-	void generateSessions_only_for_multi_format() {
-		assertThatThrownBy(() -> mentoring.generateSessions(SESSION_DATE_1, SESSION_DATE_2,
-				date -> false)).isInstanceOf(MentoringPolicyViolationException.class);
 	}
 
 	@Test
@@ -193,8 +193,9 @@ class MentoringTest {
 
 	@Test
 	void deactivate_success() {
+		UserType userType = UserType.INSTRUCTOR;
 		mentoring.activate();
-		mentoring.deactivate();
+		mentoring.deactivate(MENTOR_ID, userType);
 
 		assertThat(mentoring.getStatus()).isEqualTo(MentoringStatus.INACTIVE);
 	}

@@ -9,6 +9,7 @@ import com.goggles.mentoring_service.application.result.BookingResult;
 import com.goggles.mentoring_service.config.TestAuditConfig;
 import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.booking.*;
+import com.goggles.mentoring_service.domain.booking.event.BookingEvent;
 import com.goggles.mentoring_service.domain.booking.exception.BookingNotFoundException;
 import com.goggles.mentoring_service.domain.booking.repository.MentoringBookingRepository;
 import com.goggles.mentoring_service.domain.category.MentoringCategory;
@@ -39,6 +40,7 @@ import static com.goggles.mentoring_service.domain.mentoring.MentoringFixture.*;
 import static com.goggles.mentoring_service.domain.mentoring.MentoringFixture.sessionSlot;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
 
 @SpringBootTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
@@ -46,6 +48,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @ActiveProfiles("test")
 @Transactional
 class BookingServiceIntegrationTest {
+
+	private final BookingEvent events = mock(BookingEvent.class);
 
 	private static final Logger log = LoggerFactory.getLogger(BookingServiceIntegrationTest.class);
 
@@ -258,23 +262,33 @@ class BookingServiceIntegrationTest {
 	@Test
 	void getBookingSessions_returns_sessions() {
 		UUID mentoringId = saveMentoringWithSession(SESSION_DATE_1);
-		BookingResult.Create created =
-				bookingService.createBooking(bookingCommand(mentoringId, sessionSlot(SESSION_DATE_1)));
+		BookingResult.Create created = bookingService.createBooking(
+				bookingCommand(mentoringId, sessionSlot(SESSION_DATE_1)));
 
 		em.flush();
 		em.clear();
 
 		BookingResult.SessionList result =
-				bookingService.getBookingSessions(created.enrollmentId(), MENTEE_ID, UserType.STUDENT);
+				bookingService.getBookingSessions(created.enrollmentId(), MENTEE_ID,
+						UserType.STUDENT);
 
 		log.info("==== 회차 목록 조회 결과 ====");
-		log.info("sessions: {}건", result.sessions().size());
-		log.info("sessionDate: {}", result.sessions().get(0).sessionDate());
-		log.info("progressStatus: {}", result.sessions().get(0).progressStatus());
+		log.info("sessions: {}건", result.sessions()
+				.size());
+		log.info("sessionDate: {}", result.sessions()
+				.get(0)
+				.sessionDate());
+		log.info("progressStatus: {}", result.sessions()
+				.get(0)
+				.progressStatus());
 
 		assertThat(result.sessions()).hasSize(1);
-		assertThat(result.sessions().get(0).sessionDate()).isEqualTo(SESSION_DATE_1);
-		assertThat(result.sessions().get(0).progressStatus()).isEqualTo(SessionProgressStatus.SCHEDULED);
+		assertThat(result.sessions()
+				.get(0)
+				.sessionDate()).isEqualTo(SESSION_DATE_1);
+		assertThat(result.sessions()
+				.get(0)
+				.progressStatus()).isEqualTo(SessionProgressStatus.SCHEDULED);
 	}
 
 	// ── 회차 진행 처리 ────────────────────────────────────────────────────────
@@ -282,40 +296,45 @@ class BookingServiceIntegrationTest {
 	@Test
 	void completeSession_changes_status_to_completed() {
 		UUID mentoringId = saveMentoringWithSession(SESSION_DATE_1);
-		BookingResult.Create created =
-				bookingService.createBooking(bookingCommand(mentoringId, sessionSlot(SESSION_DATE_1)));
+		BookingResult.Create created = bookingService.createBooking(
+				bookingCommand(mentoringId, sessionSlot(SESSION_DATE_1)));
 
 		em.flush();
 		em.clear();
 
 		MentoringBooking booking =
-				bookingRepository.findById(new MentoringBookingId(created.enrollmentId())).orElseThrow();
-		booking.completePayment();
-		booking.accept(MENTOR_ID, UserType.INSTRUCTOR);
+				bookingRepository.findById(new MentoringBookingId(created.enrollmentId()))
+						.orElseThrow();
+		booking.completePayment(events);
+		booking.accept(MENTOR_ID, UserType.INSTRUCTOR,events);
 		em.flush();
 		em.clear();
 
-		UUID sessionId =
-				bookingService
-						.getBookingSessions(created.enrollmentId(), MENTOR_ID, UserType.INSTRUCTOR)
-						.sessions()
-						.get(0)
-						.sessionId();
+		UUID sessionId = bookingService.getBookingSessions(created.enrollmentId(), MENTOR_ID,
+						UserType.INSTRUCTOR)
+				.sessions()
+				.get(0)
+				.sessionId();
 
 		bookingService.completeSession(
-				new BookingCommand.CompleteSession(
-						created.enrollmentId(), sessionId, MENTOR_ID, UserType.INSTRUCTOR));
+				new BookingCommand.CompleteSession(created.enrollmentId(), sessionId, MENTOR_ID,
+						UserType.INSTRUCTOR));
 
 		em.flush();
 		em.clear();
 
 		BookingResult.SessionList result =
-				bookingService.getBookingSessions(created.enrollmentId(), MENTOR_ID, UserType.INSTRUCTOR);
+				bookingService.getBookingSessions(created.enrollmentId(), MENTOR_ID,
+						UserType.INSTRUCTOR);
 
 		log.info("==== 회차 진행 처리 결과 ====");
-		log.info("progressStatus: {}", result.sessions().get(0).progressStatus());
+		log.info("progressStatus: {}", result.sessions()
+				.get(0)
+				.progressStatus());
 
-		assertThat(result.sessions().get(0).progressStatus()).isEqualTo(SessionProgressStatus.COMPLETED);
+		assertThat(result.sessions()
+				.get(0)
+				.progressStatus()).isEqualTo(SessionProgressStatus.COMPLETED);
 	}
 
 	// ── 회차 일정 변경 ────────────────────────────────────────────────────────
@@ -323,57 +342,58 @@ class BookingServiceIntegrationTest {
 	@Test
 	void rescheduleSession_updates_session_and_rebooking_mentoring_slots() {
 		UUID mentoringId = saveMentoringWithSessions(SESSION_DATE_1, MENTORING_SESSION_DATE_2);
-		BookingResult.Create created =
-				bookingService.createBooking(bookingCommand(mentoringId, sessionSlot(SESSION_DATE_1)));
+		BookingResult.Create created = bookingService.createBooking(
+				bookingCommand(mentoringId, sessionSlot(SESSION_DATE_1)));
 
 		em.flush();
 		em.clear();
 
 		MentoringBooking booking =
-				bookingRepository.findById(new MentoringBookingId(created.enrollmentId())).orElseThrow();
-		booking.completePayment();
-		booking.accept(MENTOR_ID, UserType.INSTRUCTOR);
+				bookingRepository.findById(new MentoringBookingId(created.enrollmentId()))
+						.orElseThrow();
+		booking.completePayment(events);
+		booking.accept(MENTOR_ID, UserType.INSTRUCTOR, events);
 		em.flush();
 		em.clear();
 
-		UUID sessionId =
-				bookingService
-						.getBookingSessions(created.enrollmentId(), MENTOR_ID, UserType.INSTRUCTOR)
-						.sessions()
-						.get(0)
-						.sessionId();
+		UUID sessionId = bookingService.getBookingSessions(created.enrollmentId(), MENTOR_ID,
+						UserType.INSTRUCTOR)
+				.sessions()
+				.getFirst()
+				.sessionId();
 
 		LocalDateTime now = LocalDateTime.of(2026, 1, 1, 0, 0);
 		bookingService.rescheduleSession(
 				new BookingCommand.RescheduleSession(created.enrollmentId(), sessionId,
-						MENTORING_SESSION_DATE_2, START_TIME, END_TIME, MENTOR_ID,
+						MENTORING_SESSION_DATE_2, START_TIME, MENTOR_ID,
 						UserType.INSTRUCTOR));
 
 		em.flush();
 		em.clear();
 
 		BookingResult.SessionList result =
-				bookingService.getBookingSessions(created.enrollmentId(), MENTOR_ID, UserType.INSTRUCTOR);
+				bookingService.getBookingSessions(created.enrollmentId(), MENTOR_ID,
+						UserType.INSTRUCTOR);
 
 		log.info("==== 회차 일정 변경 결과 ====");
-		log.info("변경된 sessionDate: {}", result.sessions().get(0).sessionDate());
+		log.info("변경된 sessionDate: {}", result.sessions()
+				.get(0)
+				.sessionDate());
 
-		assertThat(result.sessions().get(0).sessionDate()).isEqualTo(MENTORING_SESSION_DATE_2);
+		assertThat(result.sessions()
+				.get(0)
+				.sessionDate()).isEqualTo(MENTORING_SESSION_DATE_2);
 
-		Mentoring mentoring =
-				mentoringRepository.findById(new MentoringId(mentoringId)).orElseThrow();
-		assertThat(mentoring.getSessions())
-				.anySatisfy(
-						s -> {
-							assertThat(s.getSessionDate()).isEqualTo(SESSION_DATE_1);
-							assertThat(s.getStatus()).isEqualTo(SessionStatus.AVAILABLE);
-						});
-		assertThat(mentoring.getSessions())
-				.anySatisfy(
-						s -> {
-							assertThat(s.getSessionDate()).isEqualTo(MENTORING_SESSION_DATE_2);
-							assertThat(s.getStatus()).isEqualTo(SessionStatus.BOOKED);
-						});
+		Mentoring mentoring = mentoringRepository.findById(new MentoringId(mentoringId))
+				.orElseThrow();
+		assertThat(mentoring.getSessions()).anySatisfy(s -> {
+			assertThat(s.getSessionDate()).isEqualTo(SESSION_DATE_1);
+			assertThat(s.getStatus()).isEqualTo(SessionStatus.AVAILABLE);
+		});
+		assertThat(mentoring.getSessions()).anySatisfy(s -> {
+			assertThat(s.getSessionDate()).isEqualTo(MENTORING_SESSION_DATE_2);
+			assertThat(s.getStatus()).isEqualTo(SessionStatus.BOOKED);
+		});
 	}
 
 	// ── 헬퍼 ─────────────────────────────────────────────────────────────────
@@ -471,7 +491,7 @@ class BookingServiceIntegrationTest {
 		MentoringBooking booking =
 				bookingRepository.findById(new MentoringBookingId(result.enrollmentId()))
 						.orElseThrow();
-		booking.completePayment();
+		booking.completePayment(events);
 		bookingRepository.save(booking);
 
 		return result.enrollmentId();
