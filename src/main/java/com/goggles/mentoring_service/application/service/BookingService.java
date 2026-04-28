@@ -11,6 +11,9 @@ import com.goggles.mentoring_service.domain.mentoring.Mentoring;
 import com.goggles.mentoring_service.domain.mentoring.MentoringId;
 import com.goggles.mentoring_service.domain.mentoring.exception.MentoringNotFoundException;
 import com.goggles.mentoring_service.domain.mentoring.repository.MentoringRepository;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -41,11 +44,12 @@ public class BookingService {
     return BookingResult.Create.of(booking.getMentoringBookingId());
   }
 
+  @Transactional
   public void paymentFailed(BookingCommand.PaymentFailed command) {
     MentoringBooking booking =
             bookingRepository.findById(command.mentoringBookingId())
                     .orElseThrow(() -> new BookingNotFoundException(command.mentoringBookingId()));
-    booking.failPayment(command.failureReason());
+    booking.failPayment(command.failureReason(), LocalDateTime.now());
     bookingRepository.save(booking);
   }
 }
