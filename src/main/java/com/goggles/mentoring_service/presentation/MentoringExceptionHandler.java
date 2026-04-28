@@ -4,7 +4,7 @@ package com.goggles.mentoring_service.presentation;
 import com.goggles.common.exception.ConflictException;
 import com.goggles.common.exception.ForbiddenException;
 import com.goggles.common.exception.NotFoundException;
-import com.goggles.mentoring_service.domain.common.MentoringValidationException;
+import com.goggles.mentoring_service.domain._common.MentoringValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;

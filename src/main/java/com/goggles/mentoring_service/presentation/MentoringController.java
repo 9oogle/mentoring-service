@@ -3,11 +3,6 @@ package com.goggles.mentoring_service.presentation;
 import com.goggles.common.pagination.CommonPageRequest;
 import com.goggles.common.pagination.CommonPageResponse;
 import com.goggles.mentoring_service.application.command.MentoringCommand;
-import com.goggles.mentoring_service.domain.mentoring.MentoringSearchCondition;
-import com.goggles.mentoring_service.domain.mentoring.MentoringSort;
-import com.goggles.mentoring_service.domain.mentoring.MentoringStatus;
-import com.goggles.mentoring_service.domain.mentoring.MentoringType;
-import com.goggles.mentoring_service.domain.mentoring.exception.InvalidConditionException;
 import com.goggles.mentoring_service.application.result.MentoringResult;
 import com.goggles.mentoring_service.application.service.MentoringService;
 import com.goggles.mentoring_service.presentation.dto.MentoringRequest;
@@ -51,9 +46,9 @@ public class MentoringController {
 
 	@GetMapping
 	public CommonPageResponse<MentoringResponse.Summary> searchMentorings(
-			@ModelAttribute MentoringRequest.Search request,
-			CommonPageRequest pageRequest) {
-		Page<MentoringResult.Summary> summary = mentoringService.searchMentorings(request.toCondition(), pageRequest);
+			@ModelAttribute MentoringRequest.Search request, CommonPageRequest pageRequest) {
+		Page<MentoringResult.Summary> summary =
+				mentoringService.searchMentorings(request.toCondition(), pageRequest);
 		return CommonPageResponse.of(summary.map(MentoringResponse.Summary::of));
 	}
 

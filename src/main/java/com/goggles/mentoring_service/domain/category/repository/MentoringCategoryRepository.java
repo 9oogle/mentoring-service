@@ -14,4 +14,6 @@ public interface MentoringCategoryRepository {
 	Optional<MentoringCategory> findById(MentoringCategoryId id);
 
 	List<MentoringCategory> findByActiveIsTrue();
+
+	List<MentoringCategory> findAllByOrderBySortOrderAsc();
 }

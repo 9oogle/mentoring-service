@@ -1,4 +1,4 @@
-package com.goggles.mentoring_service.domain.common;
+package com.goggles.mentoring_service.domain._common;
 
 public class MentoringValidationException extends MentoringDomainException {
 
