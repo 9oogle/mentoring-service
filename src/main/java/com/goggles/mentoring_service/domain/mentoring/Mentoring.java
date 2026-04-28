@@ -250,7 +250,10 @@ public class Mentoring extends BaseAudit {
 	}
 
 	public void bookSession(List<SessionSlot> sessionSlots) {
-		sessionSlots.forEach(slot -> findSession(slot.date(), slot.startTime()).book());
+		List<MentoringSession> targets = sessionSlots.stream()
+				.map(slot -> findSession(slot.date(), slot.startTime()))
+				.toList();
+		targets.forEach(MentoringSession::book);
 	}
 
 	private MentoringSession findSession(LocalDate date, LocalTime startTime) {
