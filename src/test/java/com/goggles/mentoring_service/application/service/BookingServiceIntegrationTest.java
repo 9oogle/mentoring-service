@@ -288,6 +288,6 @@ class BookingServiceIntegrationTest {
 
   private BookingCommand.Create bookingCommand(UUID mentoringId, SessionSlot slot, UUID menteeId, String menteeName) {
     MenteeInfo menteeInfo = new MenteeInfo(menteeId, UserType.STUDENT, menteeName);
-    return new BookingCommand.Create(menteeInfo, mentoringId, List.of(slot), REQUEST_MESSAGE);
+    return new BookingCommand.Create(menteeInfo, mentoringId, List.of(slot), REQUEST_MESSAGE, null);
   }
 }
