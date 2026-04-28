@@ -32,11 +32,11 @@ class CategoryServiceTest {
 
 	// ── getActiveCategories ───────────────────────────────────────────────────
 
-	@Test
-	void getActiveCategories_returns_mapped_results() {
-		MentoringCategory c1 = createActive(0);
-		MentoringCategory c2 = createActive(1);
-		given(categoryRepository.findByActiveIsTrue()).willReturn(List.of(c1, c2));
+  @Test
+  void getActiveCategories_success() {
+    MentoringCategory c1 = createActive(0);
+    MentoringCategory c2 = createActive(1);
+    given(categoryRepository.findByActiveIsTrue()).willReturn(List.of(c1, c2));
 
 		List<CategoryResult.Info> result = categoryService.getActiveCategories();
 
@@ -53,9 +53,9 @@ class CategoryServiceTest {
 				.getName()).isEqualTo(c2.getName());
 	}
 
-	@Test
-	void getActiveCategories_returns_empty_when_no_active_categories() {
-		given(categoryRepository.findByActiveIsTrue()).willReturn(List.of());
+  @Test
+  void getActiveCategories_empty() {
+    given(categoryRepository.findByActiveIsTrue()).willReturn(List.of());
 
 		List<CategoryResult.Info> result = categoryService.getActiveCategories();
 
@@ -64,12 +64,11 @@ class CategoryServiceTest {
 
 	// ── getAllCategories ──────────────────────────────────────────────────────
 
-	@Test
-	void getAllCategories_success_when_master() {
-		MentoringCategory active = createActive(0);
-		MentoringCategory inactive = createInactive();
-		given(categoryRepository.findAllByOrderBySortOrderAsc()).willReturn(
-				List.of(active, inactive));
+  @Test
+  void getAllCategories_success() {
+    MentoringCategory active = createActive(0);
+    MentoringCategory inactive = createInactive();
+    given(categoryRepository.findAllByOrderBySortOrderAsc()).willReturn(List.of(active, inactive));
 
 		List<CategoryResult.Info> result = categoryService.getAllCategories(
 				new CategoryCommand.GetList(UUID.randomUUID(), UserType.MASTER));
@@ -85,10 +84,12 @@ class CategoryServiceTest {
 				.getSortOrder()).isNull();
 	}
 
-	@Test
-	void getAllCategories_throws_forbidden_when_not_master() {
-		assertThatThrownBy(() -> categoryService.getAllCategories(
-				new CategoryCommand.GetList(UUID.randomUUID(), UserType.INSTRUCTOR))).isInstanceOf(
-				ForbiddenException.class);
-	}
+  @Test
+  void getAllCategories_forbidden_if_not_master() {
+    assertThatThrownBy(
+            () ->
+                categoryService.getAllCategories(
+                    new CategoryCommand.GetList(UUID.randomUUID(), UserType.INSTRUCTOR)))
+        .isInstanceOf(ForbiddenException.class);
+  }
 }
