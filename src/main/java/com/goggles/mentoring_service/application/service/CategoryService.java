@@ -85,12 +85,12 @@ public class CategoryService {
 		MentoringCategory category = categoryRepository.findById(command.mentoringCategoryId())
 				.orElseThrow(() -> new CategoryNotFoundException(command.mentoringCategoryId()
 						.categoryId()));
-		if (!category.getName()
-				.equals(command.name()) && categoryRepository.existsByName(command.name()))
+		if (command.name() != null && !category.getName().equals(command.name())
+				&& categoryRepository.existsByName(command.name()))
 			throw CategoryValidationException.alreadyExistsName();
 
-		if (!category.getCode()
-				.equals(command.code()) && categoryRepository.existsByCode(command.code()))
+		if (command.code() != null && !category.getCode().equals(command.code())
+				&& categoryRepository.existsByCode(command.code()))
 			throw CategoryValidationException.alreadyExistsCode();
 		category.updateNameAndCode(command.userId(), command.userType(), command.name(),
 				command.code());

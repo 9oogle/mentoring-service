@@ -2,6 +2,7 @@ package com.goggles.mentoring_service.domain.category;
 
 import com.goggles.common.exception.ForbiddenException;
 import com.goggles.mentoring_service.domain._common.UserType;
+import com.goggles.mentoring_service.domain.category.exception.CategoryValidationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -79,7 +80,7 @@ class MentoringCategoryTest {
 		MentoringCategory category = MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
 
 		assertThatThrownBy(() -> category.move(adminId, UserType.MASTER, 1))
-				.isInstanceOf(InactiveCategoryCannotMoveException.class);
+				.isInstanceOf(CategoryValidationException.class);
 	}
 
 	// ── updateNameAndCode ────────────────────────────────────────────────────

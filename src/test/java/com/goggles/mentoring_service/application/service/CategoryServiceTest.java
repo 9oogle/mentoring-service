@@ -47,13 +47,13 @@ class CategoryServiceTest {
 		List<CategoryResult.Info> result = categoryService.getActiveCategories();
 
 		assertThat(result).hasSize(2);
-		assertThat(result.get(0)
+		assertThat(result.getFirst()
 				.getName()).isEqualTo(c1.getName());
-		assertThat(result.get(0)
+		assertThat(result.getFirst()
 				.getCode()).isEqualTo(c1.getCode());
-		assertThat(result.get(0)
+		assertThat(result.getFirst()
 				.getSortOrder()).isEqualTo(0);
-		assertThat(result.get(0)
+		assertThat(result.getFirst()
 				.isActive()).isTrue();
 		assertThat(result.get(1)
 				.getName()).isEqualTo(c2.getName());
@@ -133,8 +133,8 @@ class CategoryServiceTest {
 
 		// 순서를 [c2, c0]으로 변경, c1은 제외(비활성화)
 		categoryService.updateActiveCategories(new CategoryCommand.UpdateActive(adminId,
-				UserType.MASTER, List.of(c2.getMentoringCategoryId().categoryId(),
-						c0.getMentoringCategoryId().categoryId())));
+				UserType.MASTER, List.of(c2.getMentoringCategoryId(),
+						c0.getMentoringCategoryId())));
 
 		assertThat(c2.isActive()).isTrue();
 		assertThat(c2.getSortOrder()).isEqualTo(0);
@@ -164,7 +164,7 @@ class CategoryServiceTest {
 
 		assertThatThrownBy(() -> categoryService.updateActiveCategories(
 				new CategoryCommand.UpdateActive(UUID.randomUUID(), UserType.MASTER,
-						List.of(UUID.randomUUID())))).isInstanceOf(CategoryNotFoundException.class);
+						List.of(new MentoringCategoryId(UUID.randomUUID()))))).isInstanceOf(CategoryNotFoundException.class);
 	}
 
 	@Test

@@ -149,8 +149,8 @@ class CategoryServiceIntegrationTest {
 
 		// c2를 0번, c0을 1번으로 재배치, c1은 비활성화
 		categoryService.updateActiveCategories(new CategoryCommand.UpdateActive(adminId,
-				UserType.MASTER, List.of(c2.getMentoringCategoryId().categoryId(),
-						c0.getMentoringCategoryId().categoryId())));
+				UserType.MASTER, List.of(c2.getMentoringCategoryId(),
+						c0.getMentoringCategoryId())));
 
 		List<CategoryResult.Info> active = categoryService.getActiveCategories();
 		log.info("==== 활성 카테고리 재배치 결과 ====");
@@ -181,7 +181,7 @@ class CategoryServiceIntegrationTest {
 
 		assertThatThrownBy(() -> categoryService.updateActiveCategories(
 				new CategoryCommand.UpdateActive(adminId, UserType.MASTER,
-						List.of(UUID.randomUUID())))).isInstanceOf(CategoryNotFoundException.class);
+						List.of(new MentoringCategoryId(UUID.randomUUID()))))).isInstanceOf(CategoryNotFoundException.class);
 	}
 
 	@Test
