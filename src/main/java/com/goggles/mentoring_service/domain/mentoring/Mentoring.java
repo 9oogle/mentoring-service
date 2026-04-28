@@ -203,6 +203,15 @@ public class Mentoring extends BaseAudit {
 		}
 	}
 
+	public void delete(UUID userId, UserType userType) {
+		checkIfUserIsOwnerOrManager(userId, userType);
+		if (sessions.stream()
+				.anyMatch(MentoringSession::isBooked)) {
+			throw new BookedSessionCannotBeDeletedException();
+		}
+		softDelete(userId);
+	}
+
 	public void updateEndDate(LocalDate newEndDate) {
 		this.endDate = newEndDate;
 	}

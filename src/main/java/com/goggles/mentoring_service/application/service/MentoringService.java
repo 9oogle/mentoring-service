@@ -46,16 +46,12 @@ public class MentoringService {
 
 	@Transactional(readOnly = true)
 	public MentoringResult.Detail getMentoring(UUID mentoringId) {
-		Mentoring mentoring = mentoringRepository.findById(new MentoringId(mentoringId))
-				.orElseThrow(() -> new MentoringNotFoundException(new MentoringId(mentoringId)));
-		return MentoringResult.Detail.from(mentoring);
+		return MentoringResult.Detail.from(getOrThrow(mentoringId));
 	}
 
 	@Transactional(readOnly = true)
 	public MentoringResult.Schedules getMentoringSchedules(UUID mentoringId) {
-		Mentoring mentoring = mentoringRepository.findById(new MentoringId(mentoringId))
-				.orElseThrow(() -> new MentoringNotFoundException(new MentoringId(mentoringId)));
-		return MentoringResult.Schedules.from(mentoring);
+		return MentoringResult.Schedules.from(getOrThrow(mentoringId));
 	}
 
 	@Transactional(readOnly = true)
@@ -83,6 +79,12 @@ public class MentoringService {
 		Mentoring mentoring = getOrThrow(mentoringId);
 		mentoring.deactivate(userId, userType);
 	}
+
+	public void deleteMentoring(UUID mentoringId,  UUID userId, UserType userType) {
+		Mentoring mentoring = getOrThrow(mentoringId);
+		mentoring.delete(userId, userType);
+	}
+
 	private Mentoring getOrThrow(UUID mentoringId) {
 		MentoringId id = new MentoringId(mentoringId);
 		return mentoringRepository.findById(id)
