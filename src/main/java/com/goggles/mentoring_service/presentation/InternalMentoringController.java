@@ -25,4 +25,10 @@ public class InternalMentoringController {
 		BookingResult.Create result = bookingService.createBooking(command);
 		return BookingResponse.Create.of(result);
 	}
+
+	@PatchMapping("mentoring-booking/payment-failed")
+	public void processMentoringBookingPaymentFailed(@Valid @RequestBody BookingRequest.PaymentFailed request) {
+		BookingCommand.PaymentFailed command = request.toCommand();
+		bookingService.paymentFailed(command);
+	}
 }

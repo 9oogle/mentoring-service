@@ -32,4 +32,13 @@ public class BookingRequest {
 
   public record BookingTimeSlot(
       @NotNull LocalDate date, @NotNull LocalTime startTime, @NotNull LocalTime endTime) {}
+
+  public record PaymentFailed(
+        @NotNull UUID mentoringBookingId, @NotNull UUID orderId, @NotNull String failureReason
+  ) {
+    public BookingCommand.PaymentFailed toCommand() {
+      MentoringBookingId mentoringBookingId = new MentoringBookingId(mentoringBookingId());
+        return new BookingCommand.PaymentFailed(mentoringBookingId, orderId(), failureReason());
+    }
+  }
 }

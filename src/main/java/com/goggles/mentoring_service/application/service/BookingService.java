@@ -40,4 +40,12 @@ public class BookingService {
     bookingRepository.save(booking);
     return BookingResult.Create.of(booking.getMentoringBookingId());
   }
+
+  public void paymentFailed(BookingCommand.PaymentFailed command) {
+    MentoringBooking booking =
+            bookingRepository.findById(command.mentoringBookingId())
+                    .orElseThrow(() -> new BookingNotFoundException(command.mentoringBookingId()));
+    booking.failPayment(command.failureReason());
+    bookingRepository.save(booking);
+  }
 }
