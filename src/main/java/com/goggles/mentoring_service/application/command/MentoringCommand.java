@@ -1,6 +1,7 @@
 package com.goggles.mentoring_service.application.command;
 
 import com.goggles.mentoring_service.domain._common.UserType;
+import com.goggles.mentoring_service.domain.booking.SessionSlot;
 import com.goggles.mentoring_service.domain.category.MentoringCategory;
 import com.goggles.mentoring_service.domain.mentoring.*;
 

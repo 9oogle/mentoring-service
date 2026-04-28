@@ -1,0 +1,28 @@
+package com.goggles.mentoring_service.presentation;
+
+import com.goggles.mentoring_service.application.command.BookingCommand;
+import com.goggles.mentoring_service.application.result.BookingResult;
+import com.goggles.mentoring_service.application.service.BookingService;
+import com.goggles.mentoring_service.presentation.dto.BookingRequest;
+import com.goggles.mentoring_service.presentation.dto.BookingResponse;
+import com.goggles.mentoring_service.presentation.support.UserContext;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/internal/v1/")
+@RequiredArgsConstructor
+public class InternalMentoringController {
+	private final BookingService bookingService;
+
+	@ResponseStatus(HttpStatus.CREATED)
+	@PostMapping("mentoring-booking")
+	public BookingResponse.Create processMentoringBooking(
+			UserContext userContext, @Valid @RequestBody BookingRequest.Create request) {
+		BookingCommand.Create command = request.toCommand(userContext);
+		BookingResult.Create result = bookingService.createBooking(command);
+		return BookingResponse.Create.of(result);
+	}
+}
