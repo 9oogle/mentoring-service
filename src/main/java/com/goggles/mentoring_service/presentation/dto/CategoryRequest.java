@@ -26,7 +26,8 @@ public class CategoryRequest {
 			@Size(max = 10) String code) {
 		public CategoryCommand.Update toCommand(UserContext userContext, UUID categoryId) {
 			MentoringCategoryId mentoringCategoryId = new MentoringCategoryId(categoryId);
-			return new CategoryCommand.Update(mentoringCategoryId, title(), code(), userContext);
+			return new CategoryCommand.Update(mentoringCategoryId, title(), code(),
+					userContext.userId(), userContext.userType());
 		}
 	}
 

@@ -19,8 +19,8 @@ public class CategoryCommand {
 
 	public record Update(MentoringCategoryId mentoringCategoryId, String name, String code,
 						 UUID userId, UserType userType) {
-		public Update(MentoringCategoryId mentoringCategoryId, @Size(max = 100) String name, @Size(max = 10) String code, UserContext userContext) {
-			this(mentoringCategoryId, name, code, userContext.userId(), userContext.userType());
-		}
+	}
+
+	public record Delete (UUID userId, UserType userType, MentoringCategoryId categoryId){
 	}
 }

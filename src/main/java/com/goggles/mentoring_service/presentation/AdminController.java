@@ -3,6 +3,7 @@ package com.goggles.mentoring_service.presentation;
 import com.goggles.mentoring_service.application.command.CategoryCommand;
 import com.goggles.mentoring_service.application.result.CategoryResult;
 import com.goggles.mentoring_service.application.service.CategoryService;
+import com.goggles.mentoring_service.domain.category.MentoringCategoryId;
 import com.goggles.mentoring_service.presentation.dto.CategoryRequest;
 import com.goggles.mentoring_service.presentation.dto.CategoryResponse;
 import com.goggles.mentoring_service.presentation.support.UserContext;
@@ -51,6 +52,14 @@ public class AdminController {
 			@Valid @RequestBody CategoryRequest.Update request) {
 		CategoryCommand.Update command = request.toCommand(userContext, categoryId);
 		categoryService.updateCategory(command);
+	}
+
+	@DeleteMapping("mentoring-categories/{categoryId}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void deleteCategory(UserContext userContext, @PathVariable UUID categoryId) {
+		CategoryCommand.Delete command = new CategoryCommand.Delete(userContext.userId(), userContext.userType(),
+				new MentoringCategoryId(categoryId));
+		categoryService.deleteCategory(command);
 	}
 
 }

@@ -80,6 +80,7 @@ public class CategoryService {
 		}
 	}
 
+	@Transactional
 	public void updateCategory(CategoryCommand.Update command) {
 		MentoringCategory category = categoryRepository.findById(command.mentoringCategoryId())
 				.orElseThrow(() -> new CategoryNotFoundException(command.mentoringCategoryId()
@@ -94,4 +95,14 @@ public class CategoryService {
 		category.updateNameAndCode(command.userId(), command.userType(), command.name(),
 				command.code());
 	}
+
+	@Transactional
+	public void deleteCategory(CategoryCommand.Delete command) {
+		MentoringCategoryId categoryId = command.categoryId();
+		MentoringCategory category =
+				categoryRepository.findById(categoryId)
+				.orElseThrow(() -> new CategoryNotFoundException(categoryId.categoryId()));
+		category.softDelete(command.userId(), command.userType());
+	}
+
 }
