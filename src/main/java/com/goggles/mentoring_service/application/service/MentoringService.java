@@ -1,5 +1,6 @@
 package com.goggles.mentoring_service.application.service;
 
+import com.goggles.common.exception.ForbiddenException;
 import com.goggles.common.pagination.CommonPageRequest;
 import com.goggles.mentoring_service.application.command.MentoringCommand;
 import com.goggles.mentoring_service.application.result.MentoringResult;
@@ -7,6 +8,7 @@ import com.goggles.mentoring_service.domain.category.MentoringCategory;
 import com.goggles.mentoring_service.domain.category.MentoringCategoryId;
 import com.goggles.mentoring_service.domain.category.exception.CategoryNotFoundException;
 import com.goggles.mentoring_service.domain.category.repository.MentoringCategoryRepository;
+import com.goggles.mentoring_service.domain.common.UserType;
 import com.goggles.mentoring_service.domain.mentoring.Mentoring;
 import com.goggles.mentoring_service.domain.mentoring.MentoringId;
 import com.goggles.mentoring_service.domain.mentoring.MentoringSearchCondition;
@@ -18,6 +20,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -62,4 +65,25 @@ public class MentoringService {
 				mentoringRepository.findAll(condition, pageRequest.toPageable(Sort.unsorted()));
 		return page.map(MentoringResult.Summary::from);
 	}
+
+	public void updateMentoring(UUID mentoringId, MentoringCommand.Update command) {
+		Mentoring mentoring = getOrThrow(mentoringId);
+		List<TimeSchedules> timeSchedules = command.timeSchedules();
+		List<RepeatPattern> patterns = timeSchedules != null ? command.timeSchedules()
+				.stream()
+				.map(ts -> RepeatPattern.of(ts.dayOfWeek(), ts.startTime(), ts.endTime()))
+				.toList() : null;
+		mentoring.updateInfo(command.userId(), command.userType(), command.title(),
+				command.subtitle(), command.description(),
+				command.price(), command.endDate(), patterns);
+	}
+
+
+	private Mentoring getOrThrow(UUID mentoringId) {
+		MentoringId id = new MentoringId(mentoringId);
+		return mentoringRepository.findById(id)
+				.orElseThrow(() -> new MentoringNotFoundException(id));
+	}
+
+
 }

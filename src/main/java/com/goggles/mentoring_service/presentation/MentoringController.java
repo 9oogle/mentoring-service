@@ -52,5 +52,11 @@ public class MentoringController {
 		return CommonPageResponse.of(summary.map(MentoringResponse.Summary::of));
 	}
 
+	@PatchMapping("/{mentoringId}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void updateMentoring(UserContext userContext, @PathVariable UUID mentoringId,
+			@Valid @RequestBody MentoringRequest.Update request) {
+		mentoringService.updateMentoring(mentoringId, request.toCommand(userContext));
+	}
 
 }

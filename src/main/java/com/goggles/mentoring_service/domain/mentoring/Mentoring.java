@@ -169,6 +169,34 @@ public class Mentoring extends BaseAudit {
 		this.status = MentoringStatus.INACTIVE;
 	}
 
+
+	public void updateInfo(UUID userId, UserType userType, String title, String subtitle,
+			String description, Integer price, LocalDate endDate, List<RepeatPattern> newPatterns) {
+		checkIfUserIsOwnerOrManager(userId, userType);
+
+		if (title != null && !title.isBlank()) {
+			this.title = title;
+		}
+		if (subtitle != null) {
+			this.subtitle = subtitle;
+		}
+		if (description != null) {
+			this.description = description;
+		}
+		if (endDate != null) {
+			this.endDate = endDate;
+		}
+		if (price != null) {
+			if (price < 0) {
+				throw MentoringPolicyViolationException.invalidPrice();
+			}
+			this.price = price;
+		}
+		if (newPatterns != null) {
+			updateRepeatPatterns(newPatterns);
+		}
+	}
+
 	public void updateEndDate(LocalDate newEndDate) {
 		this.endDate = newEndDate;
 	}

@@ -11,6 +11,10 @@ import java.util.UUID;
 
 public class MentoringCommand {
 
+	public record Update(UUID userId, UserType userType, String title, String subtitle,
+						 String description,
+						 Integer price, LocalDate endDate, List<TimeSchedules> timeSchedules) {}
+
 	public record Create(UUID mentorId, String mentorName, String mentorField, String mentorEmail,
 						 UserType mentorType, UUID categoryId, String title, String subtitle,
 						 String description, MentoringDuration duration,
