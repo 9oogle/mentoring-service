@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -33,4 +34,15 @@ public class CategoryService {
 	private void checkAdmin(CategoryCommand.GetList command) {
 		if (command.userType() != UserType.MASTER) throw new ForbiddenException("관리자 권한이 필요합니다.");
 	}
+	@Transactional
+	public UUID createCategory(CategoryCommand.Create command) {
+		MentoringCategory category =
+				MentoringCategory.create(command.creatorId(), command.creatorType(),
+						command.title(), command.code());
+		categoryRepository.save(category);
+		return category.getMentoringCategoryId()
+				.categoryId();
+	}
+
+	
 }

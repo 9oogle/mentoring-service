@@ -43,4 +43,5 @@ public class CategoryResponse {
 		}
 
 	}
+	public record Create(UUID categoryId) {}
 }
