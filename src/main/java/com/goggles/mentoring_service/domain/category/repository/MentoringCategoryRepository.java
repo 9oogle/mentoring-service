@@ -16,4 +16,8 @@ public interface MentoringCategoryRepository {
 	List<MentoringCategory> findByActiveIsTrue();
 
 	List<MentoringCategory> findAllByOrderBySortOrderAsc();
+
+	boolean existsByName(String name);
+
+	boolean existsByCode(String code);
 }

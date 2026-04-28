@@ -34,6 +34,7 @@ public class CategoryService {
 	private void checkAdmin(CategoryCommand.GetList command) {
 		if (command.userType() != UserType.MASTER) throw new ForbiddenException("관리자 권한이 필요합니다.");
 	}
+
 	@Transactional
 	public UUID createCategory(CategoryCommand.Create command) {
 		MentoringCategory category =
@@ -45,4 +46,19 @@ public class CategoryService {
 	}
 
 	
+
+	public void updateCategory(CategoryCommand.Update command) {
+		MentoringCategory category = categoryRepository.findById(command.mentoringCategoryId())
+				.orElseThrow(() -> new CategoryNotFoundException(command.mentoringCategoryId()
+						.categoryId()));
+		if (!category.getName()
+				.equals(command.name()) && categoryRepository.existsByName(command.name()))
+			throw CategoryValidationException.alreadyExistsName();
+
+		if (!category.getCode()
+				.equals(command.code()) && categoryRepository.existsByCode(command.code()))
+			throw CategoryValidationException.alreadyExistsCode();
+		category.updateNameAndCode(command.userId(), command.userType(), command.name(),
+				command.code());
+	}
 }

@@ -21,18 +21,11 @@ public class CategoryController {
 
 	private final CategoryService categoryService;
 
-	@PostMapping
-	@ResponseStatus(HttpStatus.CREATED)
-	public CategoryResponse.Create createCategory(UserContext userContext,
-			@Valid @RequestBody CategoryRequest.Create request) {
-		CategoryCommand.Create command = request.toCommand(userContext);
-		UUID categoryId = categoryService.createCategory(command);
-		return new CategoryResponse.Create(categoryId);
-	}
 
 	@GetMapping
 	public CategoryResponse.CategoryList getActiveCategories() {
 		List<CategoryResult.Info> categories = categoryService.getActiveCategories();
 		return CategoryResponse.CategoryList.of(categories);
 	}
+
 }

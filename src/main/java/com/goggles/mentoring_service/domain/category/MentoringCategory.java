@@ -3,7 +3,7 @@ package com.goggles.mentoring_service.domain.category;
 import com.goggles.common.domain.BaseAudit;
 import com.goggles.common.exception.ForbiddenException;
 import com.goggles.mentoring_service.domain._common.UserType;
-import com.goggles.mentoring_service.domain.category.exception.InactiveCategoryCannotMoveException;
+import com.goggles.mentoring_service.domain.category.exception.CategoryValidationException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -79,8 +79,8 @@ public class MentoringCategory extends BaseAudit {
 
 	public void updateNameAndCode(UUID userId, UserType type, String name, String code) {
 		checkIfUserTypeIsAdmin(userId, type);
-		this.name = name;
-		this.code = code;
+		if(name !=null) this.name = name;
+		if(code !=null) this.code = code;
 	}
 
 	public void activate(UUID userId, UserType type, int sortOrder) {
@@ -103,7 +103,7 @@ public class MentoringCategory extends BaseAudit {
 
 	private void checkActivation() {
 		if (!this.active) {
-			throw new InactiveCategoryCannotMoveException();
+			throw CategoryValidationException.noPermissionToActivate();
 		}
 	}
 }

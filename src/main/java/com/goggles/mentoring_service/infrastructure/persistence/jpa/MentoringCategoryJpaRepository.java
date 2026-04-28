@@ -12,4 +12,8 @@ public interface MentoringCategoryJpaRepository extends JpaRepository<MentoringC
 
 	@Query("SELECT c FROM MentoringCategory c ORDER BY c.sortOrder ASC NULLS LAST")
 	List<MentoringCategory> findAllByOrderBySortOrderAsc();
+
+	boolean existsByName(String name);
+
+	boolean existsByCode(String code);
 }
