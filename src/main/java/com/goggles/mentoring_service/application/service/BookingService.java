@@ -1,17 +1,19 @@
 package com.goggles.mentoring_service.application.service;
 
+import com.goggles.common.event.Events;
 import com.goggles.common.exception.ForbiddenException;
 import com.goggles.common.pagination.CommonPageRequest;
 import com.goggles.mentoring_service.application.command.BookingCommand;
 import com.goggles.mentoring_service.application.command.MenteeInfo;
+import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.booking.BookingSearchCondition;
 import com.goggles.mentoring_service.application.result.BookingResult;
-import com.goggles.mentoring_service.domain._common.UserType;
-import com.goggles.mentoring_service.domain.booking.BookedMentoring;
-import com.goggles.mentoring_service.domain.booking.Mentee;
 import com.goggles.mentoring_service.domain.booking.MentoringBooking;
 import com.goggles.mentoring_service.domain.booking.MentoringBookingId;
 import com.goggles.mentoring_service.domain.booking.SessionSlot;
+import com.goggles.mentoring_service.domain.booking.event.BookingAcceptedEvent;
+import com.goggles.mentoring_service.domain.booking.event.BookingCanceledEvent;
+import com.goggles.mentoring_service.domain.booking.event.BookingRejectedEvent;
 import com.goggles.mentoring_service.domain.booking.exception.BookingNotFoundException;
 import com.goggles.mentoring_service.domain.booking.repository.MentoringBookingRepository;
 import com.goggles.mentoring_service.domain.mentoring.Mentoring;
@@ -19,7 +21,6 @@ import com.goggles.mentoring_service.domain.mentoring.MentoringId;
 import com.goggles.mentoring_service.domain.mentoring.exception.MentoringNotFoundException;
 import com.goggles.mentoring_service.domain.mentoring.repository.MentoringRepository;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -32,9 +33,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class BookingService {
+  private static final String DOMAIN_TYPE = "BOOKING";
+  private static final String TOPIC_ACCEPTED = "booking.accepted";
+  private static final String TOPIC_REJECTED = "booking.rejected";
+  private static final String TOPIC_CANCELED = "booking.canceled";
 
   private final MentoringBookingRepository bookingRepository;
   private final MentoringRepository mentoringRepository;
+  private final Events events;
 
   @Transactional
   public BookingResult.Create createBooking(BookingCommand.Create command) {
@@ -76,10 +82,8 @@ public class BookingService {
   }
 
   private void checkAccess(MentoringBooking booking, UUID userId, UserType userType) {
-    boolean isMentee = userType == UserType.STUDENT && booking.getMentee()
-            .isMentee(userId);
-    boolean isMentor = userType == UserType.INSTRUCTOR && booking.getBookedMentoring()
-            .isMentor(userId);
+    boolean isMentee = userType == UserType.STUDENT && booking.getMentee().isMentee(userId);
+    boolean isMentor = userType == UserType.INSTRUCTOR && booking.getBookedMentoring().isMentor(userId);
     if (!isMentee && !isMentor) {
       throw new ForbiddenException("해당 예약에 접근 권한이 없습니다.");
     }
@@ -88,9 +92,73 @@ public class BookingService {
   @Transactional
   public void paymentFailed(BookingCommand.PaymentFailed command) {
     MentoringBooking booking =
-            bookingRepository.findById(command.mentoringBookingId())
-                    .orElseThrow(() -> new BookingNotFoundException(command.mentoringBookingId()));
+        bookingRepository.findById(command.mentoringBookingId())
+            .orElseThrow(() -> new BookingNotFoundException(command.mentoringBookingId()));
     booking.failPayment(command.failureReason(), LocalDateTime.now());
     bookingRepository.save(booking);
+  }
+
+  @Transactional
+  public void acceptBooking(BookingCommand.Accept command) {
+    MentoringBookingId id = new MentoringBookingId(command.bookingId());
+    MentoringBooking booking =
+        bookingRepository.findById(id).orElseThrow(() -> new BookingNotFoundException(id));
+    booking.accept(command.userId(), command.userType());
+
+    events.trigger(
+        command.bookingId() + "." + TOPIC_ACCEPTED,
+        DOMAIN_TYPE,
+        TOPIC_ACCEPTED,
+        new BookingAcceptedEvent(
+            booking.getMentoringBookingId().bookingId(),
+            booking.getMentee().getId(),
+            booking.getBookedMentoring().getMentorId(),
+            booking.getBookedMentoring().getMentorName(),
+            booking.getBookedMentoring().getTitle(),
+            booking.getBookedTimes()));
+  }
+
+  @Transactional
+  public void rejectBooking(BookingCommand.Reject command) {
+    MentoringBookingId id = new MentoringBookingId(command.bookingId());
+    MentoringBooking booking =
+        bookingRepository.findById(id).orElseThrow(() -> new BookingNotFoundException(id));
+    booking.reject(command.userId(), command.userType(), command.reason(), LocalDateTime.now());
+
+    events.trigger(
+        command.bookingId() + "." + TOPIC_REJECTED,
+        DOMAIN_TYPE,
+        TOPIC_REJECTED,
+        new BookingRejectedEvent(
+            booking.getMentoringBookingId().bookingId(),
+            booking.getMentee().getId(),
+            booking.getBookedMentoring().getMentorId(),
+            booking.getBookedMentoring().getMentorName(),
+            booking.getBookedMentoring().getTitle(),
+            command.reason(),
+            booking.getBookedTimes(),
+            booking.getOrderId()));
+  }
+
+  @Transactional
+  public void cancelBooking(BookingCommand.Cancel command) {
+    MentoringBookingId id = new MentoringBookingId(command.bookingId());
+    MentoringBooking booking =
+        bookingRepository.findById(id).orElseThrow(() -> new BookingNotFoundException(id));
+    booking.cancel(command.userId(), command.userType(), command.reason(), LocalDateTime.now());
+
+    events.trigger(
+        command.bookingId() + "." + TOPIC_CANCELED,
+        DOMAIN_TYPE,
+        TOPIC_CANCELED,
+        new BookingCanceledEvent(
+            booking.getMentoringBookingId().bookingId(),
+            command.userId(),
+            booking.getMentee().getId(),
+            booking.getBookedMentoring().getMentorId(),
+            booking.getBookedMentoring().getTitle(),
+            command.reason(),
+            booking.getBookedTimes(),
+            booking.getOrderId()));
   }
 }

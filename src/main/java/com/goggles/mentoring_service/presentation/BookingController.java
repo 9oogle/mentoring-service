@@ -52,4 +52,32 @@ public class BookingController {
     Page<BookingResult.Summary> page = bookingService.getMyBookings(condition, pageRequest);
     return CommonPageResponse.of(page.map(BookingResponse.Summary::of));
   }
+
+  @ResponseStatus(HttpStatus.OK)
+  @PostMapping("/{bookingId}/acceptance")
+  public void acceptBooking(UserContext userContext, @PathVariable UUID bookingId) {
+    BookingCommand.Accept command =
+        new BookingCommand.Accept(bookingId, userContext.userId(), userContext.userType());
+    bookingService.acceptBooking(command);
+  }
+
+  @ResponseStatus(HttpStatus.OK)
+  @PostMapping("/{bookingId}/rejection")
+  public void rejectBooking(
+      UserContext userContext,
+      @PathVariable UUID bookingId,
+      @Valid @RequestBody BookingRequest.Reject request) {
+    BookingCommand.Reject command = request.toCommand(bookingId, userContext);
+    bookingService.rejectBooking(command);
+  }
+
+  @ResponseStatus(HttpStatus.OK)
+  @PostMapping("/{bookingId}/cancellation")
+  public void cancelBooking(
+      UserContext userContext,
+      @PathVariable UUID bookingId,
+      @Valid @RequestBody BookingRequest.Cancel request) {
+    BookingCommand.Cancel command = request.toCommand(bookingId, userContext);
+    bookingService.cancelBooking(command);
+  }
 }

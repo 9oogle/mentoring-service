@@ -6,6 +6,7 @@ import com.goggles.mentoring_service.domain.booking.MentoringBookingId;
 import com.goggles.mentoring_service.domain.booking.SessionSlot;
 import com.goggles.mentoring_service.presentation.support.UserContext;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
@@ -33,12 +34,25 @@ public class BookingRequest {
   public record BookingTimeSlot(
       @NotNull LocalDate date, @NotNull LocalTime startTime, @NotNull LocalTime endTime) {}
 
+  public record Reject(@NotBlank String reason) {
+    public BookingCommand.Reject toCommand(UUID bookingId, UserContext userContext) {
+      return new BookingCommand.Reject(
+          bookingId, userContext.userId(), userContext.userType(), reason());
+	}
+}
   public record PaymentFailed(
         @NotNull UUID mentoringBookingId, @NotNull UUID orderId, @NotNull String failureReason
   ) {
     public BookingCommand.PaymentFailed toCommand() {
       MentoringBookingId mentoringBookingId = new MentoringBookingId(mentoringBookingId());
         return new BookingCommand.PaymentFailed(mentoringBookingId, orderId(), failureReason());
+    }
+  }
+
+  public record Cancel(@NotBlank String reason) {
+    public BookingCommand.Cancel toCommand(UUID bookingId, UserContext userContext) {
+      return new BookingCommand.Cancel(
+          bookingId, userContext.userId(), userContext.userType(), reason());
     }
   }
 }
