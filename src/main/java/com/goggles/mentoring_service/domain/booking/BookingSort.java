@@ -1,4 +1,4 @@
-package com.goggles.mentoring_service.application.query;
+package com.goggles.mentoring_service.domain.booking;
 
 public enum BookingSort {
   SESSION_DATE_ASC,

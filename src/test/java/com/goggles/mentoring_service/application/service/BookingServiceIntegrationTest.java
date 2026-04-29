@@ -9,8 +9,8 @@ import com.goggles.common.exception.ForbiddenException;
 import com.goggles.common.pagination.CommonPageRequest;
 import com.goggles.mentoring_service.application.command.BookingCommand;
 import com.goggles.mentoring_service.application.command.MenteeInfo;
-import com.goggles.mentoring_service.application.query.BookingSearchCondition;
-import com.goggles.mentoring_service.application.query.BookingSort;
+import com.goggles.mentoring_service.domain.booking.BookingSearchCondition;
+import com.goggles.mentoring_service.domain.booking.BookingSort;
 import com.goggles.mentoring_service.application.result.BookingResult;
 import com.goggles.mentoring_service.config.TestAuditConfig;
 import com.goggles.mentoring_service.domain._common.UserType;
@@ -138,14 +138,14 @@ class BookingServiceIntegrationTest {
     em.clear();
 
     BookingResult.Detail result =
-        bookingService.getBooking(created.bookingId(), MENTEE_ID, UserType.STUDENT);
+        bookingService.getBooking(created.enrollmentId(), MENTEE_ID, UserType.STUDENT);
 
     log.info("==== 멘티 예약 상세 조회 결과 ====");
     log.info("bookingId: {}", result.bookingId());
     log.info("menteeId : {}", result.mentee().menteeId());
     log.info("status   : {}", result.status());
 
-    assertThat(result.bookingId()).isEqualTo(created.bookingId());
+    assertThat(result.bookingId()).isEqualTo(created.enrollmentId());
     assertThat(result.mentee().menteeId()).isEqualTo(MENTEE_ID);
     assertThat(result.status()).isEqualTo(BookingStatus.PENDING);
   }
@@ -160,13 +160,13 @@ class BookingServiceIntegrationTest {
     em.clear();
 
     BookingResult.Detail result =
-        bookingService.getBooking(created.bookingId(), MENTOR_ID, UserType.INSTRUCTOR);
+        bookingService.getBooking(created.enrollmentId(), MENTOR_ID, UserType.INSTRUCTOR);
 
     log.info("==== 멘토 예약 상세 조회 결과 ====");
     log.info("bookingId: {}", result.bookingId());
     log.info("status   : {}", result.status());
 
-    assertThat(result.bookingId()).isEqualTo(created.bookingId());
+    assertThat(result.bookingId()).isEqualTo(created.enrollmentId());
     assertThat(result.status()).isEqualTo(BookingStatus.PENDING);
   }
 
@@ -189,7 +189,7 @@ class BookingServiceIntegrationTest {
     em.clear();
 
     assertThatThrownBy(
-            () -> bookingService.getBooking(created.bookingId(), UNAUTHORIZED_USER_ID, UserType.STUDENT))
+            () -> bookingService.getBooking(created.enrollmentId(), UNAUTHORIZED_USER_ID, UserType.STUDENT))
         .isInstanceOf(ForbiddenException.class);
   }
 

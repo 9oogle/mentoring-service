@@ -1,6 +1,6 @@
 package com.goggles.mentoring_service.domain.booking.repository;
 
-import com.goggles.mentoring_service.application.query.BookingSearchCondition;
+import com.goggles.mentoring_service.domain.booking.BookingSearchCondition;
 import com.goggles.mentoring_service.domain.booking.MentoringBooking;
 import com.goggles.mentoring_service.domain.booking.MentoringBookingId;
 

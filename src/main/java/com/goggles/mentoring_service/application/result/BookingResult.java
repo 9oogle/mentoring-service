@@ -26,6 +26,8 @@ public class BookingResult {
             mentoring.getMentor().getId(),
             mentoring.getMentor().getName()
         );
+    }
+  }
 
   public record Summary(
       UUID bookingId,

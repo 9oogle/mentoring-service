@@ -1,7 +1,7 @@
 package com.goggles.mentoring_service.infrastructure.persistence;
 
-import com.goggles.mentoring_service.application.query.BookingSearchCondition;
-import com.goggles.mentoring_service.application.query.BookingSort;
+import com.goggles.mentoring_service.domain.booking.BookingSearchCondition;
+import com.goggles.mentoring_service.domain.booking.BookingSort;
 import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.booking.MentoringBooking;
 import com.goggles.mentoring_service.domain.booking.QBookedTime;
@@ -31,7 +31,7 @@ public class BookingQueryRepositoryImpl implements BookingQueryRepository {
     BooleanBuilder where = buildWhere(b, condition);
     OrderSpecifier<?> order = buildOrder(b, bt, condition.sort());
 
-    boolean sortBySession =condition.sort().isSortBySession() ;
+    boolean sortBySession = condition.sort() != null && condition.sort().isSortBySession();
 
     List<MentoringBooking> content;
     Long total;
