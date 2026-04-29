@@ -18,7 +18,11 @@ public class CategoryValidationException extends MentoringValidationException {
 		return new CategoryValidationException("이미 존재하는 카테고리 코드입니다.");
 	}
 
-	public static CategoryValidationException noPermissionToActivate() {
-		return new CategoryValidationException("카테고리를 활성화할 수 있는 권한이 없습니다.");
+	public static CategoryValidationException cannotMoveInactiveCategory() {
+		return new CategoryValidationException("비활성화된 카테고리는 이동할 수 없습니다.");
+	}
+
+	public static CategoryValidationException duplicateCategoryIds() {
+		return new CategoryValidationException("중복된 카테고리 ID가 포함되어 있습니다.");
 	}
 }

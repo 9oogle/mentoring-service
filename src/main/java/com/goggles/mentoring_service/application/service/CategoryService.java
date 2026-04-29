@@ -45,6 +45,10 @@ public class CategoryService {
 
 	@Transactional
 	public UUID createCategory(CategoryCommand.Create command) {
+		if (categoryRepository.existsByName(command.title()))
+			throw CategoryValidationException.alreadyExistsName();
+		if (categoryRepository.existsByCode(command.code()))
+			throw CategoryValidationException.alreadyExistsCode();
 		MentoringCategory category =
 				MentoringCategory.create(command.creatorId(), command.creatorType(),
 						command.title(), command.code());
@@ -62,6 +66,8 @@ public class CategoryService {
 				.collect(Collectors.toMap(MentoringCategory::getMentoringCategoryId, c -> c));
 
 		List<MentoringCategoryId> newCategorySetIds = command.categoryIds();
+		if (new HashSet<>(newCategorySetIds).size() != newCategorySetIds.size())
+			throw CategoryValidationException.duplicateCategoryIds();
 		for (MentoringCategoryId id : newCategorySetIds) {
 			if (!categoryMap.containsKey(id)) throw new CategoryNotFoundException(id.categoryId());
 		}

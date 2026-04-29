@@ -12,15 +12,15 @@ import java.util.UUID;
 public class CategoryRequest {
 
 	public record Create( @NotBlank @Size(max = 100) String title,
-						  @NotBlank @Size(max = 10) String code,@NotNull int sortOrder) {
+						  @NotBlank @Size(max = 10) String code, @NotNull @Min(0) Integer sortOrder) {
 		public CategoryCommand.Create toCommand(UserContext userContext) {
 			return new CategoryCommand.Create(title(), code(), sortOrder(), userContext.userId(),
 					userContext.userType());
 		}}
 
 	public record Update(
-			@Size(max = 100) String title,
-			@Size(max = 10) String code) {
+			@Size(min = 1, max = 100) String title,
+			@Size(min = 1, max = 10) String code) {
 		public CategoryCommand.Update toCommand(UserContext userContext, UUID categoryId) {
 			MentoringCategoryId mentoringCategoryId = new MentoringCategoryId(categoryId);
 			return new CategoryCommand.Update(mentoringCategoryId, title(), code(),

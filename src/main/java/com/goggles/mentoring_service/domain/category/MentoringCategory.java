@@ -103,7 +103,7 @@ public class MentoringCategory extends BaseAudit {
 
 	private void checkActivation() {
 		if (!this.active) {
-			throw CategoryValidationException.noPermissionToActivate();
+			throw CategoryValidationException.cannotMoveInactiveCategory();
 		}
 	}
 }

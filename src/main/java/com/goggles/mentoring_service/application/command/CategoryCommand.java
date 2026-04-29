@@ -2,8 +2,6 @@ package com.goggles.mentoring_service.application.command;
 
 import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.category.MentoringCategoryId;
-import com.goggles.mentoring_service.presentation.support.UserContext;
-import jakarta.validation.constraints.Size;
 
 import java.util.List;
 import java.util.UUID;
@@ -12,7 +10,7 @@ public class CategoryCommand {
 
 	public record GetList(UUID userId, UserType userType) {}
 
-	public record Create(String title, String code, int sortOrder, UUID creatorId,
+	public record Create(String title, String code, Integer sortOrder, UUID creatorId,
 						 UserType creatorType) {}
 
 	public record UpdateActive(UUID userId, UserType userType, List<MentoringCategoryId> categoryIds) {}
