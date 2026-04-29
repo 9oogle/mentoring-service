@@ -140,14 +140,13 @@ public class BookingService {
         command.bookingId() + "." + TOPIC_REJECTED,
         DOMAIN_TYPE,
         TOPIC_REJECTED,
-        new BookingRejectedEvent(
-            booking.getMentoringBookingId().bookingId(),
+        new BookingRejectedEvent(booking.getMentoringBookingId().bookingId(),
             booking.getMentee().getId(),
             booking.getBookedMentoring().getMentorId(),
             booking.getBookedMentoring().getMentorName(),
             booking.getBookedMentoring().getTitle(),
             command.reason(),
-            firstSession.getSessionDate()));
+            firstSession.getSessionDate(), booking.getOrderId()));
   }
 
   @Transactional
@@ -169,6 +168,6 @@ public class BookingService {
             booking.getBookedMentoring().getMentorId(),
             booking.getBookedMentoring().getTitle(),
             command.reason(),
-            firstSession.getSessionDate()));
+            firstSession.getSessionDate(), booking.getOrderId()));
   }
 }
