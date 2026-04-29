@@ -5,13 +5,9 @@ import com.goggles.common.exception.ForbiddenException;
 import com.goggles.common.pagination.CommonPageRequest;
 import com.goggles.mentoring_service.application.command.BookingCommand;
 import com.goggles.mentoring_service.application.command.MenteeInfo;
+import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.booking.BookingSearchCondition;
 import com.goggles.mentoring_service.application.result.BookingResult;
-import com.goggles.mentoring_service.domain._common.UserType;
-import com.goggles.mentoring_service.domain.booking.BookedMentoring;
-import com.goggles.mentoring_service.domain.booking.BookedMentoring;
-import com.goggles.mentoring_service.domain.booking.BookedTime;
-import com.goggles.mentoring_service.domain.booking.Mentee;
 import com.goggles.mentoring_service.domain.booking.MentoringBooking;
 import com.goggles.mentoring_service.domain.booking.MentoringBookingId;
 import com.goggles.mentoring_service.domain.booking.SessionSlot;
@@ -25,7 +21,6 @@ import com.goggles.mentoring_service.domain.mentoring.MentoringId;
 import com.goggles.mentoring_service.domain.mentoring.exception.MentoringNotFoundException;
 import com.goggles.mentoring_service.domain.mentoring.repository.MentoringRepository;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -87,10 +82,8 @@ public class BookingService {
   }
 
   private void checkAccess(MentoringBooking booking, UUID userId, UserType userType) {
-    boolean isMentee = userType == UserType.STUDENT && booking.getMentee()
-            .isMentee(userId);
-    boolean isMentor = userType == UserType.INSTRUCTOR && booking.getBookedMentoring()
-            .isMentor(userId);
+    boolean isMentee = userType == UserType.STUDENT && booking.getMentee().isMentee(userId);
+    boolean isMentor = userType == UserType.INSTRUCTOR && booking.getBookedMentoring().isMentor(userId);
     if (!isMentee && !isMentor) {
       throw new ForbiddenException("해당 예약에 접근 권한이 없습니다.");
     }
@@ -99,8 +92,8 @@ public class BookingService {
   @Transactional
   public void paymentFailed(BookingCommand.PaymentFailed command) {
     MentoringBooking booking =
-            bookingRepository.findById(command.mentoringBookingId())
-                    .orElseThrow(() -> new BookingNotFoundException(command.mentoringBookingId()));
+        bookingRepository.findById(command.mentoringBookingId())
+            .orElseThrow(() -> new BookingNotFoundException(command.mentoringBookingId()));
     booking.failPayment(command.failureReason(), LocalDateTime.now());
     bookingRepository.save(booking);
   }
@@ -112,7 +105,6 @@ public class BookingService {
         bookingRepository.findById(id).orElseThrow(() -> new BookingNotFoundException(id));
     booking.accept(command.userId(), command.userType());
 
-    BookedTime firstSession = booking.getBookedTimes().getFirst();
     events.trigger(
         command.bookingId() + "." + TOPIC_ACCEPTED,
         DOMAIN_TYPE,
@@ -123,9 +115,7 @@ public class BookingService {
             booking.getBookedMentoring().getMentorId(),
             booking.getBookedMentoring().getMentorName(),
             booking.getBookedMentoring().getTitle(),
-            firstSession.getSessionDate(),
-            firstSession.getSessionStartTime(),
-            firstSession.getSessionEndTime()));
+            booking.getBookedTimes()));
   }
 
   @Transactional
@@ -135,18 +125,19 @@ public class BookingService {
         bookingRepository.findById(id).orElseThrow(() -> new BookingNotFoundException(id));
     booking.reject(command.userId(), command.userType(), command.reason(), LocalDateTime.now());
 
-    BookedTime firstSession = booking.getBookedTimes().getFirst();
     events.trigger(
         command.bookingId() + "." + TOPIC_REJECTED,
         DOMAIN_TYPE,
         TOPIC_REJECTED,
-        new BookingRejectedEvent(booking.getMentoringBookingId().bookingId(),
+        new BookingRejectedEvent(
+            booking.getMentoringBookingId().bookingId(),
             booking.getMentee().getId(),
             booking.getBookedMentoring().getMentorId(),
             booking.getBookedMentoring().getMentorName(),
             booking.getBookedMentoring().getTitle(),
             command.reason(),
-            firstSession.getSessionDate(), booking.getOrderId()));
+            booking.getBookedTimes(),
+            booking.getOrderId()));
   }
 
   @Transactional
@@ -156,7 +147,6 @@ public class BookingService {
         bookingRepository.findById(id).orElseThrow(() -> new BookingNotFoundException(id));
     booking.cancel(command.userId(), command.userType(), command.reason(), LocalDateTime.now());
 
-    BookedTime firstSession = booking.getBookedTimes().getFirst();
     events.trigger(
         command.bookingId() + "." + TOPIC_CANCELED,
         DOMAIN_TYPE,
@@ -168,6 +158,7 @@ public class BookingService {
             booking.getBookedMentoring().getMentorId(),
             booking.getBookedMentoring().getTitle(),
             command.reason(),
-            firstSession.getSessionDate(), booking.getOrderId()));
+            booking.getBookedTimes(),
+            booking.getOrderId()));
   }
 }
