@@ -4,4 +4,5 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 public record BookingRejectedEvent(UUID bookingId, UUID menteeId, UUID mentorId, String mentorName,
-								   String title, String reason, LocalDate sessionDate) {}
+								   String title, String reason, LocalDate sessionDate,
+								   UUID orderId) {}
