@@ -79,8 +79,8 @@ public class MentoringCategory extends BaseAudit {
 
 	public void updateNameAndCode(UUID userId, UserType type, String name, String code) {
 		checkIfUserTypeIsAdmin(userId, type);
-		if(name !=null) this.name = name;
-		if(code !=null) this.code = code;
+		if (name != null) this.name = name;
+		if (code != null) this.code = code;
 	}
 
 	public void activate(UUID userId, UserType type, int sortOrder) {

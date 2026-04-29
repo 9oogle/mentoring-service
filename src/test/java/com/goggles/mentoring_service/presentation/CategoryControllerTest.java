@@ -4,8 +4,6 @@ import com.goggles.mentoring_service.application.result.CategoryResult;
 import com.goggles.mentoring_service.application.service.CategoryService;
 import com.goggles.mentoring_service.infrastructure.config.WebMvcConfig;
 import com.goggles.mentoring_service.presentation.support.UserContextArgumentResolver;
-import java.util.List;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -28,7 +26,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @MockitoBean(types = JpaMetamodelMappingContext.class)
 class CategoryControllerTest {
 
-  @Autowired private MockMvc mockMvc;
+	@Autowired
+	private MockMvc mockMvc;
 
 	@MockitoBean
 	private CategoryService categoryService;
@@ -37,13 +36,20 @@ class CategoryControllerTest {
 	void getActiveCategories_success() throws Exception {
 		UUID id1 = UUID.randomUUID();
 		UUID id2 = UUID.randomUUID();
-		String name1 = UUID.randomUUID().toString();
-		String code1 = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+		String name1 = UUID.randomUUID()
+				.toString();
+		String code1 = UUID.randomUUID()
+				.toString()
+				.substring(0, 8)
+				.toUpperCase();
 
 		given(categoryService.getActiveCategories()).willReturn(
 				List.of(new CategoryResult.Info(id1, name1, code1, 0, true),
-						new CategoryResult.Info(id2, UUID.randomUUID().toString(),
-								UUID.randomUUID().toString().substring(0, 8).toUpperCase(), 1, true)));
+						new CategoryResult.Info(id2, UUID.randomUUID()
+								.toString(), UUID.randomUUID()
+								.toString()
+								.substring(0, 8)
+								.toUpperCase(), 1, true)));
 
 		mockMvc.perform(get("/api/v1/mentoring-categories"))
 				.andDo(print())
@@ -56,9 +62,9 @@ class CategoryControllerTest {
 				.andExpect(jsonPath("$.categories[0].sortOrder").value(0));
 	}
 
-  @Test
-  void getActiveCategories_empty() throws Exception {
-    given(categoryService.getActiveCategories()).willReturn(List.of());
+	@Test
+	void getActiveCategories_empty() throws Exception {
+		given(categoryService.getActiveCategories()).willReturn(List.of());
 
 		mockMvc.perform(get("/api/v1/mentoring-categories"))
 				.andDo(print())

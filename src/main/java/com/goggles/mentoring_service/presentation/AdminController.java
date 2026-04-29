@@ -25,7 +25,8 @@ public class AdminController {
 
 	@GetMapping("mentoring-categories")
 	public CategoryResponse.CategoryListForAdmin getAllCategories(UserContext userContext) {
-		CategoryCommand.GetList command = new CategoryCommand.GetList(userContext.userId(), userContext.userType());
+		CategoryCommand.GetList command =
+				new CategoryCommand.GetList(userContext.userId(), userContext.userType());
 		List<CategoryResult.Info> categories = categoryService.getAllCategories(command);
 		return CategoryResponse.CategoryListForAdmin.of(categories);
 	}
@@ -57,8 +58,9 @@ public class AdminController {
 	@DeleteMapping("mentoring-categories/{categoryId}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void deleteCategory(UserContext userContext, @PathVariable UUID categoryId) {
-		CategoryCommand.Delete command = new CategoryCommand.Delete(userContext.userId(), userContext.userType(),
-				new MentoringCategoryId(categoryId));
+		CategoryCommand.Delete command =
+				new CategoryCommand.Delete(userContext.userId(), userContext.userType(),
+						new MentoringCategoryId(categoryId));
 		categoryService.deleteCategory(command);
 	}
 

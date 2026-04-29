@@ -25,7 +25,7 @@ public class Mentee {
 	@Column(name = "student_name", length = 100, nullable = false)
 	private String name;
 
-	 static Mentee of(UUID id, UserType type, String name) {
+	static Mentee of(UUID id, UserType type, String name) {
 		validateUserType(id, type);
 		Mentee mentee = new Mentee();
 		mentee.id = id;

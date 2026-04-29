@@ -13,12 +13,11 @@ public class CategoryCommand {
 	public record Create(String title, String code, Integer sortOrder, UUID creatorId,
 						 UserType creatorType) {}
 
-	public record UpdateActive(UUID userId, UserType userType, List<MentoringCategoryId> categoryIds) {}
+	public record UpdateActive(UUID userId, UserType userType,
+							   List<MentoringCategoryId> categoryIds) {}
 
 	public record Update(MentoringCategoryId mentoringCategoryId, String name, String code,
-						 UUID userId, UserType userType) {
-	}
+						 UUID userId, UserType userType) {}
 
-	public record Delete (UUID userId, UserType userType, MentoringCategoryId categoryId){
-	}
+	public record Delete(UUID userId, UserType userType, MentoringCategoryId categoryId) {}
 }

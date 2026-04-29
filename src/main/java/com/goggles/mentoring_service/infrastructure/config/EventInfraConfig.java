@@ -17,35 +17,31 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class EventInfraConfig {
 
-  @Bean
-  public Events events(ApplicationEventPublisher eventPublisher) {
-    return new Events(eventPublisher);
-  }
+	@Bean
+	public Events events(ApplicationEventPublisher eventPublisher) {
+		return new Events(eventPublisher);
+	}
 
-  @Bean
-  @ConditionalOnBean(KafkaTemplate.class)
-  public OutboxStatusUpdater outboxStatusUpdater(
-      OutboxRepository outboxRepository, KafkaTemplate<String, Object> kafkaTemplate) {
-    return new OutboxStatusUpdater(outboxRepository, kafkaTemplate);
-  }
+	@Bean
+	@ConditionalOnBean(KafkaTemplate.class)
+	public OutboxStatusUpdater outboxStatusUpdater(OutboxRepository outboxRepository,
+			KafkaTemplate<String, Object> kafkaTemplate) {
+		return new OutboxStatusUpdater(outboxRepository, kafkaTemplate);
+	}
 
-  @Bean
-  @ConditionalOnBean(KafkaTemplate.class)
-  public OutboxEventListener outboxEventListener(
-      OutboxRepository outboxRepository,
-      KafkaTemplate<String, Object> kafkaTemplate,
-      ObjectMapper objectMapper,
-      OutboxStatusUpdater outboxStatusUpdater) {
-    return new OutboxEventListener(
-        outboxRepository, kafkaTemplate, objectMapper, outboxStatusUpdater);
-  }
+	@Bean
+	@ConditionalOnBean(KafkaTemplate.class)
+	public OutboxEventListener outboxEventListener(OutboxRepository outboxRepository,
+			KafkaTemplate<String, Object> kafkaTemplate, ObjectMapper objectMapper,
+			OutboxStatusUpdater outboxStatusUpdater) {
+		return new OutboxEventListener(outboxRepository, kafkaTemplate, objectMapper,
+				outboxStatusUpdater);
+	}
 
-  @Bean
-  @ConditionalOnBean(KafkaTemplate.class)
-  public OutboxRelayScheduler outboxRelayScheduler(
-      OutboxRepository outboxRepository,
-      KafkaTemplate<String, Object> kafkaTemplate,
-      OutboxStatusUpdater outboxStatusUpdater) {
-    return new OutboxRelayScheduler(outboxRepository, kafkaTemplate, outboxStatusUpdater);
-  }
+	@Bean
+	@ConditionalOnBean(KafkaTemplate.class)
+	public OutboxRelayScheduler outboxRelayScheduler(OutboxRepository outboxRepository,
+			KafkaTemplate<String, Object> kafkaTemplate, OutboxStatusUpdater outboxStatusUpdater) {
+		return new OutboxRelayScheduler(outboxRepository, kafkaTemplate, outboxStatusUpdater);
+	}
 }

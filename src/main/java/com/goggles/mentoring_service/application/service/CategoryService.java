@@ -13,12 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -75,7 +70,8 @@ public class CategoryService {
 		Set<MentoringCategoryId> newIds = new HashSet<>(newCategorySetIds);
 
 		all.stream()
-				.filter(category -> category.isActive() && !newIds.contains(category.getMentoringCategoryId()))
+				.filter(category -> category.isActive() &&
+						!newIds.contains(category.getMentoringCategoryId()))
 				.forEach(category -> category.deactivate(command.userId(), command.userType()));
 
 		for (int i = 0; i < newCategorySetIds.size(); i++) {
@@ -91,12 +87,12 @@ public class CategoryService {
 		MentoringCategory category = categoryRepository.findById(command.mentoringCategoryId())
 				.orElseThrow(() -> new CategoryNotFoundException(command.mentoringCategoryId()
 						.categoryId()));
-		if (command.name() != null && !category.getName().equals(command.name())
-				&& categoryRepository.existsByName(command.name()))
+		if (command.name() != null && !category.getName()
+				.equals(command.name()) && categoryRepository.existsByName(command.name()))
 			throw CategoryValidationException.alreadyExistsName();
 
-		if (command.code() != null && !category.getCode().equals(command.code())
-				&& categoryRepository.existsByCode(command.code()))
+		if (command.code() != null && !category.getCode()
+				.equals(command.code()) && categoryRepository.existsByCode(command.code()))
 			throw CategoryValidationException.alreadyExistsCode();
 		category.updateNameAndCode(command.userId(), command.userType(), command.name(),
 				command.code());
@@ -105,8 +101,7 @@ public class CategoryService {
 	@Transactional
 	public void deleteCategory(CategoryCommand.Delete command) {
 		MentoringCategoryId categoryId = command.categoryId();
-		MentoringCategory category =
-				categoryRepository.findById(categoryId)
+		MentoringCategory category = categoryRepository.findById(categoryId)
 				.orElseThrow(() -> new CategoryNotFoundException(categoryId.categoryId()));
 		category.softDelete(command.userId(), command.userType());
 	}

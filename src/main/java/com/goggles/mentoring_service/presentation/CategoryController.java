@@ -1,18 +1,14 @@
 package com.goggles.mentoring_service.presentation;
 
-import com.goggles.mentoring_service.application.command.CategoryCommand;
 import com.goggles.mentoring_service.application.result.CategoryResult;
 import com.goggles.mentoring_service.application.service.CategoryService;
-import com.goggles.mentoring_service.presentation.dto.CategoryRequest;
 import com.goggles.mentoring_service.presentation.dto.CategoryResponse;
-import com.goggles.mentoring_service.presentation.support.UserContext;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/mentoring-categories")

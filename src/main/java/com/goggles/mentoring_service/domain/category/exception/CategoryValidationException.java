@@ -1,7 +1,6 @@
 package com.goggles.mentoring_service.domain.category.exception;
 
 import com.goggles.mentoring_service.domain._common.MentoringValidationException;
-import com.goggles.mentoring_service.domain.booking.exception.UnauthorizedBookingAccessException;
 
 public class CategoryValidationException extends MentoringValidationException {
 

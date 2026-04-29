@@ -19,15 +19,16 @@ public class InternalMentoringController {
 
 	@ResponseStatus(HttpStatus.CREATED)
 	@PostMapping("mentoring-booking")
-	public BookingResponse.Create processMentoringBooking(
-			UserContext userContext, @Valid @RequestBody BookingRequest.Create request) {
+	public BookingResponse.Create processMentoringBooking(UserContext userContext,
+			@Valid @RequestBody BookingRequest.Create request) {
 		BookingCommand.Create command = request.toCommand(userContext);
 		BookingResult.Create result = bookingService.createBooking(command);
 		return BookingResponse.Create.of(result);
 	}
 
 	@PatchMapping("mentoring-booking/payment-failed")
-	public void processMentoringBookingPaymentFailed(@Valid @RequestBody BookingRequest.PaymentFailed request) {
+	public void processMentoringBookingPaymentFailed(
+			@Valid @RequestBody BookingRequest.PaymentFailed request) {
 		BookingCommand.PaymentFailed command = request.toCommand();
 		bookingService.paymentFailed(command);
 	}

@@ -24,7 +24,8 @@ class MentoringCategoryTest {
 
 	@Test
 	void create_success() {
-		MentoringCategory category = MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
+		MentoringCategory category =
+				MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
 
 		assertThat(category.getMentoringCategoryId()).isNotNull();
 		assertThat(category.getName()).isEqualTo("Java");
@@ -36,15 +37,16 @@ class MentoringCategoryTest {
 	@Test
 	void create_forbidden_if_not_master() {
 		assertThatThrownBy(
-				() -> MentoringCategory.create(UUID.randomUUID(), UserType.INSTRUCTOR, "Java", "JAVA"))
-				.isInstanceOf(ForbiddenException.class);
+				() -> MentoringCategory.create(UUID.randomUUID(), UserType.INSTRUCTOR, "Java",
+						"JAVA")).isInstanceOf(ForbiddenException.class);
 	}
 
 	// ── activate / deactivate ────────────────────────────────────────────────
 
 	@Test
 	void activate_success() {
-		MentoringCategory category = MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
+		MentoringCategory category =
+				MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
 
 		category.activate(adminId, UserType.MASTER, 2);
 
@@ -54,7 +56,8 @@ class MentoringCategoryTest {
 
 	@Test
 	void deactivate_success() {
-		MentoringCategory category = MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
+		MentoringCategory category =
+				MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
 		category.activate(adminId, UserType.MASTER, 2);
 
 		category.deactivate(adminId, UserType.MASTER);
@@ -67,7 +70,8 @@ class MentoringCategoryTest {
 
 	@Test
 	void move_success() {
-		MentoringCategory category = MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
+		MentoringCategory category =
+				MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
 		category.activate(adminId, UserType.MASTER, 0);
 
 		category.move(adminId, UserType.MASTER, 3);
@@ -77,17 +81,19 @@ class MentoringCategoryTest {
 
 	@Test
 	void move_throws_if_inactive() {
-		MentoringCategory category = MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
+		MentoringCategory category =
+				MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
 
-		assertThatThrownBy(() -> category.move(adminId, UserType.MASTER, 1))
-				.isInstanceOf(CategoryValidationException.class);
+		assertThatThrownBy(() -> category.move(adminId, UserType.MASTER, 1)).isInstanceOf(
+				CategoryValidationException.class);
 	}
 
 	// ── updateNameAndCode ────────────────────────────────────────────────────
 
 	@Test
 	void updateNameAndCode_success() {
-		MentoringCategory category = MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
+		MentoringCategory category =
+				MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
 
 		category.updateNameAndCode(adminId, UserType.MASTER, "Python", "PY");
 
@@ -97,18 +103,20 @@ class MentoringCategoryTest {
 
 	@Test
 	void updateNameAndCode_forbidden_if_not_master() {
-		MentoringCategory category = MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
+		MentoringCategory category =
+				MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
 
 		assertThatThrownBy(
-				() -> category.updateNameAndCode(UUID.randomUUID(), UserType.INSTRUCTOR, "Python", "PY"))
-				.isInstanceOf(ForbiddenException.class);
+				() -> category.updateNameAndCode(UUID.randomUUID(), UserType.INSTRUCTOR, "Python",
+						"PY")).isInstanceOf(ForbiddenException.class);
 	}
 
 	// ── softDelete ───────────────────────────────────────────────────────────
 
 	@Test
 	void softDelete_success() {
-		MentoringCategory category = MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
+		MentoringCategory category =
+				MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
 		category.activate(adminId, UserType.MASTER, 1);
 
 		category.softDelete(adminId, UserType.MASTER);
@@ -119,10 +127,11 @@ class MentoringCategoryTest {
 
 	@Test
 	void softDelete_forbidden_if_not_master() {
-		MentoringCategory category = MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
+		MentoringCategory category =
+				MentoringCategory.create(adminId, UserType.MASTER, "Java", "JAVA");
 
 		assertThatThrownBy(
-				() -> category.softDelete(UUID.randomUUID(), UserType.INSTRUCTOR))
-				.isInstanceOf(ForbiddenException.class);
+				() -> category.softDelete(UUID.randomUUID(), UserType.INSTRUCTOR)).isInstanceOf(
+				ForbiddenException.class);
 	}
 }

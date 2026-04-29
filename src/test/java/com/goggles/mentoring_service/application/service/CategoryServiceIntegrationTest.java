@@ -1,14 +1,14 @@
 package com.goggles.mentoring_service.application.service;
 
 import com.goggles.common.exception.ForbiddenException;
-import com.goggles.mentoring_service.domain.category.exception.CategoryNotFoundException;
-import com.goggles.mentoring_service.domain.category.exception.CategoryValidationException;
 import com.goggles.mentoring_service.application.command.CategoryCommand;
 import com.goggles.mentoring_service.application.result.CategoryResult;
 import com.goggles.mentoring_service.config.TestAuditConfig;
 import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.category.MentoringCategory;
 import com.goggles.mentoring_service.domain.category.MentoringCategoryId;
+import com.goggles.mentoring_service.domain.category.exception.CategoryNotFoundException;
+import com.goggles.mentoring_service.domain.category.exception.CategoryValidationException;
 import com.goggles.mentoring_service.domain.category.repository.MentoringCategoryRepository;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -116,8 +116,8 @@ class CategoryServiceIntegrationTest {
 
 	@Test
 	void create_savesInactive() {
-		CategoryCommand.Create command = new CategoryCommand.Create("Java", "JAVA", 0,
-				UUID.randomUUID(), UserType.MASTER);
+		CategoryCommand.Create command =
+				new CategoryCommand.Create("Java", "JAVA", 0, UUID.randomUUID(), UserType.MASTER);
 
 		UUID categoryId = categoryService.createCategory(command);
 
@@ -131,11 +131,12 @@ class CategoryServiceIntegrationTest {
 
 	@Test
 	void create_forbidden_if_not_master() {
-		CategoryCommand.Create command = new CategoryCommand.Create("Java", "JAVA", 0,
-				UUID.randomUUID(), UserType.INSTRUCTOR);
+		CategoryCommand.Create command =
+				new CategoryCommand.Create("Java", "JAVA", 0, UUID.randomUUID(),
+						UserType.INSTRUCTOR);
 
-		assertThatThrownBy(() -> categoryService.createCategory(command))
-				.isInstanceOf(ForbiddenException.class);
+		assertThatThrownBy(() -> categoryService.createCategory(command)).isInstanceOf(
+				ForbiddenException.class);
 	}
 
 	// ── updateActiveCategories ────────────────────────────────────────────────
@@ -148,19 +149,25 @@ class CategoryServiceIntegrationTest {
 		MentoringCategory c2 = categoryRepository.save(createInactive());
 
 		// c2를 0번, c0을 1번으로 재배치, c1은 비활성화
-		categoryService.updateActiveCategories(new CategoryCommand.UpdateActive(adminId,
-				UserType.MASTER, List.of(c2.getMentoringCategoryId(),
-						c0.getMentoringCategoryId())));
+		categoryService.updateActiveCategories(
+				new CategoryCommand.UpdateActive(adminId, UserType.MASTER,
+						List.of(c2.getMentoringCategoryId(), c0.getMentoringCategoryId())));
 
 		List<CategoryResult.Info> active = categoryService.getActiveCategories();
 		log.info("==== 활성 카테고리 재배치 결과 ====");
 		active.forEach(c -> log.info("  sortOrder={} id={}", c.getSortOrder(), c.getCategoryId()));
 
 		assertThat(active).hasSize(2);
-		assertThat(active.get(0).getCategoryId()).isEqualTo(c2.getMentoringCategoryId().categoryId());
-		assertThat(active.get(0).getSortOrder()).isEqualTo(0);
-		assertThat(active.get(1).getCategoryId()).isEqualTo(c0.getMentoringCategoryId().categoryId());
-		assertThat(active.get(1).getSortOrder()).isEqualTo(1);
+		assertThat(active.get(0)
+				.getCategoryId()).isEqualTo(c2.getMentoringCategoryId()
+				.categoryId());
+		assertThat(active.get(0)
+				.getSortOrder()).isEqualTo(0);
+		assertThat(active.get(1)
+				.getCategoryId()).isEqualTo(c0.getMentoringCategoryId()
+				.categoryId());
+		assertThat(active.get(1)
+				.getSortOrder()).isEqualTo(1);
 	}
 
 	@Test
@@ -181,7 +188,8 @@ class CategoryServiceIntegrationTest {
 
 		assertThatThrownBy(() -> categoryService.updateActiveCategories(
 				new CategoryCommand.UpdateActive(adminId, UserType.MASTER,
-						List.of(new MentoringCategoryId(UUID.randomUUID()))))).isInstanceOf(CategoryNotFoundException.class);
+						List.of(new MentoringCategoryId(UUID.randomUUID()))))).isInstanceOf(
+				CategoryNotFoundException.class);
 	}
 
 	@Test
@@ -199,7 +207,8 @@ class CategoryServiceIntegrationTest {
 		MentoringCategoryId id = category.getMentoringCategoryId();
 
 		categoryService.updateCategory(
-				new CategoryCommand.Update(id, "NewName", "NEWCODE", UUID.randomUUID(), UserType.MASTER));
+				new CategoryCommand.Update(id, "NewName", "NEWCODE", UUID.randomUUID(),
+						UserType.MASTER));
 
 		assertThat(category.getName()).isEqualTo("NewName");
 		assertThat(category.getCode()).isEqualTo("NEWCODE");
@@ -212,8 +221,8 @@ class CategoryServiceIntegrationTest {
 
 		assertThatThrownBy(() -> categoryService.updateCategory(
 				new CategoryCommand.Update(first.getMentoringCategoryId(), second.getName(),
-						first.getCode(), UUID.randomUUID(), UserType.MASTER)))
-				.isInstanceOf(CategoryValidationException.class)
+						first.getCode(), UUID.randomUUID(), UserType.MASTER))).isInstanceOf(
+						CategoryValidationException.class)
 				.hasMessageContaining("이름");
 	}
 
@@ -224,8 +233,8 @@ class CategoryServiceIntegrationTest {
 
 		assertThatThrownBy(() -> categoryService.updateCategory(
 				new CategoryCommand.Update(first.getMentoringCategoryId(), first.getName(),
-						second.getCode(), UUID.randomUUID(), UserType.MASTER)))
-				.isInstanceOf(CategoryValidationException.class)
+						second.getCode(), UUID.randomUUID(), UserType.MASTER))).isInstanceOf(
+						CategoryValidationException.class)
 				.hasMessageContaining("코드");
 	}
 
@@ -234,8 +243,8 @@ class CategoryServiceIntegrationTest {
 		MentoringCategoryId id = new MentoringCategoryId(UUID.randomUUID());
 
 		assertThatThrownBy(() -> categoryService.updateCategory(
-				new CategoryCommand.Update(id, "Name", "CODE", UUID.randomUUID(), UserType.MASTER)))
-				.isInstanceOf(CategoryNotFoundException.class);
+				new CategoryCommand.Update(id, "Name", "CODE", UUID.randomUUID(),
+						UserType.MASTER))).isInstanceOf(CategoryNotFoundException.class);
 	}
 
 	// ── deleteCategory ────────────────────────────────────────────────────────
@@ -257,8 +266,8 @@ class CategoryServiceIntegrationTest {
 		MentoringCategoryId id = new MentoringCategoryId(UUID.randomUUID());
 
 		assertThatThrownBy(() -> categoryService.deleteCategory(
-				new CategoryCommand.Delete(UUID.randomUUID(), UserType.MASTER, id)))
-				.isInstanceOf(CategoryNotFoundException.class);
+				new CategoryCommand.Delete(UUID.randomUUID(), UserType.MASTER, id))).isInstanceOf(
+				CategoryNotFoundException.class);
 	}
 
 	@Test
@@ -267,7 +276,6 @@ class CategoryServiceIntegrationTest {
 
 		assertThatThrownBy(() -> categoryService.deleteCategory(
 				new CategoryCommand.Delete(UUID.randomUUID(), UserType.INSTRUCTOR,
-						category.getMentoringCategoryId())))
-				.isInstanceOf(ForbiddenException.class);
+						category.getMentoringCategoryId()))).isInstanceOf(ForbiddenException.class);
 	}
 }

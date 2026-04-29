@@ -6,5 +6,5 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface BookingQueryRepository {
-  Page<MentoringBooking> findByUser(BookingSearchCondition condition, Pageable pageable);
+	Page<MentoringBooking> findByUser(BookingSearchCondition condition, Pageable pageable);
 }
