@@ -64,7 +64,7 @@ class BookingServiceIntegrationTest {
     em.clear();
 
     MentoringBooking booking =
-        bookingRepository.findById(new MentoringBookingId(result.bookingId())).orElseThrow();
+        bookingRepository.findById(new MentoringBookingId(result.enrollmentId())).orElseThrow();
 
     log.info("==== 생성된 예약 ====");
     log.info("bookingId  : {}", booking.getMentoringBookingId().bookingId());

@@ -44,7 +44,7 @@ class BookingControllerTest {
   void createBooking_success() throws Exception {
     UUID bookingId = UUID.randomUUID();
     given(bookingService.createBooking(any()))
-        .willReturn(BookingResult.Create.of(new MentoringBookingId(bookingId)));
+        .willReturn(new BookingResult.Create(bookingId, MENTORING_ID, TITLE, PRICE, MENTOR_ID, MENTOR_NAME));
 
     mockMvc
         .perform(
@@ -54,7 +54,7 @@ class BookingControllerTest {
                 .content(objectMapper.writeValueAsString(defaultRequest())))
         .andDo(print())
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.bookingId").value(bookingId.toString()));
+        .andExpect(jsonPath("$.enrollmentId").value(bookingId.toString()));
   }
 
   @Test

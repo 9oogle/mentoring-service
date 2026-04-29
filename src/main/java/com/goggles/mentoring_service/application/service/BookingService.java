@@ -41,7 +41,7 @@ public class BookingService {
             menteeInfo.menteeId(), menteeInfo.menteeUserType(), menteeInfo.menteeName(),
             mentoring, slots, command.requestMessage(), command.orderId());
     bookingRepository.save(booking);
-    return BookingResult.Create.of(booking.getMentoringBookingId());
+    return BookingResult.Create.of(booking, mentoring);
   }
 
   @Transactional

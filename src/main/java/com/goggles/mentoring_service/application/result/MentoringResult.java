@@ -13,7 +13,7 @@ public class MentoringResult {
 	public record Detail(UUID mentoringId, String title, String subtitle, String description,
 						 MentorInfo mentor, CategoryInfo category, MentoringStatus status,
 						 Format format, MentoringType mentoringType, MentoringDuration duration,
-						 int sessionCount, int maxParticipants, boolean excludeHolidays, int price,
+						 int sessionCount, int maxParticipants, boolean excludeHolidays, long price,
 						 LocalDate endDate) {
 		public static Detail from(Mentoring m) {
 			return new Detail(m.getMentoringId()
@@ -56,7 +56,7 @@ public class MentoringResult {
 
 	public record Summary(UUID mentoringId, String title, String subtitle, String mentorName,
 						  String categoryName, MentoringType mentoringType, Format format,
-						  int price, MentoringStatus status) {
+						  long price, MentoringStatus status) {
 		public static Summary from(Mentoring m) {
 			return new Summary(m.getMentoringId()
 					.mentoringId(), m.getTitle(), m.getSubtitle(), m.getMentor()

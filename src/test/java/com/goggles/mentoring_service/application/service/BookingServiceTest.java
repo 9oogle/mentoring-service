@@ -47,9 +47,9 @@ class BookingServiceTest {
     BookingResult.Create result = bookingService.createBooking(defaultCommand(mentoring));
 
     log.info("==== 예약 생성 결과 ====");
-    log.info("bookingId: {}", result.bookingId());
+    log.info("bookingId: {}", result.enrollmentId());
 
-    assertThat(result.bookingId()).isNotNull();
+    assertThat(result.enrollmentId()).isNotNull();
     verify(bookingRepository).save(any());
   }
 
