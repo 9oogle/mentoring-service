@@ -1,5 +1,6 @@
 package com.goggles.mentoring_service.domain.booking;
 
+import com.goggles.mentoring_service.domain.mentoring.Mentoring;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.AccessLevel;
@@ -8,8 +9,6 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.UUID;
 
 @Embeddable
@@ -31,14 +30,20 @@ public class BookedMentoring {
 	private UUID mentorId;
 	private String mentorName;
 
-	private LocalDate sessionDate;
-	private LocalTime sessionStartTime;
-	private LocalTime sessionEndTime;
-
+	static BookedMentoring of(Mentoring mentoring) {
+		BookedMentoring bookedMentoring = new BookedMentoring();
+		bookedMentoring.mentoringId = mentoring.getMentoringId().mentoringId();
+		bookedMentoring.categoryCode = mentoring.getMentoringCategory().getCode();
+		bookedMentoring.categoryName = mentoring.getMentoringCategory().getName();
+		bookedMentoring.title = mentoring.getTitle();
+		bookedMentoring.subtitle = mentoring.getSubtitle();
+		bookedMentoring.mentorId = mentoring.getMentor().getId();
+		bookedMentoring.mentorName = mentoring.getMentor().getName();
+		return bookedMentoring;
+	}
 
 	static BookedMentoring of(UUID mentoringId, String categoryCode, String categoryName,
-			String title, String subtitle, UUID mentorId, String mentorName, LocalDate sessionDate,
-			LocalTime sessionStartTime, LocalTime sessionEndTime) {
+			String title, String subtitle, UUID mentorId, String mentorName) {
 		BookedMentoring bookedMentoring = new BookedMentoring();
 		bookedMentoring.mentoringId = mentoringId;
 		bookedMentoring.categoryCode = categoryCode;
@@ -47,9 +52,6 @@ public class BookedMentoring {
 		bookedMentoring.subtitle = subtitle;
 		bookedMentoring.mentorId = mentorId;
 		bookedMentoring.mentorName = mentorName;
-		bookedMentoring.sessionDate = sessionDate;
-		bookedMentoring.sessionStartTime = sessionStartTime;
-		bookedMentoring.sessionEndTime = sessionEndTime;
 		return bookedMentoring;
 	}
 

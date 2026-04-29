@@ -2,6 +2,7 @@ package com.goggles.mentoring_service.domain.mentoring;
 
 import com.goggles.common.domain.BaseAudit;
 import com.goggles.mentoring_service.domain._common.UserType;
+import com.goggles.mentoring_service.domain.booking.SessionSlot;
 import com.goggles.mentoring_service.domain.mentoring.exception.BookedSessionCannotBeDeletedException;
 import com.goggles.mentoring_service.domain.mentoring.exception.MentoringPolicyViolationException;
 import com.goggles.mentoring_service.domain.mentoring.exception.RepeatPatternRequiredException;
@@ -76,13 +77,13 @@ public class Mentoring extends BaseAudit {
 	private boolean excludeHolidays = true;
 
 	@Column(nullable = false)
-	private int price;
+	private long price;
 
 
 	private Mentoring(Mentor mentor, Category mentoringCategory, String title, String subtitle,
 			String description, MentoringDuration duration, MentoringStatus status,
 			MentoringType mentoringType, Format format, int sessionCount, int maxParticipants,
-			boolean excludeHolidays, int price, LocalDate endDate,
+			boolean excludeHolidays, long price, LocalDate endDate,
 			List<RepeatPattern> repeatPatterns, List<MentoringSession> mentoringSessions) {
 		validateTypeConstraints(mentoringType, format, sessionCount, maxParticipants);
 		if (price < 0) {
@@ -248,6 +249,13 @@ public class Mentoring extends BaseAudit {
 		findSession(date, startTime).book();
 	}
 
+	public void bookSession(List<SessionSlot> sessionSlots) {
+		List<MentoringSession> targets = sessionSlots.stream()
+				.map(slot -> findSession(slot.date(), slot.startTime()))
+				.toList();
+		targets.forEach(MentoringSession::book);
+	}
+
 	private MentoringSession findSession(LocalDate date, LocalTime startTime) {
 		return this.sessions.stream()
 				.filter(session -> session.getSessionDate()
@@ -256,5 +264,4 @@ public class Mentoring extends BaseAudit {
 				.findFirst()
 				.orElseThrow(() -> new SessionNotFoundException(date, startTime));
 	}
-
 }
