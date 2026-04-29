@@ -44,7 +44,6 @@ class MentoringServiceIntegrationTest {
 
   @Autowired private EntityManager em;
 
-  // ── 생성 ─────────────────────────────────────────────────────────────────
 
   @Test
   void createMentoring_persists_to_db() {
