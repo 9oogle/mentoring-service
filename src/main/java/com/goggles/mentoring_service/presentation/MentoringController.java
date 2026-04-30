@@ -63,7 +63,8 @@ public class MentoringController {
 	@PatchMapping("/{mentoringId}/deactivate")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void deactivateMentoring(UserContext userContext, @PathVariable UUID mentoringId) {
-		mentoringService.deactivateMentoring(mentoringId, userContext.userId(), userContext.userType());
+		mentoringService.deactivateMentoring(mentoringId, userContext.userId(),
+				userContext.userType());
 	}
 
 	@DeleteMapping("/{mentoringId}")

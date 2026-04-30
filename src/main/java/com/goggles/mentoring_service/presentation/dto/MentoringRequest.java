@@ -17,19 +17,21 @@ import java.util.UUID;
 
 public class MentoringRequest {
 
-	public record Update( @Size(max = 100) String title, String subtitle,
-						 String description, @Min(0) Integer price, LocalDate endDate, @Valid List<RepeatPatternDto> repeatPatterns) {
+	public record Update(@Size(max = 100) String title, String subtitle, String description,
+						 @Min(0) Integer price, LocalDate endDate,
+						 @Valid List<RepeatPatternDto> repeatPatterns) {
 		public MentoringCommand.Update toCommand(UserContext userContext) {
-			List<TimeSchedules> patterns = repeatPatterns().stream()
-					.map(p -> new TimeSchedules(p.dayOfWeek(), p.startTime(), p.endTime()))
-					.toList();
-			return new MentoringCommand.Update(userContext.userId(), userContext.userType(), title(),
-					subtitle(), description(), price(), endDate(), patterns);
+			List<TimeSchedules> patterns = repeatPatterns() == null ? List.of() :
+					repeatPatterns().stream()
+							.map(p -> new TimeSchedules(p.dayOfWeek(), p.startTime(), p.endTime()))
+							.toList();
+			return new MentoringCommand.Update(userContext.userId(), userContext.userType(),
+					title(), subtitle(), description(), price(), endDate(), patterns);
 		}
+
 		public record RepeatPatternDto(@NotNull DayOfWeek dayOfWeek, @NotNull LocalTime startTime,
 									   @NotNull LocalTime endTime) {}
 	}
-
 
 
 	public record Create(@NotNull UUID categoryId, @NotBlank @Size(max = 100) String title,

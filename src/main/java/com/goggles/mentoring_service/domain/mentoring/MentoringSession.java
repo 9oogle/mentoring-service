@@ -58,6 +58,6 @@ public class MentoringSession {
 
 
 	void unbook() {
-		if (this.status == SessionStatus.BOOKED)  this.status = SessionStatus.AVAILABLE;
+		if (this.status == SessionStatus.BOOKED) this.status = SessionStatus.AVAILABLE;
 	}
 }

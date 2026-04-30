@@ -1,15 +1,14 @@
 package com.goggles.mentoring_service.application.service;
 
-import com.goggles.common.exception.ForbiddenException;
 import com.goggles.common.pagination.CommonPageRequest;
 import com.goggles.mentoring_service.application.command.MentoringCommand;
 import com.goggles.mentoring_service.application.command.TimeSchedules;
 import com.goggles.mentoring_service.application.result.MentoringResult;
+import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.category.MentoringCategory;
 import com.goggles.mentoring_service.domain.category.MentoringCategoryId;
 import com.goggles.mentoring_service.domain.category.exception.CategoryNotFoundException;
 import com.goggles.mentoring_service.domain.category.repository.MentoringCategoryRepository;
-import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.mentoring.Mentoring;
 import com.goggles.mentoring_service.domain.mentoring.MentoringId;
 import com.goggles.mentoring_service.domain.mentoring.MentoringSearchCondition;
@@ -22,6 +21,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -72,8 +72,8 @@ public class MentoringService {
 				.map(ts -> RepeatPattern.of(ts.dayOfWeek(), ts.startTime(), ts.endTime()))
 				.toList() : null;
 		mentoring.updateInfo(command.userId(), command.userType(), command.title(),
-				command.subtitle(), command.description(),
-				command.price(), command.endDate(), patterns);
+				command.subtitle(), command.description(), command.price(), command.endDate(),
+				patterns, LocalDate.now());
 	}
 
 
@@ -82,7 +82,7 @@ public class MentoringService {
 		mentoring.deactivate(userId, userType);
 	}
 
-	public void deleteMentoring(UUID mentoringId,  UUID userId, UserType userType) {
+	public void deleteMentoring(UUID mentoringId, UUID userId, UserType userType) {
 		Mentoring mentoring = getOrThrow(mentoringId);
 		mentoring.delete(userId, userType);
 	}

@@ -2,15 +2,12 @@ package com.goggles.mentoring_service.domain.booking;
 
 import com.goggles.mentoring_service.domain.booking.exception.InvalidRescheduleException;
 import jakarta.persistence.*;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.UUID;
 

@@ -1,11 +1,6 @@
 package com.goggles.mentoring_service.infrastructure.persistence;
 
-import com.goggles.mentoring_service.domain.mentoring.Mentoring;
-import com.goggles.mentoring_service.domain.mentoring.MentoringSearchCondition;
-import com.goggles.mentoring_service.domain.mentoring.MentoringSort;
-import com.goggles.mentoring_service.domain.mentoring.MentoringStatus;
-import com.goggles.mentoring_service.domain.mentoring.Mentoring;
-import com.goggles.mentoring_service.domain.mentoring.QMentoring;
+import com.goggles.mentoring_service.domain.mentoring.*;
 import com.goggles.mentoring_service.infrastructure.Escape;
 import com.goggles.mentoring_service.infrastructure.persistence.jpa.MentoringQueryRepository;
 import com.querydsl.core.BooleanBuilder;
@@ -72,14 +67,16 @@ public class MentoringQueryRepositoryImpl implements MentoringQueryRepository {
 			where.and(m.mentor.id.eq(condition.mentorId()));
 		}
 
-		MentoringStatus filterStatus = condition.status() != null ? condition.status() : MentoringStatus.ACTIVE;
+		MentoringStatus filterStatus =
+				condition.status() != null ? condition.status() : MentoringStatus.ACTIVE;
 		where.and(m.status.eq(filterStatus));
 
 		if (condition.mentoringType() != null) {
 			where.and(m.mentoringType.eq(condition.mentoringType()));
 		}
 
-		where.and(m.endDate.isNull().or(m.endDate.goe(LocalDate.now())));
+		where.and(m.endDate.isNull()
+				.or(m.endDate.goe(LocalDate.now())));
 
 		return where;
 	}

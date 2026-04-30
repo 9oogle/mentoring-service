@@ -40,6 +40,7 @@ public class CategoryService {
 
 	@Transactional
 	public UUID createCategory(CategoryCommand.Create command) {
+		if (command.creatorType() != UserType.MASTER) throw new ForbiddenException("관리자 권한이 필요합니다.");
 		if (categoryRepository.existsByName(command.title()))
 			throw CategoryValidationException.alreadyExistsName();
 		if (categoryRepository.existsByCode(command.code()))
