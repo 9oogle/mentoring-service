@@ -26,13 +26,7 @@ public class BookingCommand {
 
   public record CompleteSession(UUID bookingId, UUID sessionId, UUID userId, UserType userType) {}
 
-  public record RescheduleSession(
-      UUID bookingId,
-      UUID sessionId,
-      LocalDate newDate,
-      LocalTime newStartTime,
-      LocalTime newEndTime,
-      UUID userId,
-      UserType userType,
-      LocalDateTime now) {}
+	public record RescheduleSession(UUID bookingId, UUID sessionId, LocalDate newDate,
+									LocalTime newStartTime, LocalTime newEndTime, UUID userId,
+									UserType userType) {}
 }

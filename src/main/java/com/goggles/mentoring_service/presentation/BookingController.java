@@ -87,24 +87,16 @@ public class BookingController {
             bookingId, sessionId, userContext.userId(), userContext.userType()));
   }
 
-  @ResponseStatus(HttpStatus.NO_CONTENT)
-  @PatchMapping("/{bookingId}/sessions/{sessionId}/reschedule")
-  public void rescheduleSession(
-      UserContext userContext,
-      @PathVariable UUID bookingId,
-      @PathVariable UUID sessionId,
-      @Valid @RequestBody BookingRequest.RescheduleSession request) {
-    bookingService.rescheduleSession(
-        new BookingCommand.RescheduleSession(
-            bookingId,
-            sessionId,
-            request.newDate(),
-            request.newStartTime(),
-            request.newEndTime(),
-            userContext.userId(),
-            userContext.userType(),
-            LocalDateTime.now()));
-  }
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@PatchMapping("/{bookingId}/sessions/{sessionId}/reschedule")
+	public void rescheduleSession(UserContext userContext, @PathVariable UUID bookingId,
+			@PathVariable UUID sessionId,
+			@Valid @RequestBody BookingRequest.RescheduleSession request) {
+		bookingService.rescheduleSession(
+				new BookingCommand.RescheduleSession(bookingId, sessionId, request.newDate(),
+						request.newStartTime(), request.newEndTime(), userContext.userId(),
+						userContext.userType()));
+	}
 
   @GetMapping
   public CommonPageResponse<BookingResponse.Summary> getMyBookings(

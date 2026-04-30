@@ -46,18 +46,21 @@ public class BookingSession {
 		this.progressStatus = SessionProgressStatus.COMPLETED;
 	}
 
-  void reschedule(LocalDate newDate, LocalTime newStartTime, LocalTime newEndTime, LocalDateTime now) {
-    if (progressStatus == SessionProgressStatus.COMPLETED) {
-      throw InvalidRescheduleException.sessionAlreadyCompleted();
-    }
-    if (LocalDateTime.of(sessionDate, sessionStartTime).isBefore(now)) {
-      throw InvalidRescheduleException.sessionAlreadyPassed();
-    }
-    if (LocalDateTime.of(newDate, newStartTime).isBefore(now)) {
-      throw InvalidRescheduleException.newTimeIsInPast();
-    }
-    this.sessionDate = newDate;
-    this.sessionStartTime = newStartTime;
-    this.sessionEndTime = newEndTime;
-  }
+	void reschedule(LocalDate newDate, LocalTime newStartTime, LocalTime newEndTime,
+			LocalDateTime now) {
+		if (progressStatus == SessionProgressStatus.COMPLETED) {
+			throw InvalidRescheduleException.sessionAlreadyCompleted();
+		}
+		if (!LocalDateTime.of(sessionDate, sessionStartTime)
+				.isAfter(now)) {
+			throw InvalidRescheduleException.sessionAlreadyPassed();
+		}
+		if (!LocalDateTime.of(newDate, newStartTime)
+				.isAfter(now)) {
+			throw InvalidRescheduleException.newTimeIsInPast();
+		}
+		this.sessionDate = newDate;
+		this.sessionStartTime = newStartTime;
+		this.sessionEndTime = newEndTime;
+	}
 }

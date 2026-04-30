@@ -159,15 +159,10 @@ public class BookingService {
             .findById(mentoringId)
             .orElseThrow(() -> new MentoringNotFoundException(mentoringId));
 
-    SessionReschedule reschedule =
-        booking.rescheduleSession(
-            command.sessionId(),
-            command.newDate(),
-            command.newStartTime(),
-            command.newEndTime(),
-            command.userId(),
-            command.userType(),
-            command.now());
+		SessionReschedule reschedule =
+				booking.rescheduleSession(command.sessionId(), command.newDate(),
+						command.newStartTime(), command.newEndTime(), command.userId(),
+						command.userType(), LocalDateTime.now());
 
     mentoring.unbookSession(reschedule.oldSlot().date(), reschedule.oldSlot().startTime());
     mentoring.bookSession(command.newDate(), command.newStartTime());

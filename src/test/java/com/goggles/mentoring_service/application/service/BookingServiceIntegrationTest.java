@@ -344,15 +344,9 @@ class BookingServiceIntegrationTest {
 
 		LocalDateTime now = LocalDateTime.of(2026, 1, 1, 0, 0);
 		bookingService.rescheduleSession(
-				new BookingCommand.RescheduleSession(
-						created.enrollmentId(),
-						sessionId,
-						MENTORING_SESSION_DATE_2,
-						START_TIME,
-						END_TIME,
-						MENTOR_ID,
-						UserType.INSTRUCTOR,
-						now));
+				new BookingCommand.RescheduleSession(created.enrollmentId(), sessionId,
+						MENTORING_SESSION_DATE_2, START_TIME, END_TIME, MENTOR_ID,
+						UserType.INSTRUCTOR));
 
 		em.flush();
 		em.clear();
