@@ -256,7 +256,7 @@ class MentoringServiceIntegrationTest {
 	}
 
 	@Test
-	void searchMentorings_no_filter() {
+	void searchMentorings_inactive_status() {
 		saveMentoring("멘토링 A", 10_000);
 		saveMentoring("멘토링 B", 20_000);
 		saveMentoring("멘토링 C", 30_000);

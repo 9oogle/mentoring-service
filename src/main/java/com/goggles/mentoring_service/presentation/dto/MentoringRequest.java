@@ -21,7 +21,7 @@ public class MentoringRequest {
 						 @Min(0) Integer price, LocalDate endDate,
 						 @Valid List<RepeatPatternDto> repeatPatterns) {
 		public MentoringCommand.Update toCommand(UserContext userContext) {
-			List<TimeSchedules> patterns = repeatPatterns() == null ? List.of() :
+			List<TimeSchedules> patterns = repeatPatterns() == null ? null :
 					repeatPatterns().stream()
 							.map(p -> new TimeSchedules(p.dayOfWeek(), p.startTime(), p.endTime()))
 							.toList();

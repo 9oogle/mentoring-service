@@ -222,6 +222,9 @@ class MentoringBookingTest {
 	@Test
 	void completePayment_from_invalid_status() {
 		MentoringBooking booking = paymentCompletedBooking();
+
+		assertThatThrownBy(() -> booking.completePayment(events)).isInstanceOf(
+				RuntimeException.class);
 	}
 
 	@Test
