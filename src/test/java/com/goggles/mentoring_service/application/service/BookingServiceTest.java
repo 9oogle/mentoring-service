@@ -5,6 +5,7 @@ import com.goggles.common.exception.ForbiddenException;
 import com.goggles.common.pagination.CommonPageRequest;
 import com.goggles.mentoring_service.application.command.BookingCommand;
 import com.goggles.mentoring_service.application.command.MenteeInfo;
+import com.goggles.mentoring_service.application.query.BookingQuery;
 import com.goggles.mentoring_service.application.result.BookingResult;
 import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.booking.BookingSearchCondition;
@@ -245,11 +246,11 @@ class BookingServiceTest {
 		Page<MentoringBooking> page = new PageImpl<>(List.of(booking1, booking2));
 		given(bookingRepository.findByUser(any(), any())).willReturn(page);
 
-		BookingSearchCondition condition =
-				new BookingSearchCondition(MENTEE_ID, UserType.STUDENT, null,
+		BookingQuery.GetMyBookings query =
+				new BookingQuery.GetMyBookings(MENTEE_ID, UserType.STUDENT, null,
 						BookingSort.CREATED_AT_DESC);
 		Page<BookingResult.Summary> result =
-				bookingService.getMyBookings(condition, CommonPageRequest.of(0, 10));
+				bookingService.getMyBookings(query, CommonPageRequest.of(0, 10));
 
 		log.info("==== 내 예약 목록 조회 결과 ====");
 		log.info("총 {}건", result.getTotalElements());
@@ -371,7 +372,7 @@ class BookingServiceTest {
 		bookingService.rescheduleSession(new BookingCommand.RescheduleSession(
 				booking.getMentoringBookingId()
 						.bookingId(), sessionId, RESCHEDULE_DATE, SESSION_START_TIME,
-				SESSION_END_TIME, MENTOR_ID, UserType.INSTRUCTOR));
+				MENTOR_ID, UserType.INSTRUCTOR));
 
 		log.info("==== 회차 일정 변경 결과 ====");
 		log.info("sessionDate: {}", booking.getBookingSessions()
@@ -389,7 +390,7 @@ class BookingServiceTest {
 
 		assertThatThrownBy(() -> bookingService.rescheduleSession(
 				new BookingCommand.RescheduleSession(UUID.randomUUID(), UUID.randomUUID(),
-						RESCHEDULE_DATE, SESSION_START_TIME, SESSION_END_TIME, MENTOR_ID,
+						RESCHEDULE_DATE, SESSION_START_TIME, MENTOR_ID,
 						UserType.INSTRUCTOR))).isInstanceOf(
 				BookingNotFoundException.class);
 	}
@@ -399,11 +400,11 @@ class BookingServiceTest {
     Page<MentoringBooking> emptyPage = new PageImpl<>(List.of());
     given(bookingRepository.findByUser(any(), any())).willReturn(emptyPage);
 
-		BookingSearchCondition condition =
-				new BookingSearchCondition(MENTEE_ID, UserType.STUDENT, null,
+		BookingQuery.GetMyBookings query =
+				new BookingQuery.GetMyBookings(MENTEE_ID, UserType.STUDENT, null,
 						BookingSort.CREATED_AT_DESC);
 		Page<BookingResult.Summary> result =
-				bookingService.getMyBookings(condition, CommonPageRequest.of(0, 10));
+				bookingService.getMyBookings(query, CommonPageRequest.of(0, 10));
 
 		assertThat(result.getContent()).isEmpty();
 		assertThat(result.getTotalElements()).isZero();

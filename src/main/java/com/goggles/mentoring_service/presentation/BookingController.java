@@ -3,9 +3,9 @@ package com.goggles.mentoring_service.presentation;
 import com.goggles.common.pagination.CommonPageRequest;
 import com.goggles.common.pagination.CommonPageResponse;
 import com.goggles.mentoring_service.application.command.BookingCommand;
+import com.goggles.mentoring_service.application.query.BookingQuery;
 import com.goggles.mentoring_service.application.result.BookingResult;
 import com.goggles.mentoring_service.application.service.BookingService;
-import com.goggles.mentoring_service.domain.booking.BookingSearchCondition;
 import com.goggles.mentoring_service.domain.booking.BookingSort;
 import com.goggles.mentoring_service.domain.booking.BookingStatus;
 import com.goggles.mentoring_service.presentation.dto.BookingRequest;
@@ -94,19 +94,17 @@ public class BookingController {
 			@Valid @RequestBody BookingRequest.RescheduleSession request) {
 		bookingService.rescheduleSession(
 				new BookingCommand.RescheduleSession(bookingId, sessionId, request.newDate(),
-						request.newStartTime(), request.newEndTime(), userContext.userId(),
-						userContext.userType()));
+						request.newStartTime(), userContext.userId(), userContext.userType()));
 	}
 
-  @GetMapping
-  public CommonPageResponse<BookingResponse.Summary> getMyBookings(
-      UserContext userContext,
-      @RequestParam(required = false) BookingStatus status,
-      @RequestParam(required = false) BookingSort sort,
-      CommonPageRequest pageRequest) {
-    BookingSearchCondition condition =
-        new BookingSearchCondition(userContext.userId(), userContext.userType(), status, sort);
-    Page<BookingResult.Summary> page = bookingService.getMyBookings(condition, pageRequest);
-    return CommonPageResponse.of(page.map(BookingResponse.Summary::of));
-  }
+	@GetMapping
+	public CommonPageResponse<BookingResponse.Summary> getMyBookings(UserContext userContext,
+			@RequestParam(required = false) BookingStatus status,
+			@RequestParam(required = false) BookingSort sort, CommonPageRequest pageRequest) {
+		BookingQuery.GetMyBookings query =
+				new BookingQuery.GetMyBookings(userContext.userId(), userContext.userType(), status,
+						sort);
+		Page<BookingResult.Summary> page = bookingService.getMyBookings(query, pageRequest);
+		return CommonPageResponse.of(page.map(BookingResponse.Summary::of));
+	}
 }

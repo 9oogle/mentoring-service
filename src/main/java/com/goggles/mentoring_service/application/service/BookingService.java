@@ -5,6 +5,7 @@ import com.goggles.common.exception.ForbiddenException;
 import com.goggles.common.pagination.CommonPageRequest;
 import com.goggles.mentoring_service.application.command.BookingCommand;
 import com.goggles.mentoring_service.application.command.MenteeInfo;
+import com.goggles.mentoring_service.application.query.BookingQuery;
 import com.goggles.mentoring_service.application.result.BookingResult;
 import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.booking.BookingSearchCondition;
@@ -15,6 +16,7 @@ import com.goggles.mentoring_service.domain.booking.SessionSlot;
 import com.goggles.mentoring_service.domain.booking.event.BookingAcceptedEvent;
 import com.goggles.mentoring_service.domain.booking.event.BookingCanceledEvent;
 import com.goggles.mentoring_service.domain.booking.event.BookingRejectedEvent;
+import com.goggles.mentoring_service.domain.booking.event.BookingSessionSnapshot;
 import com.goggles.mentoring_service.domain.booking.exception.BookingNotFoundException;
 import com.goggles.mentoring_service.domain.booking.repository.MentoringBookingRepository;
 import com.goggles.mentoring_service.domain.mentoring.Mentoring;
@@ -28,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -71,8 +74,11 @@ public class BookingService {
 	}
 
 	@Transactional(readOnly = true)
-	public Page<BookingResult.Summary> getMyBookings(BookingSearchCondition condition,
+	public Page<BookingResult.Summary> getMyBookings(BookingQuery.GetMyBookings query,
 			CommonPageRequest pageRequest) {
+		BookingSearchCondition condition =
+				new BookingSearchCondition(query.userId(), query.userType(), query.status(),
+						query.sort());
 		return bookingRepository.findByUser(condition, pageRequest.toPageable(Sort.unsorted()))
 				.map(BookingResult.Summary::from);
 	}
@@ -98,7 +104,10 @@ public class BookingService {
 						.getId(), booking.getBookedMentoring()
 						.getMentorId(), booking.getBookedMentoring()
 						.getMentorName(), booking.getBookedMentoring()
-						.getTitle(), booking.getBookingSessions()));
+						.getTitle(), booking.getBookingSessions()
+						.stream()
+						.map(BookingSessionSnapshot::from)
+						.toList()));
 	}
 
 	@Transactional
@@ -114,8 +123,10 @@ public class BookingService {
 						.getId(), booking.getBookedMentoring()
 						.getMentorId(), booking.getBookedMentoring()
 						.getMentorName(), booking.getBookedMentoring()
-						.getTitle(), command.reason(), booking.getBookingSessions(),
-						booking.getOrderId()));
+						.getTitle(), command.reason(), booking.getBookingSessions()
+						.stream()
+						.map(BookingSessionSnapshot::from)
+						.toList(), booking.getOrderId()));
 	}
 
 	@Transactional
@@ -130,8 +141,10 @@ public class BookingService {
 						.bookingId(), command.userId(), booking.getMentee()
 						.getId(), booking.getBookedMentoring()
 						.getMentorId(), booking.getBookedMentoring()
-						.getTitle(), command.reason(), booking.getBookingSessions(),
-						booking.getOrderId()));
+						.getTitle(), command.reason(), booking.getBookingSessions()
+						.stream()
+						.map(BookingSessionSnapshot::from)
+						.toList(), booking.getOrderId()));
 	}
 
 
@@ -159,9 +172,10 @@ public class BookingService {
             .findById(mentoringId)
             .orElseThrow(() -> new MentoringNotFoundException(mentoringId));
 
+		LocalTime newEndTime = mentoring.getSlotEndTime(command.newDate(), command.newStartTime());
 		SessionReschedule reschedule =
 				booking.rescheduleSession(command.sessionId(), command.newDate(),
-						command.newStartTime(), command.newEndTime(), command.userId(),
+						command.newStartTime(), newEndTime, command.userId(),
 						command.userType(), LocalDateTime.now());
 
     mentoring.unbookSession(reschedule.oldSlot().date(), reschedule.oldSlot().startTime());

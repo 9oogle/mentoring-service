@@ -4,6 +4,7 @@ import com.goggles.common.exception.ForbiddenException;
 import com.goggles.common.pagination.CommonPageRequest;
 import com.goggles.mentoring_service.application.command.BookingCommand;
 import com.goggles.mentoring_service.application.command.MenteeInfo;
+import com.goggles.mentoring_service.application.query.BookingQuery;
 import com.goggles.mentoring_service.application.result.BookingResult;
 import com.goggles.mentoring_service.config.TestAuditConfig;
 import com.goggles.mentoring_service.domain._common.UserType;
@@ -217,8 +218,8 @@ class BookingServiceIntegrationTest {
 		em.flush();
 		em.clear();
 
-		BookingSearchCondition condition =
-				new BookingSearchCondition(MENTEE_ID, UserType.STUDENT, null,
+		BookingQuery.GetMyBookings condition =
+				new BookingQuery.GetMyBookings(MENTEE_ID, UserType.STUDENT, null,
 						BookingSort.CREATED_AT_DESC);
 		Page<BookingResult.Summary> result = bookingService.getMyBookings(condition,
 				CommonPageRequest.of(PAGE_NUMBER, PAGE_SIZE));
@@ -242,8 +243,8 @@ class BookingServiceIntegrationTest {
 		em.flush();
 		em.clear();
 
-		BookingSearchCondition condition =
-				new BookingSearchCondition(MENTEE_ID, UserType.STUDENT, null,
+		BookingQuery.GetMyBookings condition =
+				new BookingQuery.GetMyBookings(MENTEE_ID, UserType.STUDENT, null,
 						BookingSort.CREATED_AT_DESC);
 		Page<BookingResult.Summary> result = bookingService.getMyBookings(condition,
 				CommonPageRequest.of(PAGE_NUMBER, PAGE_SIZE));

@@ -54,8 +54,8 @@ public class BookingRequest {
   public record BookingTimeSlot(
       @NotNull LocalDate date, @NotNull LocalTime startTime, @NotNull LocalTime endTime) {}
 
-  public record RescheduleSession(
-      @NotNull LocalDate newDate,
-      @NotNull LocalTime newStartTime,
-      @NotNull LocalTime newEndTime) {}
+	public record BookingTimeSlot(@NotNull LocalDate date, @NotNull LocalTime startTime,
+								  @NotNull LocalTime endTime) {}
+
+	public record RescheduleSession(@NotNull LocalDate newDate, @NotNull LocalTime newStartTime) {}
 }
