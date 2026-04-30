@@ -1,5 +1,6 @@
 package com.goggles.mentoring_service.infrastructure.persistence;
 
+import com.goggles.common.exception.ForbiddenException;
 import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.booking.*;
 import com.goggles.mentoring_service.infrastructure.persistence.jpa.BookingQueryRepository;
@@ -69,6 +70,9 @@ public class BookingQueryRepositoryImpl implements BookingQueryRepository {
 		}
 		else if (condition.userType() == UserType.INSTRUCTOR) {
 			where.and(b.bookedMentoring.mentorId.eq(condition.userId()));
+		}
+		else {
+			throw new ForbiddenException("지원하지 않는 사용자 유형: " + condition.userType());
 		}
 
 		if (condition.status() != null) {

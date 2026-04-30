@@ -5,4 +5,4 @@ import java.util.UUID;
 
 public record BookingAcceptedEvent(UUID bookingId, UUID menteeId, UUID mentorId, String mentorName,
 								   String title,
-								   List<com.goggles.mentoring_service.domain.booking.BookingSession> sessionSlots) {}
+								   List<BookingSessionSnapshot> sessionSlots) {}
