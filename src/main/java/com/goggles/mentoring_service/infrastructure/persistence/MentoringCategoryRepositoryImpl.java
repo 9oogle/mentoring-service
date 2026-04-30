@@ -40,4 +40,14 @@ public class MentoringCategoryRepositoryImpl implements MentoringCategoryReposit
 	public List<MentoringCategory> findAllByOrderBySortOrderAsc() {
 		return jpaRepository.findAllByOrderBySortOrderAsc();
 	}
+
+	@Override
+	public boolean existsByName(String name) {
+		return jpaRepository.existsByName(name);
+	}
+
+	@Override
+	public boolean existsByCode(String code) {
+		return jpaRepository.existsByCode(code);
+	}
 }

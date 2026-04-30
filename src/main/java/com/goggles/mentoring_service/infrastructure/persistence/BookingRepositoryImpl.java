@@ -6,31 +6,32 @@ import com.goggles.mentoring_service.domain.booking.MentoringBookingId;
 import com.goggles.mentoring_service.domain.booking.repository.MentoringBookingRepository;
 import com.goggles.mentoring_service.infrastructure.persistence.jpa.BookingJpaRepository;
 import com.goggles.mentoring_service.infrastructure.persistence.jpa.BookingQueryRepository;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 @RequiredArgsConstructor
 public class BookingRepositoryImpl implements MentoringBookingRepository {
 
-  private final BookingJpaRepository jpaRepository;
-  private final BookingQueryRepository queryRepository;
+	private final BookingJpaRepository jpaRepository;
+	private final BookingQueryRepository queryRepository;
 
-  @Override
-  public MentoringBooking save(MentoringBooking mentoringBooking) {
-    return jpaRepository.save(mentoringBooking);
-  }
+	@Override
+	public MentoringBooking save(MentoringBooking mentoringBooking) {
+		return jpaRepository.save(mentoringBooking);
+	}
 
-  @Override
-  public Optional<MentoringBooking> findById(MentoringBookingId id) {
-    return jpaRepository.findById(id);
-  }
+	@Override
+	public Optional<MentoringBooking> findById(MentoringBookingId id) {
+		return jpaRepository.findById(id);
+	}
 
-  @Override
-  public Page<MentoringBooking> findByUser(BookingSearchCondition condition, Pageable pageable) {
-    return queryRepository.findByUser(condition, pageable);
-  }
+	@Override
+	public Page<MentoringBooking> findByUser(BookingSearchCondition condition, Pageable pageable) {
+		return queryRepository.findByUser(condition, pageable);
+	}
 }

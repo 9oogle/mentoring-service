@@ -32,13 +32,18 @@ public class BookedMentoring {
 
 	static BookedMentoring of(Mentoring mentoring) {
 		BookedMentoring bookedMentoring = new BookedMentoring();
-		bookedMentoring.mentoringId = mentoring.getMentoringId().mentoringId();
-		bookedMentoring.categoryCode = mentoring.getMentoringCategory().getCode();
-		bookedMentoring.categoryName = mentoring.getMentoringCategory().getName();
+		bookedMentoring.mentoringId = mentoring.getMentoringId()
+				.mentoringId();
+		bookedMentoring.categoryCode = mentoring.getMentoringCategory()
+				.getCode();
+		bookedMentoring.categoryName = mentoring.getMentoringCategory()
+				.getName();
 		bookedMentoring.title = mentoring.getTitle();
 		bookedMentoring.subtitle = mentoring.getSubtitle();
-		bookedMentoring.mentorId = mentoring.getMentor().getId();
-		bookedMentoring.mentorName = mentoring.getMentor().getName();
+		bookedMentoring.mentorId = mentoring.getMentor()
+				.getId();
+		bookedMentoring.mentorName = mentoring.getMentor()
+				.getName();
 		return bookedMentoring;
 	}
 

@@ -1,6 +1,5 @@
 package com.goggles.mentoring_service.domain.mentoring.exception;
 
-
 import com.goggles.mentoring_service.domain._common.MentoringValidationException;
 
 public class InvalidConditionException extends MentoringValidationException {

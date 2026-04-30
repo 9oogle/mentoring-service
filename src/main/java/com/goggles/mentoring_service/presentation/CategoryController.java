@@ -11,15 +11,17 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/mentorings-categories")
+@RequestMapping("/api/v1/mentoring-categories")
 @RequiredArgsConstructor
-public class MentoringCategoryController {
+public class CategoryController {
 
 	private final CategoryService categoryService;
+
 
 	@GetMapping
 	public CategoryResponse.CategoryList getActiveCategories() {
 		List<CategoryResult.Info> categories = categoryService.getActiveCategories();
 		return CategoryResponse.CategoryList.of(categories);
 	}
+
 }
