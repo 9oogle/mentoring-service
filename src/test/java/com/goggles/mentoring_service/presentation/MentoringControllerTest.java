@@ -12,6 +12,7 @@ import com.goggles.mentoring_service.presentation.support.UserContextArgumentRes
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
@@ -38,6 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@ActiveProfiles("test")
 @WebMvcTest(MentoringController.class)
 @Import({WebMvcConfig.class, UserContextArgumentResolver.class,
 		MentoringControllerTest.PageResolverConfig.class})
@@ -199,7 +201,7 @@ class MentoringControllerTest {
 	private HttpHeaders userHeaders() {
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("X-User-Id", MENTOR_ID.toString());
-		headers.add("X-User-Type", MENTOR_TYPE.name());
+		headers.add("X-User-Role", MENTOR_TYPE.name());
 		headers.add("X-User-Name", MENTOR_NAME);
 		headers.add("X-User-Email", MENTOR_EMAIL);
 		headers.add("X-User-Field", MENTOR_FIELD);

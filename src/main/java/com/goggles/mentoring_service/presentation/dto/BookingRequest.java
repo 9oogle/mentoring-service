@@ -17,12 +17,12 @@ import java.util.UUID;
 
 public class BookingRequest {
 	public record Create(@NotNull UUID mentoringId,
-						 @NotEmpty List<@Valid BookingTimeSlot> bookingTimeSlots,
+						 @NotEmpty List<@Valid BookingTimeSlot> timeSlots,
 						 String requestMessage, UUID orderId) {
 		public BookingCommand.Create toCommand(UserContext userContext) {
 			MenteeInfo menteeInfo = new MenteeInfo(userContext.userId(), userContext.userType(),
 					userContext.userName());
-			List<SessionSlot> sessionSlots = bookingTimeSlots().stream()
+			List<SessionSlot> sessionSlots = timeSlots().stream()
 					.map(slot -> new SessionSlot(slot.date(), slot.startTime(), slot.endTime()))
 					.toList();
 			return new BookingCommand.Create(menteeInfo, mentoringId(), sessionSlots,

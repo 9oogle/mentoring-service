@@ -28,7 +28,7 @@ public class UserContextArgumentResolver implements HandlerMethodArgumentResolve
 		HttpServletRequest request = webRequest.getNativeRequest(HttpServletRequest.class);
 		try {
 			return new UserContext(UUID.fromString(request.getHeader("X-User-Id")),
-					UserType.valueOf(request.getHeader("X-User-Type")),
+					UserType.valueOf(request.getHeader("X-User-Role")),
 					request.getHeader("X-User-Name"), request.getHeader("X-User-Email"),
 					request.getHeader("X-User-Field"));
 		} catch (IllegalArgumentException | NullPointerException e) {

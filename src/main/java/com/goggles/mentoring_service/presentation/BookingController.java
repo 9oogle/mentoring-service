@@ -47,7 +47,7 @@ public class BookingController {
 	}
 
 	@ResponseStatus(HttpStatus.OK)
-	@PostMapping("/{bookingId}/acceptance")
+	@PatchMapping("/{bookingId}/acceptance")
 	public void acceptBooking(UserContext userContext, @PathVariable UUID bookingId) {
 		BookingCommand.Accept command =
 				new BookingCommand.Accept(bookingId, userContext.userId(), userContext.userType());
@@ -55,7 +55,7 @@ public class BookingController {
 	}
 
 	@ResponseStatus(HttpStatus.OK)
-	@PostMapping("/{bookingId}/rejection")
+	@PatchMapping("/{bookingId}/rejection")
 	public void rejectBooking(UserContext userContext, @PathVariable UUID bookingId,
 			@Valid @RequestBody BookingRequest.Reject request) {
 		BookingCommand.Reject command = request.toCommand(bookingId, userContext);
@@ -63,7 +63,7 @@ public class BookingController {
 	}
 
 	@ResponseStatus(HttpStatus.OK)
-	@PostMapping("/{bookingId}/cancellation")
+	@PatchMapping("/{bookingId}/cancellation")
 	public void cancelBooking(UserContext userContext, @PathVariable UUID bookingId,
 			@Valid @RequestBody BookingRequest.Cancel request) {
 		BookingCommand.Cancel command = request.toCommand(bookingId, userContext);
