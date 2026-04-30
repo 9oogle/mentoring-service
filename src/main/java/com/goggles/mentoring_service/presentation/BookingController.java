@@ -12,9 +12,6 @@ import com.goggles.mentoring_service.presentation.dto.BookingRequest;
 import com.goggles.mentoring_service.presentation.dto.BookingResponse;
 import com.goggles.mentoring_service.presentation.support.UserContext;
 import jakarta.validation.Valid;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -47,7 +44,7 @@ public class BookingController {
 	}
 
 	@ResponseStatus(HttpStatus.OK)
-	@PatchMapping("/{bookingId}/acceptance")
+	@PostMapping("/{bookingId}/acceptance")
 	public void acceptBooking(UserContext userContext, @PathVariable UUID bookingId) {
 		BookingCommand.Accept command =
 				new BookingCommand.Accept(bookingId, userContext.userId(), userContext.userType());
@@ -55,7 +52,7 @@ public class BookingController {
 	}
 
 	@ResponseStatus(HttpStatus.OK)
-	@PatchMapping("/{bookingId}/rejection")
+	@PostMapping("/{bookingId}/rejection")
 	public void rejectBooking(UserContext userContext, @PathVariable UUID bookingId,
 			@Valid @RequestBody BookingRequest.Reject request) {
 		BookingCommand.Reject command = request.toCommand(bookingId, userContext);
@@ -63,29 +60,30 @@ public class BookingController {
 	}
 
 	@ResponseStatus(HttpStatus.OK)
-	@PatchMapping("/{bookingId}/cancellation")
+	@PostMapping("/{bookingId}/cancellation")
 	public void cancelBooking(UserContext userContext, @PathVariable UUID bookingId,
 			@Valid @RequestBody BookingRequest.Cancel request) {
 		BookingCommand.Cancel command = request.toCommand(bookingId, userContext);
 		bookingService.cancelBooking(command);
 	}
 
-  @GetMapping("/{bookingId}/sessions")
-  public BookingResponse.SessionList getBookingSessions(
-      UserContext userContext, @PathVariable UUID bookingId) {
-    BookingResult.SessionList result =
-        bookingService.getBookingSessions(bookingId, userContext.userId(), userContext.userType());
-    return BookingResponse.SessionList.of(result);
-  }
+	@GetMapping("/{bookingId}/sessions")
+	public BookingResponse.SessionList getBookingSessions(UserContext userContext,
+			@PathVariable UUID bookingId) {
+		BookingResult.SessionList result =
+				bookingService.getBookingSessions(bookingId, userContext.userId(),
+						userContext.userType());
+		return BookingResponse.SessionList.of(result);
+	}
 
-  @ResponseStatus(HttpStatus.NO_CONTENT)
-  @PatchMapping("/{bookingId}/sessions/{sessionId}/complete")
-  public void completeSession(
-      UserContext userContext, @PathVariable UUID bookingId, @PathVariable UUID sessionId) {
-    bookingService.completeSession(
-        new BookingCommand.CompleteSession(
-            bookingId, sessionId, userContext.userId(), userContext.userType()));
-  }
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@PatchMapping("/{bookingId}/sessions/{sessionId}/complete")
+	public void completeSession(UserContext userContext, @PathVariable UUID bookingId,
+			@PathVariable UUID sessionId) {
+		bookingService.completeSession(
+				new BookingCommand.CompleteSession(bookingId, sessionId, userContext.userId(),
+						userContext.userType()));
+	}
 
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@PatchMapping("/{bookingId}/sessions/{sessionId}/reschedule")
