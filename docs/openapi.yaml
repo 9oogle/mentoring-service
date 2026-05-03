@@ -1,0 +1,950 @@
+openapi: 3.1.0
+info:
+  title: OpenAPI definition
+  version: v0
+servers:
+- url: http://localhost:8080
+  description: Generated server url
+paths:
+  /api/v1/admin/mentoring-categories/active:
+    put:
+      tags:
+      - admin-controller
+      operationId: updateActiveCategories
+      parameters:
+      - name: userContext
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/UserContext"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateActive"
+        required: true
+      responses:
+        "204":
+          description: No Content
+  /internal/v1/mentoring-booking:
+    post:
+      tags:
+      - internal-mentoring-controller
+      operationId: processMentoringBooking
+      parameters:
+      - name: userContext
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/UserContext"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Create"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Create"
+  /api/v1/mentorings:
+    get:
+      tags:
+      - mentoring-controller
+      operationId: searchMentorings
+      parameters:
+      - name: request
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/Search"
+      - name: pageRequest
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/CommonPageRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CommonPageResponseSummary"
+    post:
+      tags:
+      - mentoring-controller
+      operationId: createMentoring
+      parameters:
+      - name: userContext
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/UserContext"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Create"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Create"
+  /api/v1/mentoring-bookings:
+    get:
+      tags:
+      - booking-controller
+      operationId: getMyBookings
+      parameters:
+      - name: userContext
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/UserContext"
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - PENDING
+          - PAYMENT_COMPLETED
+          - PAYMENT_FAILED
+          - ACCEPTED
+          - REJECTED
+          - CANCELED
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - SESSION_DATE_ASC
+          - SESSION_DATE_DESC
+          - CREATED_AT_ASC
+          - CREATED_AT_DESC
+      - name: pageRequest
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/CommonPageRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CommonPageResponseSummary"
+    post:
+      tags:
+      - booking-controller
+      operationId: createBooking
+      parameters:
+      - name: userContext
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/UserContext"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Create"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Create"
+  /api/v1/mentoring-bookings/{bookingId}/rejection:
+    post:
+      tags:
+      - booking-controller
+      operationId: rejectBooking
+      parameters:
+      - name: userContext
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/UserContext"
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Reject"
+        required: true
+      responses:
+        "200":
+          description: OK
+  /api/v1/mentoring-bookings/{bookingId}/cancellation:
+    post:
+      tags:
+      - booking-controller
+      operationId: cancelBooking
+      parameters:
+      - name: userContext
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/UserContext"
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Cancel"
+        required: true
+      responses:
+        "200":
+          description: OK
+  /api/v1/mentoring-bookings/{bookingId}/acceptance:
+    post:
+      tags:
+      - booking-controller
+      operationId: acceptBooking
+      parameters:
+      - name: userContext
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/UserContext"
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+  /api/v1/admin/mentoring-categories:
+    get:
+      tags:
+      - admin-controller
+      operationId: getAllCategories
+      parameters:
+      - name: userContext
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/UserContext"
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CategoryListForAdmin"
+    post:
+      tags:
+      - admin-controller
+      operationId: createCategory
+      parameters:
+      - name: userContext
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/UserContext"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Create"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Create"
+  /internal/v1/mentoring-booking/payment-failed:
+    patch:
+      tags:
+      - internal-mentoring-controller
+      operationId: processMentoringBookingPaymentFailed
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentFailed"
+        required: true
+      responses:
+        "200":
+          description: OK
+  /api/v1/mentorings/{mentoringId}:
+    get:
+      tags:
+      - mentoring-controller
+      operationId: getMentoring
+      parameters:
+      - name: mentoringId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Detail"
+    delete:
+      tags:
+      - mentoring-controller
+      operationId: deleteMentoring
+      parameters:
+      - name: userContext
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/UserContext"
+      - name: mentoringId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: No Content
+    patch:
+      tags:
+      - mentoring-controller
+      operationId: updateMentoring
+      parameters:
+      - name: userContext
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/UserContext"
+      - name: mentoringId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Update"
+        required: true
+      responses:
+        "204":
+          description: No Content
+  /api/v1/mentorings/{mentoringId}/deactivate:
+    patch:
+      tags:
+      - mentoring-controller
+      operationId: deactivateMentoring
+      parameters:
+      - name: userContext
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/UserContext"
+      - name: mentoringId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: No Content
+  /api/v1/mentoring-bookings/{bookingId}/sessions/{sessionId}/reschedule:
+    patch:
+      tags:
+      - booking-controller
+      operationId: rescheduleSession
+      parameters:
+      - name: userContext
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/UserContext"
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: sessionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RescheduleSession"
+        required: true
+      responses:
+        "204":
+          description: No Content
+  /api/v1/mentoring-bookings/{bookingId}/sessions/{sessionId}/complete:
+    patch:
+      tags:
+      - booking-controller
+      operationId: completeSession
+      parameters:
+      - name: userContext
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/UserContext"
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: sessionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: No Content
+  /api/v1/admin/mentoring-categories/{categoryId}:
+    delete:
+      tags:
+      - admin-controller
+      operationId: deleteCategory
+      parameters:
+      - name: userContext
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/UserContext"
+      - name: categoryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: No Content
+    patch:
+      tags:
+      - admin-controller
+      operationId: updateCategory
+      parameters:
+      - name: userContext
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/UserContext"
+      - name: categoryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Update"
+        required: true
+      responses:
+        "204":
+          description: No Content
+  /api/v1/mentorings/{mentoringId}/schedules:
+    get:
+      tags:
+      - mentoring-controller
+      operationId: getMentoringSchedules
+      parameters:
+      - name: mentoringId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Schedules"
+  /api/v1/mentoring-categories:
+    get:
+      tags:
+      - category-controller
+      operationId: getActiveCategories
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CategoryList"
+  /api/v1/mentoring-bookings/{bookingId}:
+    get:
+      tags:
+      - booking-controller
+      operationId: getBooking
+      parameters:
+      - name: userContext
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/UserContext"
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Detail"
+  /api/v1/mentoring-bookings/{bookingId}/sessions:
+    get:
+      tags:
+      - booking-controller
+      operationId: getBookingSessions
+      parameters:
+      - name: userContext
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/UserContext"
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SessionList"
+components:
+  schemas:
+    UserContext:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        userType:
+          type: string
+          enum:
+          - STUDENT
+          - INSTRUCTOR
+          - MASTER
+        userName:
+          type: string
+        userEmail:
+          type: string
+        userField:
+          type: string
+    UpdateActive:
+      type: object
+      properties:
+        categoryIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required:
+      - categoryIds
+    BookingTimeSlot:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        startTime:
+          type: string
+        endTime:
+          type: string
+      required:
+      - date
+      - endTime
+      - startTime
+    Create:
+      type: object
+      properties:
+        mentoringId:
+          type: string
+          format: uuid
+        timeSlots:
+          type: array
+          items:
+            $ref: "#/components/schemas/BookingTimeSlot"
+          minItems: 1
+        requestMessage:
+          type: string
+        orderId:
+          type: string
+          format: uuid
+      required:
+      - mentoringId
+      - timeSlots
+    RepeatPatternDto:
+      type: object
+      properties:
+        dayOfWeek:
+          type: string
+          enum:
+          - MONDAY
+          - TUESDAY
+          - WEDNESDAY
+          - THURSDAY
+          - FRIDAY
+          - SATURDAY
+          - SUNDAY
+        startTime:
+          type: string
+        endTime:
+          type: string
+      required:
+      - dayOfWeek
+      - endTime
+      - startTime
+    SessionDto:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        startTime:
+          type: string
+        endTime:
+          type: string
+      required:
+      - date
+      - endTime
+      - startTime
+    Reject:
+      type: object
+      properties:
+        reason:
+          type: string
+          minLength: 1
+      required:
+      - reason
+    Cancel:
+      type: object
+      properties:
+        reason:
+          type: string
+          minLength: 1
+      required:
+      - reason
+    PaymentFailed:
+      type: object
+      properties:
+        mentoringBookingId:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+        failureReason:
+          type: string
+      required:
+      - failureReason
+      - mentoringBookingId
+      - orderId
+    Update:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 100
+          minLength: 0
+        subtitle:
+          type: string
+        description:
+          type: string
+        price:
+          type: integer
+          format: int32
+          minimum: 0
+        endDate:
+          type: string
+          format: date
+        repeatPatterns:
+          type: array
+          items:
+            $ref: "#/components/schemas/RepeatPatternDto"
+    RescheduleSession:
+      type: object
+      properties:
+        newDate:
+          type: string
+          format: date
+        newStartTime:
+          type: string
+      required:
+      - newDate
+      - newStartTime
+    Search:
+      type: object
+      properties:
+        keyword:
+          type: string
+        categoryId:
+          type: string
+          format: uuid
+        mentorId:
+          type: string
+          format: uuid
+        status:
+          type: string
+        mentoringType:
+          type: string
+        sortBy:
+          type: string
+    CommonPageRequest:
+      type: object
+      properties:
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+    CommonPageResponseSummary:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/Summary"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        first:
+          type: boolean
+        last:
+          type: boolean
+    Summary:
+      type: object
+      properties:
+        mentoringId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        subtitle:
+          type: string
+        mentorName:
+          type: string
+        categoryName:
+          type: string
+        mentoringType:
+          type: string
+          enum:
+          - ONE_ON_ONE
+          - GROUP
+        format:
+          type: string
+          enum:
+          - SINGLE
+          - MULTI
+        price:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - INACTIVE
+    CategoryInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+    Detail:
+      type: object
+      properties:
+        mentoringId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        subtitle:
+          type: string
+        description:
+          type: string
+        mentor:
+          $ref: "#/components/schemas/MentorInfo"
+        category:
+          $ref: "#/components/schemas/CategoryInfo"
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - INACTIVE
+        format:
+          type: string
+          enum:
+          - SINGLE
+          - MULTI
+        mentoringType:
+          type: string
+          enum:
+          - ONE_ON_ONE
+          - GROUP
+        duration:
+          type: string
+          enum:
+          - MINUTES_30
+          - MINUTES_60
+          - MINUTES_90
+          - MINUTES_120
+          - MINUTES_150
+          - MINUTES_180
+        sessionCount:
+          type: integer
+          format: int32
+        maxParticipants:
+          type: integer
+          format: int32
+        excludeHolidays:
+          type: boolean
+        price:
+          type: integer
+          format: int64
+        endDate:
+          type: string
+          format: date
+    MentorInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        field:
+          type: string
+    Schedules:
+      type: object
+      properties:
+        repeatPatterns:
+          type: array
+          items:
+            $ref: "#/components/schemas/RepeatPatternDto"
+        sessions:
+          type: array
+          items:
+            $ref: "#/components/schemas/SessionDto"
+    CategoryList:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/ListItem"
+    ListItem:
+      type: object
+      properties:
+        categoryId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        code:
+          type: string
+        sortOrder:
+          type: integer
+          format: int32
+    SessionInfo:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        sessionDate:
+          type: string
+          format: date
+        startTime:
+          type: string
+        endTime:
+          type: string
+        progressStatus:
+          type: string
+          enum:
+          - SCHEDULED
+          - COMPLETED
+    SessionList:
+      type: object
+      properties:
+        bookingId:
+          type: string
+          format: uuid
+        sessions:
+          type: array
+          items:
+            $ref: "#/components/schemas/SessionInfo"
+    CategoryListForAdmin:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/ListItemForAdmin"
+    ListItemForAdmin:
+      type: object
+      properties:
+        categoryId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        code:
+          type: string
+        sortOrder:
+          type: integer
+          format: int32
+        active:
+          type: boolean
