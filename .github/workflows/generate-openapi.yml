@@ -12,6 +12,21 @@ jobs:
       contents: write
       packages: read
 
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: goggles
+          POSTGRES_USER: goggles
+          POSTGRES_PASSWORD: goggles
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v4
 
@@ -21,11 +36,17 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Create mentoring schema
+        run: PGPASSWORD=goggles psql -h localhost -U goggles -d goggles -c "CREATE SCHEMA IF NOT EXISTS mentoring;"
+
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
       - name: Generate OpenAPI Spec
-        run: ./gradlew generateOpenApiDocs --no-daemon -Pgpr.user=${{ github.actor }} -Pgpr.key=${{ secrets.GITHUB_TOKEN }}
+        env:
+          SPRING_PROFILES_ACTIVE: local
+          SERVER_PORT: 8080
+        run: ./gradlew generateOpenApiDocs --no-daemon -PGitHubPackagesUsername=${{ github.actor }} -PGitHubPackagesPassword=${{ secrets.GITHUB_TOKEN }}
 
       - name: Commit OpenAPI spec
         run: |
