@@ -25,7 +25,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Generate OpenAPI Spec
-        run: ./gradlew generateOpenApiDocs --no-daemon -Pgpr.user=${{ github.actor }} -Pgpr.key=${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew generateOpenApiDocs --no-daemon -PGitHubPackagesUsername=${{ github.actor }} -PGitHubPackagesPassword=${{ secrets.GITHUB_TOKEN }}
 
       - name: Commit OpenAPI spec
         run: |
