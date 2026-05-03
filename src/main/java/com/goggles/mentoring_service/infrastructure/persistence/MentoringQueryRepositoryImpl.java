@@ -1,9 +1,6 @@
 package com.goggles.mentoring_service.infrastructure.persistence;
 
-import com.goggles.mentoring_service.domain.mentoring.Mentoring;
-import com.goggles.mentoring_service.domain.mentoring.MentoringSearchCondition;
-import com.goggles.mentoring_service.domain.mentoring.MentoringSort;
-import com.goggles.mentoring_service.domain.mentoring.QMentoring;
+import com.goggles.mentoring_service.domain.mentoring.*;
 import com.goggles.mentoring_service.infrastructure.Escape;
 import com.goggles.mentoring_service.infrastructure.persistence.jpa.MentoringQueryRepository;
 import com.querydsl.core.BooleanBuilder;
@@ -16,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -69,13 +67,16 @@ public class MentoringQueryRepositoryImpl implements MentoringQueryRepository {
 			where.and(m.mentor.id.eq(condition.mentorId()));
 		}
 
-		if (condition.status() != null) {
-			where.and(m.status.eq(condition.status()));
-		}
+		MentoringStatus filterStatus =
+				condition.status() != null ? condition.status() : MentoringStatus.ACTIVE;
+		where.and(m.status.eq(filterStatus));
 
 		if (condition.mentoringType() != null) {
 			where.and(m.mentoringType.eq(condition.mentoringType()));
 		}
+
+		where.and(m.endDate.isNull()
+				.or(m.endDate.goe(LocalDate.now())));
 
 		return where;
 	}

@@ -16,11 +16,10 @@ import org.hibernate.annotations.SQLRestriction;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Getter
@@ -165,22 +164,80 @@ public class Mentoring extends BaseAudit {
 		this.status = MentoringStatus.ACTIVE;
 	}
 
-	public void deactivate() {
+	public void deactivate(UUID userId, UserType userType) {
+		checkIfUserIsOwnerOrManager(userId, userType);
 		this.status = MentoringStatus.INACTIVE;
+	}
+
+	private void checkIfUserIsOwnerOrManager(UUID userId, UserType userType) {
+		if (!mentor.isSameUser(userId, userType) && userType != UserType.MASTER) {
+			throw MentoringPolicyViolationException.noPermissionToDeactivate();
+		}
+	}
+
+	public void updateInfo(UUID userId, UserType userType, String title, String subtitle,
+			String description, Integer price, LocalDate endDate, List<RepeatPattern> newPatterns,
+			LocalDate now) {
+		checkIfUserIsOwnerOrManager(userId, userType);
+
+		if (title != null && !title.isBlank()) {
+			this.title = title;
+		}
+		if (subtitle != null) {
+			this.subtitle = subtitle;
+		}
+		if (description != null) {
+			this.description = description;
+		}
+		if (endDate != null) {
+			this.endDate = endDate;
+		}
+		if (price != null) {
+			if (price < 0) {
+				throw MentoringPolicyViolationException.invalidPrice();
+			}
+			this.price = price;
+		}
+		if (newPatterns != null) {
+			updateRepeatPatterns(newPatterns, now);
+		}
+	}
+
+	public void delete(UUID userId, UserType userType) {
+		checkIfUserIsOwnerOrManager(userId, userType);
+		if (sessions.stream()
+				.anyMatch(MentoringSession::isBooked)) {
+			throw new BookedSessionCannotBeDeletedException();
+		}
+		softDelete(userId);
 	}
 
 	public void updateEndDate(LocalDate newEndDate) {
 		this.endDate = newEndDate;
 	}
 
-	public void updateRepeatPatterns(List<RepeatPattern> newPatterns) {
+	public void updateRepeatPatterns(List<RepeatPattern> newPatterns, LocalDate now) {
 		this.repeatPatterns.clear();
 		this.repeatPatterns.addAll(newPatterns);
+		this.sessions.removeIf(session -> session.getSessionDate()
+				.isAfter(now) && !session.isBooked());
 	}
 
 	public void addSessions(List<MentoringSession> newSessions) {
 		newSessions.forEach(this::validateSession);
 		this.sessions.addAll(newSessions);
+	}
+
+	public void addSessionsExcludingBooked(List<MentoringSession> candidates) {
+		Set<LocalDateTime> bookedSlots = sessions.stream()
+				.filter(MentoringSession::isBooked)
+				.map(s -> LocalDateTime.of(s.getSessionDate(), s.getSessionStartTime()))
+				.collect(Collectors.toSet());
+		List<MentoringSession> filtered = candidates.stream()
+				.filter(s -> !bookedSlots.contains(
+						LocalDateTime.of(s.getSessionDate(), s.getSessionStartTime())))
+				.toList();
+		addSessions(filtered);
 	}
 
 	private void validateSession(MentoringSession session) {
@@ -206,9 +263,6 @@ public class Mentoring extends BaseAudit {
 
 	public List<MentoringSession> generateSessions(LocalDate from, LocalDate to,
 			HolidayProvider holidayProvider) {
-		if (format != Format.MULTI) {
-			throw MentoringPolicyViolationException.generateSessionsOnlyForAutoRepeat();
-		}
 		LocalDate effectiveTo = (endDate != null && endDate.isBefore(to)) ? endDate : to;
 		List<MentoringSession> generated = new ArrayList<>();
 

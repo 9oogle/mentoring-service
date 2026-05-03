@@ -32,7 +32,7 @@ public class MentoringFixture {
 	public static final int PRICE = 50_000;
 
 	public static final LocalDate SESSION_DATE_1 = LocalDate.of(2027, 5, 1);
-	public static final LocalDate SESSION_DATE_2 = LocalDate.of(2026, 5, 2);
+	public static final LocalDate SESSION_DATE_2 = LocalDate.of(2027, 5, 2);
 	public static final LocalTime START_TIME = LocalTime.of(10, 0);
 	public static final LocalTime END_TIME = LocalTime.of(11, 0);
 

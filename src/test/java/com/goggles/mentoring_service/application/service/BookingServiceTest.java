@@ -1,6 +1,5 @@
 package com.goggles.mentoring_service.application.service;
 
-import com.goggles.common.event.Events;
 import com.goggles.common.exception.ForbiddenException;
 import com.goggles.common.pagination.CommonPageRequest;
 import com.goggles.mentoring_service.application.command.BookingCommand;
@@ -8,11 +7,11 @@ import com.goggles.mentoring_service.application.command.MenteeInfo;
 import com.goggles.mentoring_service.application.query.BookingQuery;
 import com.goggles.mentoring_service.application.result.BookingResult;
 import com.goggles.mentoring_service.domain._common.UserType;
-import com.goggles.mentoring_service.domain.booking.BookingSearchCondition;
 import com.goggles.mentoring_service.domain.booking.BookingSort;
 import com.goggles.mentoring_service.domain.booking.BookingStatus;
 import com.goggles.mentoring_service.domain.booking.MentoringBooking;
 import com.goggles.mentoring_service.domain.booking.SessionProgressStatus;
+import com.goggles.mentoring_service.domain.booking.event.BookingEvent;
 import com.goggles.mentoring_service.domain.booking.exception.BookingNotFoundException;
 import com.goggles.mentoring_service.domain.booking.exception.UnauthorizedBookingAccessException;
 import com.goggles.mentoring_service.domain.booking.repository.MentoringBookingRepository;
@@ -56,7 +55,7 @@ class BookingServiceTest {
 	@Mock
 	private MentoringRepository mentoringRepository;
 	@Mock
-	private Events events;
+	private BookingEvent events;
 
 	@Test
 	void createBooking_success() {
@@ -273,19 +272,20 @@ class BookingServiceTest {
 		verify(bookingRepository).findByUser(any(), any());
 	}
 
-  // ── getBookingSessions ────────────────────────────────────────────────────
+	// ── getBookingSessions ────────────────────────────────────────────────────
 
-  @Test
-  void getBookingSessions_success() {
-    MentoringBooking booking = acceptedBooking();
-    given(bookingRepository.findById(any())).willReturn(Optional.of(booking));
+	@Test
+	void getBookingSessions_success() {
+		MentoringBooking booking = acceptedBooking();
+		given(bookingRepository.findById(any())).willReturn(Optional.of(booking));
 
-    BookingResult.SessionList result =
-        bookingService.getBookingSessions(
-            booking.getMentoringBookingId().bookingId(), MENTOR_ID, UserType.INSTRUCTOR);
+		BookingResult.SessionList result = bookingService.getBookingSessions(
+				booking.getMentoringBookingId()
+						.bookingId(), MENTOR_ID, UserType.INSTRUCTOR);
 
-    log.info("==== 회차 목록 조회 결과 ====");
-    log.info("sessions: {}", result.sessions().size());
+		log.info("==== 회차 목록 조회 결과 ====");
+		log.info("sessions: {}", result.sessions()
+				.size());
 
 		assertThat(result.sessions()).hasSize(1);
 		assertThat(result.sessions()
@@ -294,32 +294,25 @@ class BookingServiceTest {
 		verify(bookingRepository).findById(any());
 	}
 
-  @Test
-  void getBookingSessions_bookingNotFound() {
-    given(bookingRepository.findById(any())).willReturn(Optional.empty());
+	@Test
+	void getBookingSessions_bookingNotFound() {
+		given(bookingRepository.findById(any())).willReturn(Optional.empty());
 
-    assertThatThrownBy(
-            () ->
-                bookingService.getBookingSessions(
-                    UUID.randomUUID(), MENTOR_ID, UserType.INSTRUCTOR))
-        .isInstanceOf(BookingNotFoundException.class);
-  }
+		assertThatThrownBy(() -> bookingService.getBookingSessions(UUID.randomUUID(), MENTOR_ID,
+				UserType.INSTRUCTOR)).isInstanceOf(BookingNotFoundException.class);
+	}
 
-  @Test
-  void getBookingSessions_forbidden() {
-    MentoringBooking booking = acceptedBooking();
-    given(bookingRepository.findById(any())).willReturn(Optional.of(booking));
+	@Test
+	void getBookingSessions_forbidden() {
+		MentoringBooking booking = acceptedBooking();
+		given(bookingRepository.findById(any())).willReturn(Optional.of(booking));
 
-    assertThatThrownBy(
-            () ->
-                bookingService.getBookingSessions(
-                    booking.getMentoringBookingId().bookingId(),
-                    UUID.randomUUID(),
-                    UserType.STUDENT))
-        .isInstanceOf(ForbiddenException.class);
-  }
+		assertThatThrownBy(() -> bookingService.getBookingSessions(booking.getMentoringBookingId()
+				.bookingId(), UUID.randomUUID(), UserType.STUDENT)).isInstanceOf(
+				ForbiddenException.class);
+	}
 
-  // ── completeSession ───────────────────────────────────────────────────────
+	// ── completeSession ───────────────────────────────────────────────────────
 
 	@Test
 	void completeSession_success() {
@@ -329,9 +322,9 @@ class BookingServiceTest {
 				.getId();
 		given(bookingRepository.findById(any())).willReturn(Optional.of(booking));
 
-    bookingService.completeSession(
-        new BookingCommand.CompleteSession(
-            booking.getMentoringBookingId().bookingId(), sessionId, MENTOR_ID, UserType.INSTRUCTOR));
+		bookingService.completeSession(new BookingCommand.CompleteSession(
+				booking.getMentoringBookingId()
+						.bookingId(), sessionId, MENTOR_ID, UserType.INSTRUCTOR));
 
 		log.info("==== 회차 진행 처리 결과 ====");
 		log.info("progressStatus: {}", booking.getBookingSessions()
@@ -343,19 +336,16 @@ class BookingServiceTest {
 				.getProgressStatus()).isEqualTo(SessionProgressStatus.COMPLETED);
 	}
 
-  @Test
-  void completeSession_bookingNotFound() {
-    given(bookingRepository.findById(any())).willReturn(Optional.empty());
+	@Test
+	void completeSession_bookingNotFound() {
+		given(bookingRepository.findById(any())).willReturn(Optional.empty());
 
-    assertThatThrownBy(
-            () ->
-                bookingService.completeSession(
-                    new BookingCommand.CompleteSession(
-                        UUID.randomUUID(), UUID.randomUUID(), MENTOR_ID, UserType.INSTRUCTOR)))
-        .isInstanceOf(BookingNotFoundException.class);
-  }
+		assertThatThrownBy(() -> bookingService.completeSession(
+				new BookingCommand.CompleteSession(UUID.randomUUID(), UUID.randomUUID(), MENTOR_ID,
+						UserType.INSTRUCTOR))).isInstanceOf(BookingNotFoundException.class);
+	}
 
-  // ── rescheduleSession ─────────────────────────────────────────────────────
+	// ── rescheduleSession ─────────────────────────────────────────────────────
 
 	@Test
 	void rescheduleSession_success() {
@@ -371,8 +361,8 @@ class BookingServiceTest {
 
 		bookingService.rescheduleSession(new BookingCommand.RescheduleSession(
 				booking.getMentoringBookingId()
-						.bookingId(), sessionId, RESCHEDULE_DATE, SESSION_START_TIME,
-				MENTOR_ID, UserType.INSTRUCTOR));
+						.bookingId(), sessionId, RESCHEDULE_DATE, SESSION_START_TIME, MENTOR_ID,
+				UserType.INSTRUCTOR));
 
 		log.info("==== 회차 일정 변경 결과 ====");
 		log.info("sessionDate: {}", booking.getBookingSessions()
@@ -384,21 +374,20 @@ class BookingServiceTest {
 				.getSessionDate()).isEqualTo(RESCHEDULE_DATE);
 	}
 
-  @Test
-  void rescheduleSession_bookingNotFound() {
-    given(bookingRepository.findById(any())).willReturn(Optional.empty());
+	@Test
+	void rescheduleSession_bookingNotFound() {
+		given(bookingRepository.findById(any())).willReturn(Optional.empty());
 
 		assertThatThrownBy(() -> bookingService.rescheduleSession(
 				new BookingCommand.RescheduleSession(UUID.randomUUID(), UUID.randomUUID(),
 						RESCHEDULE_DATE, SESSION_START_TIME, MENTOR_ID,
-						UserType.INSTRUCTOR))).isInstanceOf(
-				BookingNotFoundException.class);
+						UserType.INSTRUCTOR))).isInstanceOf(BookingNotFoundException.class);
 	}
 
-  @Test
-  void getMyBookings_empty() {
-    Page<MentoringBooking> emptyPage = new PageImpl<>(List.of());
-    given(bookingRepository.findByUser(any(), any())).willReturn(emptyPage);
+	@Test
+	void getMyBookings_empty() {
+		Page<MentoringBooking> emptyPage = new PageImpl<>(List.of());
+		given(bookingRepository.findByUser(any(), any())).willReturn(emptyPage);
 
 		BookingQuery.GetMyBookings query =
 				new BookingQuery.GetMyBookings(MENTEE_ID, UserType.STUDENT, null,

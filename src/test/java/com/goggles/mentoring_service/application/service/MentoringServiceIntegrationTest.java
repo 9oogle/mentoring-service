@@ -212,7 +212,8 @@ class MentoringServiceIntegrationTest {
 		em.clear();
 
 		MentoringSearchCondition condition =
-				new MentoringSearchCondition("스프링", null, null, null, null, null);
+				new MentoringSearchCondition("스프링", null, null, MentoringStatus.INACTIVE, null,
+						null);
 		Page<MentoringResult.Summary> result =
 				mentoringService.searchMentorings(condition, CommonPageRequest.of(0, 10));
 
@@ -237,7 +238,8 @@ class MentoringServiceIntegrationTest {
 		em.clear();
 
 		MentoringSearchCondition condition =
-				new MentoringSearchCondition(null, null, MENTOR_ID, null, null, null);
+				new MentoringSearchCondition(null, null, MENTOR_ID, MentoringStatus.INACTIVE, null,
+						null);
 		Page<MentoringResult.Summary> result =
 				mentoringService.searchMentorings(condition, CommonPageRequest.of(0, 10));
 
@@ -254,7 +256,7 @@ class MentoringServiceIntegrationTest {
 	}
 
 	@Test
-	void searchMentorings_no_filter() {
+	void searchMentorings_inactive_status() {
 		saveMentoring("멘토링 A", 10_000);
 		saveMentoring("멘토링 B", 20_000);
 		saveMentoring("멘토링 C", 30_000);
@@ -262,7 +264,8 @@ class MentoringServiceIntegrationTest {
 		em.clear();
 
 		MentoringSearchCondition condition =
-				new MentoringSearchCondition(null, null, null, null, null, null);
+				new MentoringSearchCondition(null, null, null, MentoringStatus.INACTIVE, null,
+						null);
 		Page<MentoringResult.Summary> result =
 				mentoringService.searchMentorings(condition, CommonPageRequest.of(0, 10));
 
@@ -285,8 +288,8 @@ class MentoringServiceIntegrationTest {
 
 		log.info("size=10 (허용된 최솟값): 5건이므로 첫 페이지에 전체가 담김");
 		Page<MentoringResult.Summary> page0 = mentoringService.searchMentorings(
-				new MentoringSearchCondition(null, null, null, null, null, null),
-				CommonPageRequest.of(0, 10));
+				new MentoringSearchCondition(null, null, null, MentoringStatus.INACTIVE, null,
+						null), CommonPageRequest.of(0, 10));
 
 		log.info("==== 페이지네이션 메타데이터 확인 (size=10) ====");
 		log.info("0페이지: {}건 / 전체 {}건 / 총 {}페이지 / first={} / last={}", page0.getContent()
@@ -303,8 +306,8 @@ class MentoringServiceIntegrationTest {
 
 		log.info("2페이지 요청 → 범위 초과, 데이터 없음");
 		Page<MentoringResult.Summary> page2 = mentoringService.searchMentorings(
-				new MentoringSearchCondition(null, null, null, null, null, null),
-				CommonPageRequest.of(2, 10));
+				new MentoringSearchCondition(null, null, null, MentoringStatus.INACTIVE, null,
+						null), CommonPageRequest.of(2, 10));
 
 		log.info("2페이지: {}건", page2.getContent()
 				.size());

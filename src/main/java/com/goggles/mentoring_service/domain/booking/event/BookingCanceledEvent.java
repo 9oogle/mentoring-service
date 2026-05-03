@@ -5,5 +5,4 @@ import java.util.UUID;
 
 public record BookingCanceledEvent(UUID bookingId, UUID canceledBy, UUID menteeId, UUID mentorId,
 								   String title, String reason,
-								   List<BookingSessionSnapshot> sessionSlots,
-								   UUID orderId) {}
+								   List<BookingSessionSnapshot> sessionSlots, UUID orderId) {}
