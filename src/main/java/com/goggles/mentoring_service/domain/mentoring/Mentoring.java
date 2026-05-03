@@ -264,4 +264,13 @@ public class Mentoring extends BaseAudit {
 				.findFirst()
 				.orElseThrow(() -> new SessionNotFoundException(date, startTime));
 	}
+
+	public LocalTime getSlotEndTime(LocalDate date, LocalTime startTime) {
+		return findSession(date, startTime).getSessionEndTime();
+	}
+
+	public void unbookSession(LocalDate date, LocalTime startTime) {
+		findSession(date, startTime).unbook();
+	}
+
 }

@@ -2,9 +2,7 @@ package com.goggles.mentoring_service.domain.booking;
 
 import com.goggles.common.domain.BaseAudit;
 import com.goggles.mentoring_service.domain._common.UserType;
-import com.goggles.mentoring_service.domain.booking.exception.CancellationDeadlineExceededException;
-import com.goggles.mentoring_service.domain.booking.exception.CancellationReasonRequiredException;
-import com.goggles.mentoring_service.domain.booking.exception.UnauthorizedBookingAccessException;
+import com.goggles.mentoring_service.domain.booking.exception.*;
 import com.goggles.mentoring_service.domain.mentoring.Mentoring;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -12,7 +10,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -36,9 +36,9 @@ public class MentoringBooking extends BaseAudit {
 	@Embedded
 	private Mentee mentee;
 
-	@ElementCollection
-	@CollectionTable(name = "P_BOOKED_TIME", joinColumns = @JoinColumn(name = "booking_id"))
-	private final List<BookedTime> bookedTimes = new ArrayList<>();
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+	@JoinColumn(name = "booking_id", nullable = false)
+	private final List<BookingSession> bookingSessions = new ArrayList<>();
 
 	@Enumerated(EnumType.STRING)
 	@Column(length = 30, nullable = false)
@@ -52,12 +52,14 @@ public class MentoringBooking extends BaseAudit {
 
 	private UUID orderId;
 
+
+
 	private MentoringBooking(BookedMentoring bookedMentoring, Mentee mentee,
-			List<BookedTime> bookedTimes, String requestMessage, UUID orderId) {
+			List<BookingSession> bookingSessions, String requestMessage, UUID orderId) {
 		this.mentoringBookingId = MentoringBookingId.of();
 		this.bookedMentoring = bookedMentoring;
 		this.mentee = mentee;
-		this.bookedTimes.addAll(bookedTimes);
+		this.bookingSessions.addAll(bookingSessions);
 		this.requestMessage = requestMessage;
 		this.orderId = orderId;
 	}
@@ -67,10 +69,11 @@ public class MentoringBooking extends BaseAudit {
 			UUID orderId) {
 		Mentee mentee = Mentee.of(menteeId, menteeUserType, menteeName);
 		BookedMentoring bookedMentoring = BookedMentoring.of(mentoring);
-		List<BookedTime> bookedTimes = sessionSlots.stream()
-				.map(BookedTime::of)
+		List<BookingSession> bookingSessions = sessionSlots.stream()
+				.map(BookingSession::of)
 				.toList();
-		return new MentoringBooking(bookedMentoring, mentee, bookedTimes, requestMessage, orderId);
+		return new MentoringBooking(bookedMentoring, mentee, bookingSessions, requestMessage,
+				orderId);
 	}
 
 	public void completePayment() {
@@ -98,6 +101,7 @@ public class MentoringBooking extends BaseAudit {
 		this.closure = BookingClosure.close(userId, reason, now);
 	}
 
+
 	public void cancel(UUID canceledBy, UserType userType, String reason, LocalDateTime now) {
 		validateReason(reason);
 		checkIfUserCanCancel(canceledBy, userType);
@@ -107,9 +111,44 @@ public class MentoringBooking extends BaseAudit {
 		this.closure = BookingClosure.close(canceledBy, reason, now);
 	}
 
-	public UUID getClosedBy() {
-		return this.closure != null ? this.closure.getClosedBy() : null;
-	}
+  public void completeSession(UUID sessionId, UUID userId, UserType userType) {
+    checkIfUserIsMentor(userId, userType);
+    if (status != BookingStatus.ACCEPTED) {
+      throw SessionOperationNotAllowedException.completionNotAllowed(status);
+    }
+    findBookingSession(sessionId).complete();
+  }
+
+  public SessionReschedule rescheduleSession(
+      UUID sessionId,
+      LocalDate newDate,
+      LocalTime newStartTime,
+      LocalTime newEndTime,
+      UUID userId,
+      UserType userType,
+      LocalDateTime now) {
+    checkIfUserIsMentor(userId, userType);
+    if (status != BookingStatus.ACCEPTED) {
+      throw InvalidRescheduleException.bookingNotAccepted();
+    }
+    BookingSession session = findBookingSession(sessionId);
+    SessionSlot oldSlot = new SessionSlot(session.getSessionDate(), session.getSessionStartTime(), session.getSessionEndTime());
+    session.reschedule(newDate, newStartTime, newEndTime, now);
+    SessionSlot newSlot = new SessionSlot(newDate, newStartTime, newEndTime);
+    return new SessionReschedule(oldSlot, newSlot);
+  }
+
+  private BookingSession findBookingSession(UUID sessionId) {
+    return bookingSessions.stream()
+        .filter(bt -> bt.getId().equals(sessionId))
+        .findFirst()
+        .orElseThrow(() -> new BookedSessionNotFoundException(sessionId));
+  }
+
+  public UUID getClosedBy() {
+    return this.closure != null ? this.closure.getClosedBy() : null;
+  }
+
 
 	public LocalDateTime getClosedAt() {
 		return this.closure != null ? this.closure.getClosedAt() : null;
@@ -148,7 +187,7 @@ public class MentoringBooking extends BaseAudit {
 	}
 
 	private void checkCancellationDeadline(LocalDateTime now) {
-		for (BookedTime session : this.bookedTimes) {
+		for (BookingSession session : this.bookingSessions) {
 			LocalDateTime sessionStart =
 					LocalDateTime.of(session.getSessionDate(), session.getSessionStartTime());
 			if (now.isAfter(sessionStart.minusHours(CANCELLATION_DEADLINE_HOURS))) {

@@ -24,12 +24,18 @@ public class BookingFixture {
 	public static final LocalTime SESSION_START_TIME = LocalTime.of(10, 0);
 	public static final LocalTime SESSION_END_TIME = LocalTime.of(11, 0);
 
-	// SESSION_DATE 기준 24시간 전/후 (세션: 2026-06-01 10:00, 취소 마감: 2026-05-31 10:00)
-	public static final LocalDateTime BEFORE_DEADLINE = LocalDateTime.of(2026, 5, 31, 0, 0);
-	public static final LocalDateTime AFTER_DEADLINE = LocalDateTime.of(2026, 6, 1, 9, 1);
+  public static final LocalDate RESCHEDULE_DATE = LocalDate.of(2026, 7, 1);
 
-	public static final String REJECT_REASON = "일정 불가";
-	public static final String CANCEL_REASON = "개인 사정";
+  // SESSION_DATE 기준 24시간 전/후 (세션: 2026-06-01 10:00, 취소 마감: 2026-05-31 10:00)
+  public static final LocalDateTime BEFORE_DEADLINE = LocalDateTime.of(2026, 5, 31, 0, 0);
+  public static final LocalDateTime AFTER_DEADLINE = LocalDateTime.of(2026, 6, 1, 9, 1);
+
+  // 회차 일정 변경 기준 now (세션 시작 전 / 세션 지난 후)
+  public static final LocalDateTime NOW_BEFORE_SESSION = LocalDateTime.of(2026, 5, 1, 0, 0);
+  public static final LocalDateTime NOW_AFTER_SESSION = LocalDateTime.of(2026, 6, 2, 0, 0);
+
+  public static final String REJECT_REASON = "일정 불가";
+  public static final String CANCEL_REASON = "개인 사정";
 
 	public static Mentoring mentoring() {
 		return defaultMentoringBuilder().sessions(List.of())
@@ -65,7 +71,11 @@ public class BookingFixture {
 		return BookingResult.Detail.from(pendingBooking());
 	}
 
-	public static BookingResult.Summary bookingSummary() {
-		return BookingResult.Summary.from(pendingBooking());
-	}
+  public static BookingResult.Summary bookingSummary() {
+    return BookingResult.Summary.from(pendingBooking());
+  }
+
+  public static BookingResult.SessionList sessionList() {
+    return BookingResult.SessionList.from(acceptedBooking());
+  }
 }

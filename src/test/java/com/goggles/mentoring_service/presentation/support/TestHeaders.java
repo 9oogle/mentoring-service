@@ -11,7 +11,7 @@ public class TestHeaders {
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("X-User-Id", UUID.randomUUID()
 				.toString());
-		headers.add("X-User-Type", userType.name());
+		headers.add("X-User-Role", userType.name());
 		headers.add("X-User-Name", UUID.randomUUID()
 				.toString());
 		headers.add("X-User-Email", UUID.randomUUID()

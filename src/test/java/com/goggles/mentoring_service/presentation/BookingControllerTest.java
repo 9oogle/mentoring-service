@@ -7,9 +7,7 @@ import com.goggles.mentoring_service.application.result.BookingResult;
 import com.goggles.mentoring_service.application.service.BookingService;
 import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.booking.MentoringBookingId;
-import com.goggles.mentoring_service.domain.booking.exception.BookingNotFoundException;
-import com.goggles.mentoring_service.domain.booking.exception.InvalidBookingStatusTransitionException;
-import com.goggles.mentoring_service.domain.booking.exception.UnauthorizedBookingAccessException;
+import com.goggles.mentoring_service.domain.booking.exception.*;
 import com.goggles.mentoring_service.domain.mentoring.MentoringId;
 import com.goggles.mentoring_service.domain.mentoring.exception.MentoringNotFoundException;
 import com.goggles.mentoring_service.infrastructure.config.WebMvcConfig;
@@ -19,6 +17,7 @@ import com.goggles.mentoring_service.presentation.support.UserContextArgumentRes
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
@@ -38,12 +37,14 @@ import static com.goggles.mentoring_service.domain.booking.BookingFixture.*;
 import static com.goggles.mentoring_service.domain.mentoring.MentoringFixture.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@ActiveProfiles("test")
 @WebMvcTest(BookingController.class)
 @Import({WebMvcConfig.class, UserContextArgumentResolver.class,
 		BookingControllerTest.PageResolverConfig.class})
@@ -127,7 +128,7 @@ class BookingControllerTest {
 						.menteeId()
 						.toString()))
 				.andExpect(jsonPath("$.requestMessage").value(detail.requestMessage()))
-				.andExpect(jsonPath("$.bookedTimes").isArray());
+				.andExpect(jsonPath("$.sessions").isArray());
 	}
 
 	@Test
@@ -216,9 +217,38 @@ class BookingControllerTest {
 		mockMvc.perform(
 						post("/api/v1/mentoring-bookings/{bookingId}/acceptance", bookingId).headers(
 								TestHeaders.headersFor(UserType.INSTRUCTOR)))
-
-
 				.andDo(print())
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.title").value("Not Found"));
+	}
+
+	@Test
+	void getBookingSessions_success() throws Exception {
+		BookingResult.SessionList result = sessionList();
+		given(bookingService.getBookingSessions(any(), any(), any())).willReturn(result);
+
+		mockMvc.perform(
+						get("/api/v1/mentoring-bookings/{bookingId}/sessions", result.bookingId()).headers(
+								TestHeaders.headersFor(UserType.STUDENT)))
+				.andDo(print())
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.bookingId").value(result.bookingId()
+						.toString()))
+				.andExpect(jsonPath("$.sessions").isArray())
+				.andExpect(jsonPath("$.sessions.length()").value(1))
+				.andExpect(jsonPath("$.sessions[0].progressStatus").value("SCHEDULED"));
+	}
+
+	// ── getBookingSessions ────────────────────────────────────────────────────
+
+	@Test
+	void getBookingSessions_notFound() throws Exception {
+		UUID bookingId = UUID.randomUUID();
+		given(bookingService.getBookingSessions(any(), any(), any())).willThrow(
+				new BookingNotFoundException(new MentoringBookingId(bookingId)));
+
+		mockMvc.perform(get("/api/v1/mentoring-bookings/{bookingId}/sessions", bookingId).headers(
+						TestHeaders.headersFor(UserType.STUDENT)))
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.title").value("Not Found"));
 	}
@@ -247,6 +277,86 @@ class BookingControllerTest {
 										MediaType.APPLICATION_JSON)
 								.headers(TestHeaders.headersFor(UserType.INSTRUCTOR))
 								.content("{}"))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	void completeSession_success() throws Exception {
+		UUID bookingId = UUID.randomUUID();
+		UUID sessionId = UUID.randomUUID();
+
+		mockMvc.perform(
+						patch("/api/v1/mentoring-bookings/{bookingId}/sessions/{sessionId}/complete",
+								bookingId, sessionId).headers(TestHeaders.headersFor(UserType.INSTRUCTOR)))
+				.andDo(print())
+				.andExpect(status().isNoContent());
+
+		verify(bookingService).completeSession(any());
+	}
+
+	// ── completeSession ───────────────────────────────────────────────────────
+
+	@Test
+	void completeSession_session_not_found() throws Exception {
+		UUID bookingId = UUID.randomUUID();
+		UUID sessionId = UUID.randomUUID();
+		doThrow(new BookedSessionNotFoundException(sessionId)).when(bookingService)
+				.completeSession(any());
+
+		mockMvc.perform(
+						patch("/api/v1/mentoring-bookings/{bookingId}/sessions/{sessionId}/complete",
+								bookingId, sessionId).headers(TestHeaders.headersFor(UserType.INSTRUCTOR)))
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.title").value("Not Found"));
+	}
+
+	@Test
+	void rescheduleSession_success() throws Exception {
+		UUID bookingId = UUID.randomUUID();
+		UUID sessionId = UUID.randomUUID();
+		BookingRequest.RescheduleSession request =
+				new BookingRequest.RescheduleSession(SESSION_DATE, SESSION_START_TIME);
+
+		mockMvc.perform(
+						patch("/api/v1/mentoring-bookings/{bookingId}/sessions/{sessionId}/reschedule",
+								bookingId, sessionId).contentType(MediaType.APPLICATION_JSON)
+								.headers(TestHeaders.headersFor(UserType.INSTRUCTOR))
+								.content(objectMapper.writeValueAsString(request)))
+				.andDo(print())
+				.andExpect(status().isNoContent());
+
+		verify(bookingService).rescheduleSession(any());
+	}
+
+	// ── rescheduleSession ─────────────────────────────────────────────────────
+
+	@Test
+	void rescheduleSession_invalid_request() throws Exception {
+		UUID bookingId = UUID.randomUUID();
+		UUID sessionId = UUID.randomUUID();
+
+		mockMvc.perform(
+						patch("/api/v1/mentoring-bookings/{bookingId}/sessions/{sessionId}/reschedule",
+								bookingId, sessionId).contentType(MediaType.APPLICATION_JSON)
+								.headers(TestHeaders.headersFor(UserType.INSTRUCTOR))
+								.content("{}"))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	void rescheduleSession_already_completed() throws Exception {
+		UUID bookingId = UUID.randomUUID();
+		UUID sessionId = UUID.randomUUID();
+		BookingRequest.RescheduleSession request =
+				new BookingRequest.RescheduleSession(SESSION_DATE, SESSION_START_TIME);
+		doThrow(InvalidRescheduleException.sessionAlreadyCompleted()).when(bookingService)
+				.rescheduleSession(any());
+
+		mockMvc.perform(
+						patch("/api/v1/mentoring-bookings/{bookingId}/sessions/{sessionId}/reschedule",
+								bookingId, sessionId).contentType(MediaType.APPLICATION_JSON)
+								.headers(TestHeaders.headersFor(UserType.INSTRUCTOR))
+								.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isBadRequest());
 	}
 

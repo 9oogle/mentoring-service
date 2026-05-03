@@ -1,5 +1,6 @@
 package com.goggles.mentoring_service.infrastructure.persistence;
 
+import com.goggles.common.exception.ForbiddenException;
 import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.booking.*;
 import com.goggles.mentoring_service.infrastructure.persistence.jpa.BookingQueryRepository;
@@ -23,7 +24,7 @@ public class BookingQueryRepositoryImpl implements BookingQueryRepository {
 	@Override
 	public Page<MentoringBooking> findByUser(BookingSearchCondition condition, Pageable pageable) {
 		QMentoringBooking b = QMentoringBooking.mentoringBooking;
-		QBookedTime bt = new QBookedTime("bt");
+		QBookingSession bt = new QBookingSession("bt");
 
 		BooleanBuilder where = buildWhere(b, condition);
 		OrderSpecifier<?> order = buildOrder(b, bt, condition.sort());
@@ -36,7 +37,7 @@ public class BookingQueryRepositoryImpl implements BookingQueryRepository {
 
 		if (sortBySession) {
 			content = queryFactory.selectFrom(b)
-					.leftJoin(b.bookedTimes, bt)
+					.leftJoin(b.bookingSessions, bt)
 					.where(where)
 					.groupBy(b.mentoringBookingId)
 					.orderBy(order)
@@ -70,6 +71,9 @@ public class BookingQueryRepositoryImpl implements BookingQueryRepository {
 		else if (condition.userType() == UserType.INSTRUCTOR) {
 			where.and(b.bookedMentoring.mentorId.eq(condition.userId()));
 		}
+		else {
+			throw new ForbiddenException("지원하지 않는 사용자 유형: " + condition.userType());
+		}
 
 		if (condition.status() != null) {
 			where.and(b.status.eq(condition.status()));
@@ -78,7 +82,8 @@ public class BookingQueryRepositoryImpl implements BookingQueryRepository {
 		return where;
 	}
 
-	private OrderSpecifier<?> buildOrder(QMentoringBooking b, QBookedTime bt, BookingSort sort) {
+	private OrderSpecifier<?> buildOrder(QMentoringBooking b, QBookingSession bt,
+			BookingSort sort) {
 		if (sort == null) return b.createdAt.desc();
 		return switch (sort) {
 			case SESSION_DATE_ASC -> bt.sessionDate.min()

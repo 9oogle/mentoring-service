@@ -5,15 +5,18 @@ import com.goggles.common.exception.ForbiddenException;
 import com.goggles.common.pagination.CommonPageRequest;
 import com.goggles.mentoring_service.application.command.BookingCommand;
 import com.goggles.mentoring_service.application.command.MenteeInfo;
+import com.goggles.mentoring_service.application.query.BookingQuery;
 import com.goggles.mentoring_service.application.result.BookingResult;
 import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.booking.BookingSearchCondition;
 import com.goggles.mentoring_service.domain.booking.MentoringBooking;
 import com.goggles.mentoring_service.domain.booking.MentoringBookingId;
+import com.goggles.mentoring_service.domain.booking.SessionReschedule;
 import com.goggles.mentoring_service.domain.booking.SessionSlot;
 import com.goggles.mentoring_service.domain.booking.event.BookingAcceptedEvent;
 import com.goggles.mentoring_service.domain.booking.event.BookingCanceledEvent;
 import com.goggles.mentoring_service.domain.booking.event.BookingRejectedEvent;
+import com.goggles.mentoring_service.domain.booking.event.BookingSessionSnapshot;
 import com.goggles.mentoring_service.domain.booking.exception.BookingNotFoundException;
 import com.goggles.mentoring_service.domain.booking.repository.MentoringBookingRepository;
 import com.goggles.mentoring_service.domain.mentoring.Mentoring;
@@ -27,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -70,20 +74,13 @@ public class BookingService {
 	}
 
 	@Transactional(readOnly = true)
-	public Page<BookingResult.Summary> getMyBookings(BookingSearchCondition condition,
+	public Page<BookingResult.Summary> getMyBookings(BookingQuery.GetMyBookings query,
 			CommonPageRequest pageRequest) {
+		BookingSearchCondition condition =
+				new BookingSearchCondition(query.userId(), query.userType(), query.status(),
+						query.sort());
 		return bookingRepository.findByUser(condition, pageRequest.toPageable(Sort.unsorted()))
 				.map(BookingResult.Summary::from);
-	}
-
-	private void checkAccess(MentoringBooking booking, UUID userId, UserType userType) {
-		boolean isMentee = userType == UserType.STUDENT && booking.getMentee()
-				.isMentee(userId);
-		boolean isMentor = userType == UserType.INSTRUCTOR && booking.getBookedMentoring()
-				.isMentor(userId);
-		if (!isMentee && !isMentor) {
-			throw new ForbiddenException("해당 예약에 접근 권한이 없습니다.");
-		}
 	}
 
 	@Transactional
@@ -107,7 +104,10 @@ public class BookingService {
 						.getId(), booking.getBookedMentoring()
 						.getMentorId(), booking.getBookedMentoring()
 						.getMentorName(), booking.getBookedMentoring()
-						.getTitle(), booking.getBookedTimes()));
+						.getTitle(), booking.getBookingSessions()
+						.stream()
+						.map(BookingSessionSnapshot::from)
+						.toList()));
 	}
 
 	@Transactional
@@ -123,8 +123,10 @@ public class BookingService {
 						.getId(), booking.getBookedMentoring()
 						.getMentorId(), booking.getBookedMentoring()
 						.getMentorName(), booking.getBookedMentoring()
-						.getTitle(), command.reason(), booking.getBookedTimes(),
-						booking.getOrderId()));
+						.getTitle(), command.reason(), booking.getBookingSessions()
+						.stream()
+						.map(BookingSessionSnapshot::from)
+						.toList(), booking.getOrderId()));
 	}
 
 	@Transactional
@@ -139,7 +141,59 @@ public class BookingService {
 						.bookingId(), command.userId(), booking.getMentee()
 						.getId(), booking.getBookedMentoring()
 						.getMentorId(), booking.getBookedMentoring()
-						.getTitle(), command.reason(), booking.getBookedTimes(),
-						booking.getOrderId()));
+						.getTitle(), command.reason(), booking.getBookingSessions()
+						.stream()
+						.map(BookingSessionSnapshot::from)
+						.toList(), booking.getOrderId()));
 	}
+
+
+  @Transactional(readOnly = true)
+  public BookingResult.SessionList getBookingSessions(
+      UUID bookingId, UUID userId, UserType userType) {
+    MentoringBooking booking = findBooking(bookingId);
+    checkAccess(booking, userId, userType);
+    return BookingResult.SessionList.from(booking);
+  }
+
+
+  @Transactional
+  public void completeSession(BookingCommand.CompleteSession command) {
+    MentoringBooking booking = findBooking(command.bookingId());
+    booking.completeSession(command.sessionId(), command.userId(), command.userType());
+  }
+
+  @Transactional
+  public void rescheduleSession(BookingCommand.RescheduleSession command) {
+    MentoringBooking booking = findBooking(command.bookingId());
+    MentoringId mentoringId = new MentoringId(booking.getBookedMentoring().getMentoringId());
+    Mentoring mentoring =
+        mentoringRepository
+            .findById(mentoringId)
+            .orElseThrow(() -> new MentoringNotFoundException(mentoringId));
+
+		LocalTime newEndTime = mentoring.getSlotEndTime(command.newDate(), command.newStartTime());
+		SessionReschedule reschedule =
+				booking.rescheduleSession(command.sessionId(), command.newDate(),
+						command.newStartTime(), newEndTime, command.userId(),
+						command.userType(), LocalDateTime.now());
+
+    mentoring.unbookSession(reschedule.oldSlot().date(), reschedule.oldSlot().startTime());
+    mentoring.bookSession(command.newDate(), command.newStartTime());
+  }
+
+  private MentoringBooking findBooking(UUID bookingId) {
+    return bookingRepository
+        .findById(new MentoringBookingId(bookingId))
+        .orElseThrow(() -> new BookingNotFoundException(new MentoringBookingId(bookingId)));
+  }
+
+  private void checkAccess(MentoringBooking booking, UUID userId, UserType userType) {
+    boolean isMentee = userType == UserType.STUDENT && booking.getMentee().isMentee(userId);
+    boolean isMentor =
+        userType == UserType.INSTRUCTOR && booking.getBookedMentoring().isMentor(userId);
+    if (!isMentee && !isMentor) {
+      throw new ForbiddenException("해당 예약에 접근 권한이 없습니다.");
+    }
+  }
 }

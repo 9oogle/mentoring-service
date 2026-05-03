@@ -17,21 +17,18 @@ import java.util.UUID;
 
 public class BookingRequest {
 	public record Create(@NotNull UUID mentoringId,
-						 @NotEmpty List<@Valid BookingTimeSlot> bookingTimeSlots,
+						 @NotEmpty List<@Valid BookingTimeSlot> timeSlots,
 						 String requestMessage, UUID orderId) {
 		public BookingCommand.Create toCommand(UserContext userContext) {
 			MenteeInfo menteeInfo = new MenteeInfo(userContext.userId(), userContext.userType(),
 					userContext.userName());
-			List<SessionSlot> sessionSlots = bookingTimeSlots().stream()
+			List<SessionSlot> sessionSlots = timeSlots().stream()
 					.map(slot -> new SessionSlot(slot.date(), slot.startTime(), slot.endTime()))
 					.toList();
 			return new BookingCommand.Create(menteeInfo, mentoringId(), sessionSlots,
 					requestMessage(), orderId());
 		}
 	}
-
-	public record BookingTimeSlot(@NotNull LocalDate date, @NotNull LocalTime startTime,
-								  @NotNull LocalTime endTime) {}
 
 	public record Reject(@NotBlank String reason) {
 		public BookingCommand.Reject toCommand(UUID bookingId, UserContext userContext) {
@@ -54,4 +51,11 @@ public class BookingRequest {
 					userContext.userType(), reason());
 		}
 	}
+  public record BookingTimeSlot(
+      @NotNull LocalDate date, @NotNull LocalTime startTime, @NotNull LocalTime endTime) {}
+
+	public record BookingTimeSlot(@NotNull LocalDate date, @NotNull LocalTime startTime,
+								  @NotNull LocalTime endTime) {}
+
+	public record RescheduleSession(@NotNull LocalDate newDate, @NotNull LocalTime newStartTime) {}
 }

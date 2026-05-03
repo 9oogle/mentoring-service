@@ -3,7 +3,10 @@ package com.goggles.mentoring_service.presentation.dto;
 import com.goggles.mentoring_service.application.result.BookingResult;
 import com.goggles.mentoring_service.domain.booking.BookingStatus;
 
+import com.goggles.mentoring_service.domain.booking.SessionProgressStatus;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,7 +22,7 @@ public class BookingResponse {
 
 	public record Summary(UUID bookingId, String mentoringTitle, String mentorName,
 						  String menteeName, BookingStatus status,
-						  List<BookingResult.BookedTimeInfo> requestedSessions,
+						  List<BookingResult.SessionInfo> requestedSessions,
 						  LocalDateTime createdAt) {
 
 		public static Summary of(BookingResult.Summary result) {
@@ -29,16 +32,51 @@ public class BookingResponse {
 		}
 	}
 
-	public record Detail(UUID bookingId, BookingResult.Detail.MentoringInfo mentoring,
-						 BookingResult.Detail.MenteeInfo mentee,
-						 List<BookingResult.BookedTimeInfo> bookedTimes, BookingStatus status,
-						 String requestMessage, BookingResult.Detail.ClosureInfo closure,
-						 LocalDateTime createdAt) {
+  public record Detail(
+      UUID bookingId,
+      BookingResult.Detail.MentoringInfo mentoring,
+      BookingResult.Detail.MenteeInfo mentee,
+      List<BookingResult.SessionInfo> sessions,
+      BookingStatus status,
+      String requestMessage,
+      BookingResult.Detail.ClosureInfo closure,
+      LocalDateTime createdAt) {
 
-		public static Detail of(BookingResult.Detail result) {
-			return new Detail(result.bookingId(), result.mentoring(), result.mentee(),
-					result.bookedTimes(), result.status(), result.requestMessage(),
-					result.closure(), result.createdAt());
-		}
-	}
+    public static Detail of(BookingResult.Detail result) {
+      return new Detail(
+          result.bookingId(),
+          result.mentoring(),
+          result.mentee(),
+          result.sessions(),
+          result.status(),
+          result.requestMessage(),
+          result.closure(),
+          result.createdAt());
+    }
+  }
+
+  public record SessionList(UUID bookingId, List<SessionInfo> sessions) {
+
+    public static SessionList of(BookingResult.SessionList result) {
+      List<SessionInfo> sessions = result.sessions().stream().map(SessionInfo::of).toList();
+      return new SessionList(result.bookingId(), sessions);
+    }
+  }
+
+  public record SessionInfo(
+      UUID sessionId,
+      LocalDate sessionDate,
+      LocalTime startTime,
+      LocalTime endTime,
+      SessionProgressStatus progressStatus) {
+
+    public static SessionInfo of(BookingResult.SessionInfo result) {
+      return new SessionInfo(
+          result.sessionId(),
+          result.sessionDate(),
+          result.startTime(),
+          result.endTime(),
+          result.progressStatus());
+    }
+  }
 }
