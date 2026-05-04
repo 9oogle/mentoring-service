@@ -27,7 +27,7 @@ public class Mentor {
 	private String name;
 
 	@Column(name = "mentor_field", length = 100, nullable = false)
-	private String field;
+	private String field = "-";
 
 	@Column(name = "mentor_email", length = 100, nullable = false)
 	private String email;
@@ -37,7 +37,7 @@ public class Mentor {
 		checkIfMentorAuthValidate(id, userType);
 		this.id = id;
 		this.name = name;
-		this.field = field;
+		this.field = field == null ? "-" : field;
 		this.email = email;
 	}
 

@@ -53,7 +53,7 @@ public class MentoringRequest {
 					.toList();
 
 			return new MentoringCommand.Create(userContext.userId(), userContext.userName(),
-					userContext.userField(), userContext.userEmail(), userContext.userType(),
+					"", userContext.userName(), userContext.userType(),
 					categoryId(), title(), subtitle(), description(), duration(), mentoringType(),
 					format(), sessionCount(), maxParticipants(), excludeHolidays(), price(),
 					endDate(), sessionSlots, patterns);

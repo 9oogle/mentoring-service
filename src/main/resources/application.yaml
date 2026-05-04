@@ -1,6 +1,17 @@
 spring:
   application:
     name: mentoring-service
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  config:
+    import:
+      - "optional:configserver: "
+      - "optional:file:.env[.properties]"
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: config-server
   datasource:
     url: jdbc:postgresql://localhost:5432/goggles
     username: ${DB_USERNAME:goggles}
@@ -59,7 +70,7 @@ server:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://localhost:9001/eureka/
     register-with-eureka: true
     fetch-registry: true
   instance:
