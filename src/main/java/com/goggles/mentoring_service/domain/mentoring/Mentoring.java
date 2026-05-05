@@ -59,12 +59,16 @@ public class Mentoring extends BaseAudit {
 	@Column(columnDefinition = "TEXT")
 	private String description;
 
+	@Enumerated(EnumType.STRING)
 	private MentoringDuration duration;
 
+	@Enumerated(EnumType.STRING)
 	private MentoringStatus status = MentoringStatus.INACTIVE;
 
+	@Enumerated(EnumType.STRING)
 	private Format format = Format.SINGLE;
 
+	@Enumerated(EnumType.STRING)
 	private MentoringType mentoringType = MentoringType.ONE_ON_ONE;
 
 	private int sessionCount = 1;
