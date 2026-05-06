@@ -6,6 +6,7 @@ import com.goggles.mentoring_service.domain.booking.event.BookingAcceptedEvent;
 import com.goggles.mentoring_service.domain.booking.event.BookingEvent;
 import com.goggles.mentoring_service.domain.booking.event.PaymentCompletedEvent;
 import com.goggles.mentoring_service.domain.booking.event.PaymentFailedEvent;
+import com.goggles.mentoring_service.infrastructure.config.KafkaTopicProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -15,14 +16,14 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class BookingEventImpl implements BookingEvent {
 	private final Events events;
-
+	private final KafkaTopicProperties kafkaTopicProperties;
 
 	@Override
 	public void bookingPaymentCompleted(MentoringBooking mentoringBooking) {
 		UUID bookingId = mentoringBooking.getMentoringBookingId()
 				.bookingId();
 		events.trigger(bookingId.toString(), "MENTORING_BOOKING",
-				"mentoring.booking.payment_completed", new PaymentCompletedEvent(bookingId));
+				kafkaTopicProperties.booking().paymentCompleted(), new PaymentCompletedEvent(bookingId));
 	}
 
 	@Override
@@ -30,16 +31,15 @@ public class BookingEventImpl implements BookingEvent {
 		UUID bookingId = mentoringBooking.getMentoringBookingId()
 				.bookingId();
 		events.trigger(bookingId.toString(), "MENTORING_BOOKING",
-				"mentoring.booking.payment_failed", new PaymentFailedEvent(bookingId));
-
+				kafkaTopicProperties.booking().paymentFailed(), new PaymentFailedEvent(bookingId));
 	}
 
 	@Override
 	public void mentoringBookingAccepted(MentoringBooking mentoringBooking) {
 		UUID bookingId = mentoringBooking.getMentoringBookingId()
 				.bookingId();
-		events.trigger(bookingId.toString(), "MENTORING_BOOKING", "mentoring.booking.accepted",
-				BookingAcceptedEvent.from(mentoringBooking));
+		events.trigger(bookingId.toString(), "MENTORING_BOOKING",
+				kafkaTopicProperties.booking().accepted(), BookingAcceptedEvent.from(mentoringBooking));
 	}
 
 	@Override

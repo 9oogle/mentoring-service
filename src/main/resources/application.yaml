@@ -6,7 +6,6 @@ spring:
   config:
     import:
       - "optional:configserver: "
-      - "optional:file:.env[.properties]"
   cloud:
     config:
       discovery:
@@ -38,6 +37,17 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+kafka:
+  topics:
+    booking:
+      payment-completed: mentoring.booking.payment_completed.v1
+      payment-failed: mentoring.booking.payment_failed.v1
+      accepted: mentoring.booking.accepted.v1
+      rejected: mentoring.booking.rejected.v1
+      canceled: mentoring.booking.canceled.v1
+      requested: mentoring.booking.requested.v1
+      pending-approval: mentoring.booking.pending_approval.v1
 
 resilience4j:
   circuitbreaker:

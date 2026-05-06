@@ -29,7 +29,7 @@ public class UserContextArgumentResolver implements HandlerMethodArgumentResolve
 		try {
 			assert request != null;
 			return new UserContext(UUID.fromString(request.getHeader("X-User-Id")),
-					UserType.valueOf(request.getHeader("X-User-Role")), request.getHeader("X-User-Email"));
+					UserType.valueOf(request.getHeader("X-User-Role")), request.getHeader("X-User-Name"));
 		} catch (IllegalArgumentException | NullPointerException e) {
 			throw new BadRequestException("Invalid user context in request headers",
 					e.getMessage());
