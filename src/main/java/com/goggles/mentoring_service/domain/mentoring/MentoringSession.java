@@ -4,6 +4,8 @@ import com.goggles.mentoring_service.domain.mentoring.exception.BookedSessionSta
 import com.goggles.mentoring_service.domain.mentoring.exception.InvalidTimeRangeException;
 import com.goggles.mentoring_service.domain.mentoring.exception.SessionNotAvailableException;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -18,6 +20,7 @@ public class MentoringSession {
 	private LocalDate sessionDate;
 	private LocalTime sessionStartTime;
 	private LocalTime sessionEndTime;
+	@Enumerated(EnumType.STRING)
 	private SessionStatus status = SessionStatus.AVAILABLE;
 
 	public static MentoringSession of(LocalDate date, LocalTime startTime, LocalTime endTime) {

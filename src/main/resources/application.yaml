@@ -1,6 +1,16 @@
 spring:
   application:
     name: mentoring-service
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  config:
+    import:
+      - "optional:configserver: "
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: config-server
   datasource:
     url: jdbc:postgresql://localhost:5432/goggles
     username: ${DB_USERNAME:goggles}
@@ -27,6 +37,17 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+kafka:
+  topics:
+    booking:
+      payment-completed: mentoring.booking.payment_completed.v1
+      payment-failed: mentoring.booking.payment_failed.v1
+      accepted: mentoring.booking.accepted.v1
+      rejected: mentoring.booking.rejected.v1
+      canceled: mentoring.booking.canceled.v1
+      requested: mentoring.booking.requested.v1
+      pending-approval: mentoring.booking.pending_approval.v1
 
 resilience4j:
   circuitbreaker:
@@ -59,7 +80,7 @@ server:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://localhost:9001/eureka/
     register-with-eureka: true
     fetch-registry: true
   instance:
