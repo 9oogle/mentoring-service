@@ -63,7 +63,7 @@ public class Mentoring extends BaseAudit {
 	private MentoringDuration duration;
 
 	@Enumerated(EnumType.STRING)
-	private MentoringStatus status = MentoringStatus.INACTIVE;
+	private MentoringStatus status = MentoringStatus.ACTIVE;
 
 	@Enumerated(EnumType.STRING)
 	private Format format = Format.SINGLE;
