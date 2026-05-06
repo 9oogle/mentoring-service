@@ -572,10 +572,6 @@ components:
           - MASTER
         userName:
           type: string
-        userEmail:
-          type: string
-        userField:
-          type: string
     UpdateActive:
       type: object
       properties:
