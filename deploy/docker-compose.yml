@@ -1,0 +1,18 @@
+services:
+  mentoring-service:
+    image: asia-northeast3-docker.pkg.dev/melodic-crane-494802-u3/goggles/mentoring-service:${IMAGE_TAG:-latest}
+    container_name: mentoring-service
+    restart: unless-stopped
+    ports:
+      - "9006:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: ${DB_URL}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      REDIS_SENTINEL_1: ${REDIS_SENTINEL_1}
+      REDIS_SENTINEL_2: ${REDIS_SENTINEL_2}
+      REDIS_SENTINEL_3: ${REDIS_SENTINEL_3}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      EUREKA_SERVER_URL: ${EUREKA_SERVER_URL}
