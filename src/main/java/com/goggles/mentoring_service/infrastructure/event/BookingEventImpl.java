@@ -6,8 +6,7 @@ import com.goggles.mentoring_service.domain.booking.event.BookingAcceptedEvent;
 import com.goggles.mentoring_service.domain.booking.event.BookingCanceledEvent;
 import com.goggles.mentoring_service.domain.booking.event.BookingEvent;
 import com.goggles.mentoring_service.domain.booking.event.BookingRejectedEvent;
-import com.goggles.mentoring_service.domain.booking.event.PaymentCompletedEvent;
-import com.goggles.mentoring_service.domain.booking.event.PaymentFailedEvent;
+import com.goggles.mentoring_service.domain.booking.event.BookingRequestedEvent;
 import com.goggles.mentoring_service.infrastructure.config.KafkaTopicProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -19,22 +18,6 @@ import java.util.UUID;
 public class BookingEventImpl implements BookingEvent {
 	private final Events events;
 	private final KafkaTopicProperties kafkaTopicProperties;
-
-	@Override
-	public void bookingPaymentCompleted(MentoringBooking mentoringBooking) {
-		UUID bookingId = mentoringBooking.getMentoringBookingId()
-				.bookingId();
-		events.trigger(bookingId.toString(), "MENTORING_BOOKING",
-				kafkaTopicProperties.booking().paymentCompleted(), new PaymentCompletedEvent(bookingId));
-	}
-
-	@Override
-	public void bookingPaymentFailed(MentoringBooking mentoringBooking) {
-		UUID bookingId = mentoringBooking.getMentoringBookingId()
-				.bookingId();
-		events.trigger(bookingId.toString(), "MENTORING_BOOKING",
-				kafkaTopicProperties.booking().paymentFailed(), new PaymentFailedEvent(bookingId));
-	}
 
 	@Override
 	public void mentoringBookingAccepted(MentoringBooking mentoringBooking) {
@@ -56,5 +39,12 @@ public class BookingEventImpl implements BookingEvent {
 		UUID bookingId = mentoringBooking.getMentoringBookingId().bookingId();
 		events.trigger(bookingId.toString(), "MENTORING_BOOKING",
 				kafkaTopicProperties.booking().canceled(), BookingCanceledEvent.from(mentoringBooking));
+	}
+
+	@Override
+	public void bookingRequested(MentoringBooking mentoringBooking) {
+		UUID bookingId = mentoringBooking.getMentoringBookingId().bookingId();
+		events.trigger(bookingId.toString(), "MENTORING_BOOKING",
+				kafkaTopicProperties.booking().requested(), BookingRequestedEvent.from(mentoringBooking));
 	}
 }

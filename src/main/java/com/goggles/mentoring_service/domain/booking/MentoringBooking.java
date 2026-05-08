@@ -62,20 +62,19 @@ public class MentoringBooking extends BaseAudit {
 	public static MentoringBooking create(UUID menteeId, UserType menteeUserType, String menteeName,
 			Mentoring mentoring, List<SessionSlot> sessionSlots, String requestMessage,
 			UUID orderId) {
-		Mentee mentee =  Mentee.of(menteeId, menteeUserType, menteeName);
+		Mentee mentee = Mentee.of(menteeId, menteeUserType, menteeName);
 		List<BookingSession> bookingSessions = new ArrayList<>();
 		for (SessionSlot slot : sessionSlots) {
 			bookingSessions.add(BookingSession.of(slot));
 		}
 		BookedMentoring bookedMentoring = BookedMentoring.of(mentoring);
-		return new MentoringBooking(bookedMentoring, mentee, bookingSessions, requestMessage,
-				orderId);
+		return new MentoringBooking(bookedMentoring, mentee, bookingSessions, requestMessage, orderId);
 	}
 
 	public void completePayment(BookingEvent events) {
 		validateStatus(BookingStatus.PAYMENT_COMPLETED);
 		this.status = BookingStatus.PAYMENT_COMPLETED;
-		events.bookingPaymentCompleted(this);
+		events.bookingRequested(this);
 	}
 
 	public void failPayment(String reason, LocalDateTime now) {
@@ -126,8 +125,9 @@ public class MentoringBooking extends BaseAudit {
 		events.mentoringBookingCanceled(this);
 	}
 
-	public void forceCancel() {
+	public void forceCancel(String reason, LocalDateTime now) {
 		this.status = BookingStatus.CANCELED;
+		this.closure = BookingClosure.close(null, reason, now);
 	}
 
 	public void completeSession(UUID sessionId, UUID userId, UserType userType) {

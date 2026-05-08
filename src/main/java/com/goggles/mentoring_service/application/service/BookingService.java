@@ -82,7 +82,7 @@ public class BookingService {
 					booking.getBookingSessions().forEach(session ->
 							mentoring.unbookSession(session.getSessionDate(),
 									session.getSessionStartTime())));
-			booking.forceCancel();
+			booking.forceCancel("주문 취소", LocalDateTime.now());
 		});
 	}
 
