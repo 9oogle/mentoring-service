@@ -15,6 +15,7 @@ import static com.goggles.mentoring_service.domain.mentoring.MentoringFixture.ME
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 class MentoringBookingTest {
 
@@ -44,7 +45,7 @@ class MentoringBookingTest {
 		assertThatThrownBy(
 				() -> MentoringBooking.create(instructorId, UserType.INSTRUCTOR, "이강사", mentoring(),
 						List.of(sessionSlot()), REQUEST_MESSAGE, UUID.randomUUID())).isInstanceOf(
-				RuntimeException.class);
+					RuntimeException.class);
 	}
 
 	@Test
@@ -56,11 +57,23 @@ class MentoringBookingTest {
 	}
 
 	@Test
+	void completePayment_publishes_booking_requested_event() {
+		MentoringBooking booking = pendingBooking();
+		booking.completePayment(events);
+
+		verify(events).bookingRequested(booking);
+	}
+
+	@Test
 	void failPayment_success() {
 		MentoringBooking booking = pendingBooking();
-		booking.failPayment("결제 실패 사유", LocalDateTime.now(), events);
+		LocalDateTime now = LocalDateTime.of(2026, 6, 1, 12, 0);
+
+		booking.failPayment("카드 한도 초과", now);
 
 		assertThat(booking.getStatus()).isEqualTo(BookingStatus.PAYMENT_FAILED);
+		assertThat(booking.getCloseReason()).isEqualTo("카드 한도 초과");
+		assertThat(booking.getClosedAt()).isEqualTo(now);
 	}
 
 
@@ -214,7 +227,7 @@ class MentoringBookingTest {
 		assertThatThrownBy(
 				() -> MentoringBooking.create(MENTOR_ID, UserType.INSTRUCTOR, "이강사", mentoring(),
 						List.of(sessionSlot()), REQUEST_MESSAGE, UUID.randomUUID())).isInstanceOf(
-				RuntimeException.class);
+					RuntimeException.class);
 	}
 
 
@@ -335,9 +348,84 @@ class MentoringBookingTest {
 	@Test
 	void cancel_from_payment_failed() {
 		MentoringBooking booking = pendingBooking();
-		booking.failPayment("결제 실패 사유", LocalDateTime.now(), events);
+		booking.failPayment("결제 실패 사유", LocalDateTime.now());
 
 		assertThatThrownBy(() -> booking.cancel(MENTEE_ID, UserType.STUDENT, CANCEL_REASON,
 				BEFORE_DEADLINE,events)).isInstanceOf(InvalidBookingStatusTransitionException.class);
+	}
+
+	// ── cancelByOrder ─────────────────────────────────────────────────────────
+
+	@Test
+	void cancelByOrder_from_payment_completed_by_mentee() {
+		MentoringBooking booking = paymentCompletedBooking();
+
+		booking.cancelByOrder(MENTEE_ID, UserType.STUDENT, "사용자 취소", LocalDateTime.now(), events);
+
+		assertThat(booking.getStatus()).isEqualTo(BookingStatus.CANCELED);
+		assertThat(booking.getClosedBy()).isEqualTo(MENTEE_ID);
+		assertThat(booking.getCloseReason()).isEqualTo("사용자 취소");
+	}
+
+	@Test
+	void cancelByOrder_from_accepted_by_mentor() {
+		MentoringBooking booking = acceptedBooking();
+
+		booking.cancelByOrder(MENTOR_ID, UserType.INSTRUCTOR, "멘토 취소", LocalDateTime.now(), events);
+
+		assertThat(booking.getStatus()).isEqualTo(BookingStatus.CANCELED);
+		assertThat(booking.getClosedBy()).isEqualTo(MENTOR_ID);
+	}
+
+	@Test
+	void cancelByOrder_from_pending_fails() {
+		MentoringBooking booking = pendingBooking();
+
+		assertThatThrownBy(
+				() -> booking.cancelByOrder(MENTEE_ID, UserType.STUDENT, "취소", LocalDateTime.now(),
+						events)).isInstanceOf(InvalidBookingStatusTransitionException.class);
+	}
+
+	@Test
+	void cancelByOrder_without_reason_fails() {
+		MentoringBooking booking = paymentCompletedBooking();
+
+		assertThatThrownBy(
+				() -> booking.cancelByOrder(MENTEE_ID, UserType.STUDENT, "", LocalDateTime.now(),
+						events)).isInstanceOf(CancellationReasonRequiredException.class);
+	}
+
+	@Test
+	void cancelByOrder_by_unauthorized_user_fails() {
+		MentoringBooking booking = paymentCompletedBooking();
+
+		assertThatThrownBy(
+				() -> booking.cancelByOrder(UUID.randomUUID(), UserType.STUDENT, "취소",
+						LocalDateTime.now(), events)).isInstanceOf(
+				UnauthorizedBookingAccessException.class);
+	}
+
+	// ── forceCancel ───────────────────────────────────────────────────────────
+
+	@Test
+	void forceCancel_sets_status_and_closure() {
+		MentoringBooking booking = paymentCompletedBooking();
+		LocalDateTime now = LocalDateTime.of(2026, 6, 1, 12, 0);
+
+		booking.forceCancel("주문 취소", now);
+
+		assertThat(booking.getStatus()).isEqualTo(BookingStatus.CANCELED);
+		assertThat(booking.getCloseReason()).isEqualTo("주문 취소");
+		assertThat(booking.getClosedAt()).isEqualTo(now);
+		assertThat(booking.getClosedBy()).isNull();
+	}
+
+	@Test
+	void forceCancel_from_accepted() {
+		MentoringBooking booking = acceptedBooking();
+
+		booking.forceCancel("주문 취소", LocalDateTime.now());
+
+		assertThat(booking.getStatus()).isEqualTo(BookingStatus.CANCELED);
 	}
 }
