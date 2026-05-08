@@ -85,8 +85,6 @@ public class BookingService {
 		MentoringBooking booking = bookingRepository.findById(id)
 				.orElseThrow(() -> new BookingNotFoundException(id));
 		booking.accept(command.userId(), command.userType(), events);
-
-		events.mentoringBookingAccepted(booking);
 	}
 
 	@Transactional
@@ -95,8 +93,6 @@ public class BookingService {
 		MentoringBooking booking = bookingRepository.findById(id)
 				.orElseThrow(() -> new BookingNotFoundException(id));
 		booking.reject(command.userId(), command.userType(), command.reason(), LocalDateTime.now(), events);
-
-		events.mentoringBookingRejected(booking);
 	}
 
 	@Transactional
@@ -105,8 +101,6 @@ public class BookingService {
 		MentoringBooking booking = bookingRepository.findById(id)
 				.orElseThrow(() -> new BookingNotFoundException(id));
 		booking.cancel(command.userId(), command.userType(), command.reason(), LocalDateTime.now(), events);
-
-		events.mentoringBookingCanceled(booking);
 	}
 
 
