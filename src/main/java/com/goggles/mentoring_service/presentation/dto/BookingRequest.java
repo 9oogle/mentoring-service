@@ -2,6 +2,7 @@ package com.goggles.mentoring_service.presentation.dto;
 
 import com.goggles.mentoring_service.application.command.BookingCommand;
 import com.goggles.mentoring_service.application.command.MenteeInfo;
+import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.booking.MentoringBookingId;
 import com.goggles.mentoring_service.domain.booking.SessionSlot;
 import com.goggles.mentoring_service.presentation.support.UserContext;
@@ -63,4 +64,10 @@ public class BookingRequest {
 
 
 	public record RescheduleSession(@NotNull LocalDate newDate, @NotNull LocalTime newStartTime) {}
+
+	public record Rollback(@NotBlank String cancelReason) {
+		public BookingCommand.Rollback toCommand(UUID bookingId) {
+			return new BookingCommand.Rollback(bookingId, cancelReason());
+		}
+	}
 }

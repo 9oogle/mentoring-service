@@ -71,6 +71,12 @@ public class BookingService {
 				.map(BookingResult.Summary::from);
 	}
 
+
+	@Transactional
+	public void rollbackBooking(BookingCommand.Rollback command) {
+		failPaymentWithUnbook(new MentoringBookingId(command.bookingId()), command.cancelReason());
+	}
+
 	@Transactional
 	public void paymentCompleted(BookingCommand.PaymentCompleted command) {
 		MentoringBooking booking = bookingRepository.findById(command.mentoringBookingId())
