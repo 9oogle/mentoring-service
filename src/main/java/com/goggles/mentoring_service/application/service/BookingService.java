@@ -72,6 +72,21 @@ public class BookingService {
 	}
 
 	@Transactional
+	public void confirmCanceledByOrder(UUID bookingId) {
+		bookingRepository.findById(new MentoringBookingId(bookingId)).ifPresent(booking -> {
+			if (booking.getStatus() == BookingStatus.CANCELED) {
+				return;
+			}
+			MentoringId mentoringId = new MentoringId(booking.getBookedMentoring().getMentoringId());
+			mentoringRepository.findById(mentoringId).ifPresent(mentoring ->
+					booking.getBookingSessions().forEach(session ->
+							mentoring.unbookSession(session.getSessionDate(),
+									session.getSessionStartTime())));
+			booking.forceCancel();
+		});
+	}
+
+	@Transactional
 	public void cancelBookingByOrder(BookingCommand.Cancellation command) {
 		MentoringBookingId bookingId = new MentoringBookingId(command.bookingId());
 		MentoringBooking booking = bookingRepository.findById(bookingId)

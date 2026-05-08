@@ -2,7 +2,7 @@ spring:
   application:
     name: mentoring-service
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:local}
+    active: ${SPRING_PROFILES_ACTIVE:local},topics
   config:
     import:
       - "optional:configserver: "
@@ -36,6 +36,11 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: mentoring-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
 kafka:
   topics:
@@ -47,6 +52,9 @@ kafka:
       canceled: mentoring.booking.canceled.v1
       requested: mentoring.booking.requested.v1
       pending-approval: mentoring.booking.pending_approval.v1
+    order:
+      mentoring-completed: ${topics.order.mentoring-completed:order.mentoring-completed.v1}
+      mentoring-canceled: ${topics.order.mentoring-cancelled:order.mentoring-canceled.v1}
 
 resilience4j:
   circuitbreaker:

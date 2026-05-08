@@ -125,6 +125,11 @@ public class MentoringBooking extends BaseAudit {
 		this.closure = BookingClosure.close(canceledBy, reason, now);
 		events.mentoringBookingCanceled(this);
 	}
+
+	public void forceCancel() {
+		this.status = BookingStatus.CANCELED;
+	}
+
 	public void completeSession(UUID sessionId, UUID userId, UserType userType) {
 		checkIfUserIsMentor(userId, userType);
 		if (status != BookingStatus.ACCEPTED) {
