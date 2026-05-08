@@ -72,6 +72,14 @@ public class BookingService {
 	}
 
 	@Transactional
+	public void paymentCompleted(BookingCommand.PaymentCompleted command) {
+		MentoringBooking booking = bookingRepository.findById(command.mentoringBookingId())
+				.orElseThrow(() -> new BookingNotFoundException(command.mentoringBookingId()));
+		booking.completePayment(events);
+		bookingRepository.save(booking);
+	}
+
+	@Transactional
 	public void paymentFailed(BookingCommand.PaymentFailed command) {
 		MentoringBooking booking = bookingRepository.findById(command.mentoringBookingId())
 				.orElseThrow(() -> new BookingNotFoundException(command.mentoringBookingId()));

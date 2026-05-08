@@ -37,6 +37,12 @@ public class BookingRequest {
 		}
 	}
 
+	public record PaymentCompleted(@NotNull UUID mentoringBookingId, @NotNull UUID orderId) {
+		public BookingCommand.PaymentCompleted toCommand() {
+			return new BookingCommand.PaymentCompleted(new MentoringBookingId(mentoringBookingId()), orderId());
+		}
+	}
+
 	public record PaymentFailed(@NotNull UUID mentoringBookingId, @NotNull UUID orderId,
 								@NotNull String failureReason) {
 		public BookingCommand.PaymentFailed toCommand() {

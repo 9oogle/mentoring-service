@@ -14,6 +14,8 @@ public class BookingCommand {
 						 String requestMessage, UUID orderId) {}
 
 
+	public record PaymentCompleted(MentoringBookingId mentoringBookingId, UUID orderId) {}
+
 	public record PaymentFailed(MentoringBookingId mentoringBookingId, UUID orderId,
 								String failureReason) {}
 
