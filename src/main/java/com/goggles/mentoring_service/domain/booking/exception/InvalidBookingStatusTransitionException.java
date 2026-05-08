@@ -34,4 +34,10 @@ public class InvalidBookingStatusTransitionException extends MentoringValidation
 		return new InvalidBookingStatusTransitionException(
 				String.format("이미 종료된 예약은 변경할 수 없습니다. 현재 상태: %s", current));
 	}
+
+	public static InvalidBookingStatusTransitionException cannotCancelByOrder(BookingStatus current) {
+		return new InvalidBookingStatusTransitionException(
+				String.format("주문 취소는 PAYMENT_COMPLETED 또는 ACCEPTED 상태에서만 가능합니다. 현재 상태: %s",
+						current));
+	}
 }

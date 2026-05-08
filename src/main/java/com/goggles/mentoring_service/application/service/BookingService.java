@@ -71,6 +71,21 @@ public class BookingService {
 				.map(BookingResult.Summary::from);
 	}
 
+	@Transactional
+	public void cancelBookingByOrder(BookingCommand.Cancellation command) {
+		MentoringBookingId bookingId = new MentoringBookingId(command.bookingId());
+		MentoringBooking booking = bookingRepository.findById(bookingId)
+				.orElseThrow(() -> new BookingNotFoundException(bookingId));
+
+		MentoringId mentoringId = new MentoringId(booking.getBookedMentoring().getMentoringId());
+		Mentoring mentoring = mentoringRepository.findById(mentoringId)
+				.orElseThrow(() -> new MentoringNotFoundException(mentoringId));
+
+		booking.cancelByOrder(command.userId(), command.userType(), command.cancelReason(),
+				LocalDateTime.now(), events);
+		booking.getBookingSessions().forEach(session ->
+				mentoring.unbookSession(session.getSessionDate(), session.getSessionStartTime()));
+	}
 
 	@Transactional
 	public void rollbackBooking(BookingCommand.Rollback command) {

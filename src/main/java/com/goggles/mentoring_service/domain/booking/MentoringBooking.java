@@ -114,6 +114,17 @@ public class MentoringBooking extends BaseAudit {
 
 	}
 
+	public void cancelByOrder(UUID canceledBy, UserType userType, String reason, LocalDateTime now,
+			BookingEvent events) {
+		if (status != BookingStatus.PAYMENT_COMPLETED && status != BookingStatus.ACCEPTED) {
+			throw InvalidBookingStatusTransitionException.cannotCancelByOrder(this.status);
+		}
+		validateReason(reason);
+		checkIfUserCanCancel(canceledBy, userType);
+		this.status = BookingStatus.CANCELED;
+		this.closure = BookingClosure.close(canceledBy, reason, now);
+		events.mentoringBookingCanceled(this);
+	}
 	public void completeSession(UUID sessionId, UUID userId, UserType userType) {
 		checkIfUserIsMentor(userId, userType);
 		if (status != BookingStatus.ACCEPTED) {

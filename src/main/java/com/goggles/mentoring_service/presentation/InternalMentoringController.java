@@ -34,6 +34,15 @@ public class InternalMentoringController {
 			@Valid @RequestBody BookingRequest.Rollback request) {
 		bookingService.rollbackBooking(request.toCommand(bookingId));
 	}
+
+	@PatchMapping("mentoring-booking/{bookingId}/cancellation")
+	public void cancelMentoringBooking(@PathVariable UUID bookingId,
+			@RequestHeader("X-User-Id") UUID userId,
+			@RequestHeader("X-User-Role") UserType userType,
+			@Valid @RequestBody BookingRequest.Cancellation request) {
+		bookingService.cancelBookingByOrder(request.toCommand(bookingId, userId, userType));
+	}
+
 	@PatchMapping("mentoring-booking/payment-completed")
 	public void processMentoringBookingPaymentCompleted(
 			@Valid @RequestBody BookingRequest.PaymentCompleted request) {

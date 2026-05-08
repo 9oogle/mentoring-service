@@ -70,4 +70,12 @@ public class BookingRequest {
 			return new BookingCommand.Rollback(bookingId, cancelReason());
 		}
 	}
+
+	public record Cancellation(@NotNull UUID orderId, @NotBlank String cancelReason,
+							   String cancelDescription) {
+		public BookingCommand.Cancellation toCommand(UUID bookingId, UUID userId, UserType userType) {
+			return new BookingCommand.Cancellation(bookingId, userId, userType, orderId(),
+					cancelReason(), cancelDescription());
+		}
+	}
 }
