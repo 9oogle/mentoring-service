@@ -1,9 +1,12 @@
 package com.goggles.mentoring_service.infrastructure.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.goggles.common.domain.InboxRepository;
 import com.goggles.common.domain.OutboxRepository;
 import com.goggles.common.event.OutboxEventListener;
 import com.goggles.common.event.OutboxStatusUpdater;
+import com.goggles.common.event.advice.InboxAdvice;
+import com.goggles.common.event.scheduler.InboxCleanupScheduler;
 import com.goggles.common.event.scheduler.OutboxRelayScheduler;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
@@ -36,5 +39,17 @@ public class EventInfraConfig {
 	public OutboxRelayScheduler outboxRelayScheduler(OutboxRepository outboxRepository,
 			KafkaTemplate<String, Object> kafkaTemplate, OutboxStatusUpdater outboxStatusUpdater) {
 		return new OutboxRelayScheduler(outboxRepository, kafkaTemplate, outboxStatusUpdater);
+	}
+
+	@Bean
+	@ConditionalOnBean(KafkaTemplate.class)
+	public InboxAdvice inboxAdvice(InboxRepository inboxRepository) {
+		return new InboxAdvice(inboxRepository);
+	}
+
+	@Bean
+	@ConditionalOnBean(KafkaTemplate.class)
+	public InboxCleanupScheduler inboxCleanupScheduler(InboxRepository inboxRepository) {
+		return new InboxCleanupScheduler(inboxRepository);
 	}
 }
