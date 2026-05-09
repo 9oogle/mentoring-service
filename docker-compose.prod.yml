@@ -1,0 +1,15 @@
+services:
+  mentoring-service:
+    image: ${IMAGE}:${IMAGE_TAG:-latest}
+    env_file: .env
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+    ports:
+      - "9006:9006"
+    volumes:
+      - ./ssl/kafka.truststore.jks:/app/ssl/kafka.truststore.jks:ro
+      - mentoring-logs:/app/logs
+    restart: unless-stopped
+
+volumes:
+  mentoring-logs:

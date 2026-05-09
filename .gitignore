@@ -3,7 +3,13 @@
 *.iws
 *.iml
 *.ipr
-.vscode/
+
+# VSCode
+.vscode/*
+!.vscode/extensions.json
+*.code-workspace
+.history/
+bin/
 
 # Gradle
 .gradle/
@@ -31,7 +37,11 @@ application-prod.yml
 application-prod.yaml
 *.env
 .env
+deployManager-key.json
 
 # Compiled
 out/
 target/
+# Kafka SSL - CA private key must never be committed
+*.pem
+src/main/resources/ssl/kafka.truststore.jks

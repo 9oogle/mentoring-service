@@ -1,0 +1,7 @@
+services:
+  mentoring-service:
+    image: ${IMAGE}:${IMAGE_TAG:-latest}
+    env_file: .env
+    ports:
+      - "9006:9006"
+    restart: unless-stopped

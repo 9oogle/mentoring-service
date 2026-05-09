@@ -1,5 +1,6 @@
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 COPY build/libs/*.jar app.jar
-EXPOSE 8080
+RUN mkdir -p ssl logs
+EXPOSE 9006
 ENTRYPOINT ["java", "-jar", "app.jar"]
