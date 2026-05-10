@@ -126,6 +126,10 @@ public class MentoringBooking extends BaseAudit {
 	}
 
 	public void forceCancel(String reason, LocalDateTime now) {
+		if (status == BookingStatus.CANCELED || status == BookingStatus.REJECTED
+				|| status == BookingStatus.PAYMENT_FAILED) {
+			return;
+		}
 		this.status = BookingStatus.CANCELED;
 		this.closure = BookingClosure.close(null, reason, now);
 	}
