@@ -16,3 +16,5 @@ services:
       REDIS_SENTINEL_3: ${REDIS_SENTINEL_3}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       EUREKA_SERVER_URL: ${EUREKA_SERVER_URL}
+    volumes:
+      - ../ssl:/app/ssl:ro
