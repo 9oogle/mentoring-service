@@ -4,4 +4,6 @@ services:
     env_file: .env
     ports:
       - "9006:9006"
+    volumes:
+      - ./ssl/kafka.truststore.jks:/app/ssl/kafka.truststore.jks:ro
     restart: unless-stopped

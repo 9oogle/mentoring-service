@@ -3,7 +3,7 @@ package com.goggles.mentoring_service.infrastructure.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "kafka.topics")
-public record KafkaTopicProperties(Booking booking) {
+public record KafkaTopicProperties(Booking booking, Order order) {
 
 	public record Booking(
 			String paymentCompleted,
@@ -14,4 +14,6 @@ public record KafkaTopicProperties(Booking booking) {
 			String requested,
 			String pendingApproval
 	) {}
+
+	public record Order(String mentoringCompleted, String mentoringCanceled) {}
 }

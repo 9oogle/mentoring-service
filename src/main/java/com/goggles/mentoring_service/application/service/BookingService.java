@@ -72,11 +72,65 @@ public class BookingService {
 	}
 
 	@Transactional
-	public void paymentFailed(BookingCommand.PaymentFailed command) {
+	public void confirmCanceledByOrder(UUID bookingId) {
+		bookingRepository.findById(new MentoringBookingId(bookingId)).ifPresent(booking -> {
+			if (booking.getStatus() == BookingStatus.CANCELED) {
+				return;
+			}
+			MentoringId mentoringId = new MentoringId(booking.getBookedMentoring().getMentoringId());
+			mentoringRepository.findById(mentoringId).ifPresent(mentoring ->
+					booking.getBookingSessions().forEach(session ->
+							mentoring.unbookSession(session.getSessionDate(),
+									session.getSessionStartTime())));
+			booking.forceCancel("주문 취소", LocalDateTime.now());
+		});
+	}
+
+	@Transactional
+	public void cancelBookingByOrder(BookingCommand.Cancellation command) {
+		MentoringBookingId bookingId = new MentoringBookingId(command.bookingId());
+		MentoringBooking booking = bookingRepository.findById(bookingId)
+				.orElseThrow(() -> new BookingNotFoundException(bookingId));
+
+		MentoringId mentoringId = new MentoringId(booking.getBookedMentoring().getMentoringId());
+		Mentoring mentoring = mentoringRepository.findById(mentoringId)
+				.orElseThrow(() -> new MentoringNotFoundException(mentoringId));
+
+		booking.cancelByOrder(command.userId(), command.userType(), command.cancelReason(),
+				LocalDateTime.now(), events);
+		booking.getBookingSessions().forEach(session ->
+				mentoring.unbookSession(session.getSessionDate(), session.getSessionStartTime()));
+	}
+
+	@Transactional
+	public void rollbackBooking(BookingCommand.Rollback command) {
+		failPaymentWithUnbook(new MentoringBookingId(command.bookingId()), command.cancelReason());
+	}
+
+	@Transactional
+	public void paymentCompleted(BookingCommand.PaymentCompleted command) {
 		MentoringBooking booking = bookingRepository.findById(command.mentoringBookingId())
 				.orElseThrow(() -> new BookingNotFoundException(command.mentoringBookingId()));
-		booking.failPayment(command.failureReason(), LocalDateTime.now(), events);
+		booking.completePayment(events);
 		bookingRepository.save(booking);
+	}
+
+	@Transactional
+	public void paymentFailed(BookingCommand.PaymentFailed command) {
+		failPaymentWithUnbook(command.mentoringBookingId(), command.failureReason());
+	}
+
+	private void failPaymentWithUnbook(MentoringBookingId bookingId, String reason) {
+		MentoringBooking booking = bookingRepository.findById(bookingId)
+				.orElseThrow(() -> new BookingNotFoundException(bookingId));
+
+		MentoringId mentoringId = new MentoringId(booking.getBookedMentoring().getMentoringId());
+		Mentoring mentoring = mentoringRepository.findById(mentoringId)
+				.orElseThrow(() -> new MentoringNotFoundException(mentoringId));
+
+		booking.failPayment(reason, LocalDateTime.now());
+		booking.getBookingSessions().forEach(session ->
+				mentoring.unbookSession(session.getSessionDate(), session.getSessionStartTime()));
 	}
 
 	@Transactional
@@ -85,8 +139,6 @@ public class BookingService {
 		MentoringBooking booking = bookingRepository.findById(id)
 				.orElseThrow(() -> new BookingNotFoundException(id));
 		booking.accept(command.userId(), command.userType(), events);
-
-		events.mentoringBookingAccepted(booking);
 	}
 
 	@Transactional
@@ -95,8 +147,6 @@ public class BookingService {
 		MentoringBooking booking = bookingRepository.findById(id)
 				.orElseThrow(() -> new BookingNotFoundException(id));
 		booking.reject(command.userId(), command.userType(), command.reason(), LocalDateTime.now(), events);
-
-		events.mentoringBookingRejected(booking);
 	}
 
 	@Transactional
@@ -105,8 +155,6 @@ public class BookingService {
 		MentoringBooking booking = bookingRepository.findById(id)
 				.orElseThrow(() -> new BookingNotFoundException(id));
 		booking.cancel(command.userId(), command.userType(), command.reason(), LocalDateTime.now(), events);
-
-		events.mentoringBookingCanceled(booking);
 	}
 
 
@@ -160,11 +208,4 @@ public class BookingService {
 		}
 	}
 
-	@Transactional
-	public void paymentFailed(BookingCommand.PaymentFailed command, BookingEvent events) {
-		MentoringBooking booking = bookingRepository.findById(command.mentoringBookingId())
-				.orElseThrow(() -> new BookingNotFoundException(command.mentoringBookingId()));
-		booking.failPayment(command.failureReason(), LocalDateTime.now(), events);
-		bookingRepository.save(booking);
-	}
 }

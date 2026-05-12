@@ -14,6 +14,8 @@ public class BookingCommand {
 						 String requestMessage, UUID orderId) {}
 
 
+	public record PaymentCompleted(MentoringBookingId mentoringBookingId, UUID orderId) {}
+
 	public record PaymentFailed(MentoringBookingId mentoringBookingId, UUID orderId,
 								String failureReason) {}
 
@@ -27,4 +29,9 @@ public class BookingCommand {
 
 	public record RescheduleSession(UUID bookingId, UUID sessionId, LocalDate newDate,
 									LocalTime newStartTime, UUID userId, UserType userType) {}
+
+	public record Rollback(UUID bookingId, String cancelReason) {}
+
+	public record Cancellation(UUID bookingId, UUID userId, UserType userType, UUID orderId,
+							   String cancelReason, String cancelDescription) {}
 }

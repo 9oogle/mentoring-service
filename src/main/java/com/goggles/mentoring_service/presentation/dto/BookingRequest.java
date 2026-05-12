@@ -2,6 +2,7 @@ package com.goggles.mentoring_service.presentation.dto;
 
 import com.goggles.mentoring_service.application.command.BookingCommand;
 import com.goggles.mentoring_service.application.command.MenteeInfo;
+import com.goggles.mentoring_service.domain._common.UserType;
 import com.goggles.mentoring_service.domain.booking.MentoringBookingId;
 import com.goggles.mentoring_service.domain.booking.SessionSlot;
 import com.goggles.mentoring_service.presentation.support.UserContext;
@@ -37,6 +38,12 @@ public class BookingRequest {
 		}
 	}
 
+	public record PaymentCompleted(@NotNull UUID mentoringBookingId, @NotNull UUID orderId) {
+		public BookingCommand.PaymentCompleted toCommand() {
+			return new BookingCommand.PaymentCompleted(new MentoringBookingId(mentoringBookingId()), orderId());
+		}
+	}
+
 	public record PaymentFailed(@NotNull UUID mentoringBookingId, @NotNull UUID orderId,
 								@NotNull String failureReason) {
 		public BookingCommand.PaymentFailed toCommand() {
@@ -57,4 +64,18 @@ public class BookingRequest {
 
 
 	public record RescheduleSession(@NotNull LocalDate newDate, @NotNull LocalTime newStartTime) {}
+
+	public record Rollback(@NotBlank String cancelReason) {
+		public BookingCommand.Rollback toCommand(UUID bookingId) {
+			return new BookingCommand.Rollback(bookingId, cancelReason());
+		}
+	}
+
+	public record Cancellation(@NotNull UUID orderId, @NotBlank String cancelReason,
+							   String cancelDescription) {
+		public BookingCommand.Cancellation toCommand(UUID bookingId, UUID userId, UserType userType) {
+			return new BookingCommand.Cancellation(bookingId, userId, userType, orderId(),
+					cancelReason(), cancelDescription());
+		}
+	}
 }

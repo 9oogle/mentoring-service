@@ -205,12 +205,36 @@ jobs:
 
             # Kafka SSL truststore 복원
             mkdir -p $APP_DIR/ssl
-            echo "${{ secrets.TRUSTSTORE_JKS_B64 }}" | base64 -d > $APP_DIR/ssl/kafka.truststore.jks
+
+            TRUSTSTORE_B64="${{ secrets.TRUSTSTORE_JKS_B64 }}"
+            echo "[SSL] TRUSTSTORE_JKS_B64 secret 길이: ${#TRUSTSTORE_B64}"
+            if [ -z "$TRUSTSTORE_B64" ]; then
+              echo "[SSL] ❌ TRUSTSTORE_JKS_B64 secret이 비어있음"
+              exit 1
+            fi
+
+            echo "$TRUSTSTORE_B64" | base64 -d > $APP_DIR/ssl/kafka.truststore.jks
+
+            echo "[SSL] 파일 경로: $APP_DIR/ssl/kafka.truststore.jks"
+            if [ -f "$APP_DIR/ssl/kafka.truststore.jks" ]; then
+              FILE_SIZE=$(stat -c%s "$APP_DIR/ssl/kafka.truststore.jks")
+              echo "[SSL] ✅ 파일 존재 (크기: ${FILE_SIZE} bytes)"
+              if [ "$FILE_SIZE" -eq 0 ]; then
+                echo "[SSL] ❌ 파일이 비어있음 — base64 디코딩 실패"
+                exit 1
+              fi
+            else
+              echo "[SSL] ❌ 파일 생성 실패"
+              exit 1
+            fi
+
+            echo "[SSL] ssl 디렉토리 내용:"
+            ls -lh $APP_DIR/ssl/
 
             # 새 이미지 pull & 재시작
             COMPOSE_FILE="${{ steps.vars.outputs.compose }}"
-            docker compose -f $COMPOSE_FILE pull $SERVICE
-            docker compose -f $COMPOSE_FILE up -d $SERVICE
+            docker compose --env-file $ENV_FILE -f $COMPOSE_FILE pull $SERVICE
+            docker compose --env-file $ENV_FILE -f $COMPOSE_FILE up -d $SERVICE
 
             # Health check (30초 간격, 최대 8회)
             echo "Health check 시작... (port: ${{ vars.HEALTH_CHECK_PORT }})"

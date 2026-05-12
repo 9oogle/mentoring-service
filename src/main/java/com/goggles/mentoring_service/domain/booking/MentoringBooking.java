@@ -62,27 +62,25 @@ public class MentoringBooking extends BaseAudit {
 	public static MentoringBooking create(UUID menteeId, UserType menteeUserType, String menteeName,
 			Mentoring mentoring, List<SessionSlot> sessionSlots, String requestMessage,
 			UUID orderId) {
-		Mentee mentee =  Mentee.of(menteeId, menteeUserType, menteeName);
+		Mentee mentee = Mentee.of(menteeId, menteeUserType, menteeName);
 		List<BookingSession> bookingSessions = new ArrayList<>();
 		for (SessionSlot slot : sessionSlots) {
 			bookingSessions.add(BookingSession.of(slot));
 		}
 		BookedMentoring bookedMentoring = BookedMentoring.of(mentoring);
-		return new MentoringBooking(bookedMentoring, mentee, bookingSessions, requestMessage,
-				orderId);
+		return new MentoringBooking(bookedMentoring, mentee, bookingSessions, requestMessage, orderId);
 	}
 
 	public void completePayment(BookingEvent events) {
 		validateStatus(BookingStatus.PAYMENT_COMPLETED);
 		this.status = BookingStatus.PAYMENT_COMPLETED;
-		events.bookingPaymentCompleted(this);
+		events.bookingRequested(this);
 	}
 
-	public void failPayment(String reason, LocalDateTime now, BookingEvent events) {
+	public void failPayment(String reason, LocalDateTime now) {
 		validateStatus(BookingStatus.PAYMENT_FAILED);
 		this.status = BookingStatus.PAYMENT_FAILED;
 		this.closure = BookingClosure.close(this.mentee.getId(), reason, now);
-		events.bookingPaymentFailed(this);
 	}
 
 	public void accept(UUID userId, UserType userType, BookingEvent events) {
@@ -113,6 +111,27 @@ public class MentoringBooking extends BaseAudit {
 		this.closure = BookingClosure.close(canceledBy, reason, now);
 		events.mentoringBookingCanceled(this);
 
+	}
+
+	public void cancelByOrder(UUID canceledBy, UserType userType, String reason, LocalDateTime now,
+			BookingEvent events) {
+		if (status != BookingStatus.PAYMENT_COMPLETED && status != BookingStatus.ACCEPTED) {
+			throw InvalidBookingStatusTransitionException.cannotCancelByOrder(this.status);
+		}
+		validateReason(reason);
+		checkIfUserCanCancel(canceledBy, userType);
+		this.status = BookingStatus.CANCELED;
+		this.closure = BookingClosure.close(canceledBy, reason, now);
+		events.mentoringBookingCanceled(this);
+	}
+
+	public void forceCancel(String reason, LocalDateTime now) {
+		if (status == BookingStatus.CANCELED || status == BookingStatus.REJECTED
+				|| status == BookingStatus.PAYMENT_FAILED) {
+			return;
+		}
+		this.status = BookingStatus.CANCELED;
+		this.closure = BookingClosure.close(null, reason, now);
 	}
 
 	public void completeSession(UUID sessionId, UUID userId, UserType userType) {
