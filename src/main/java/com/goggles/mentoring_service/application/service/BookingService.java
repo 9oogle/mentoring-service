@@ -193,6 +193,21 @@ public class BookingService {
 		mentoring.bookSession(command.newDate(), command.newStartTime());
 	}
 
+	@Transactional
+	public int autoCancelUnapproved(LocalDateTime threshold) {
+		List<MentoringBooking> bookings = bookingRepository.findPaymentCompletedWithApproachingSessions(
+				threshold.toLocalDate(), threshold.toLocalTime());
+		for (MentoringBooking booking : bookings) {
+			MentoringId mentoringId = new MentoringId(booking.getBookedMentoring().getMentoringId());
+			mentoringRepository.findById(mentoringId).ifPresent(mentoring ->
+					booking.getBookingSessions().forEach(session ->
+							mentoring.unbookSession(session.getSessionDate(),
+									session.getSessionStartTime())));
+			booking.forceCancel("멘토 미승인으로 인한 자동 취소", LocalDateTime.now());
+		}
+		return bookings.size();
+	}
+
 	private MentoringBooking findBooking(UUID bookingId) {
 		return bookingRepository.findById(new MentoringBookingId(bookingId))
 				.orElseThrow(() -> new BookingNotFoundException(new MentoringBookingId(bookingId)));

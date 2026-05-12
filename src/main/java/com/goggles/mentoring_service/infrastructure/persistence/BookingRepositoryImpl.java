@@ -38,4 +38,11 @@ public class BookingRepositoryImpl implements MentoringBookingRepository {
 	public Page<MentoringBooking> findByUser(BookingSearchCondition condition, Pageable pageable) {
 		return queryRepository.findByUser(condition, pageable);
 	}
+
+	@Override
+	public List<MentoringBooking> findPaymentCompletedWithApproachingSessions(
+			LocalDate thresholdDate, LocalTime thresholdTime) {
+		return jpaRepository.findByStatusWithApproachingSessions(
+				BookingStatus.PAYMENT_COMPLETED, thresholdDate, thresholdTime);
+	}
 }

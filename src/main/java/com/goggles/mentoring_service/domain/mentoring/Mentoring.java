@@ -235,11 +235,11 @@ public class Mentoring extends BaseAudit {
 	public void addSessionsExcludingBooked(List<MentoringSession> candidates) {
 		Set<LocalDateTime> bookedSlots = sessions.stream()
 				.filter(MentoringSession::isBooked)
-				.map(s -> LocalDateTime.of(s.getSessionDate(), s.getSessionStartTime()))
+				.map(session -> LocalDateTime.of(session.getSessionDate(), session.getSessionStartTime()))
 				.collect(Collectors.toSet());
 		List<MentoringSession> filtered = candidates.stream()
-				.filter(s -> !bookedSlots.contains(
-						LocalDateTime.of(s.getSessionDate(), s.getSessionStartTime())))
+				.filter(session -> !bookedSlots.contains(
+						LocalDateTime.of(session.getSessionDate(), session.getSessionStartTime())))
 				.toList();
 		addSessions(filtered);
 	}
