@@ -10,6 +10,7 @@ import com.goggles.mentoring_service.domain.category.repository.MentoringCategor
 import com.goggles.mentoring_service.domain.mentoring.*;
 import com.goggles.mentoring_service.domain.mentoring.exception.MentoringNotFoundException;
 import com.goggles.mentoring_service.domain.mentoring.repository.MentoringRepository;
+import com.goggles.mentoring_service.domain.mentoring.SessionStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,6 +23,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -46,6 +48,9 @@ class MentoringServiceTest {
 
 	@Mock
 	private MentoringCategoryRepository categoryRepository;
+
+	@Mock
+	private HolidayProvider holidayProvider;
 
 	@Mock
 	private MentoringCategory category;
@@ -225,5 +230,110 @@ class MentoringServiceTest {
 				MentoringType.ONE_ON_ONE, Format.SINGLE, SESSION_COUNT, MAX_PARTICIPANTS, false,
 				PRICE, null, List.of(sessionSlot(SESSION_DATE_1)),
 				List.of(timeSchedules(DayOfWeek.MONDAY)));
+	}
+
+	// SESSION_DATE_1 = 2027-05-01 (토), 월 = 2027-05-03, 화 = 2027-05-04
+	private static final LocalDate MONDAY = LocalDate.of(2027, 5, 3);
+	private static final LocalDate TUESDAY = LocalDate.of(2027, 5, 4);
+
+	private Mentoring activeMultiMentoring(List<RepeatPattern> patterns,
+			List<MentoringSession> sessions) {
+		return defaultMentoringBuilder()
+				.format(Format.MULTI)
+				.sessionCount(2)
+				.status(MentoringStatus.ACTIVE)
+				.repeatPatterns(patterns)
+				.sessions(sessions)
+				.build();
+	}
+
+	@Test
+	void generateDailyRepeatSessions_adds_session_for_matching_day() {
+		Mentoring mentoring = activeMultiMentoring(
+				List.of(repeatPattern(DayOfWeek.MONDAY)), List.of());
+		given(mentoringRepository.findActiveWithRepeatPatterns()).willReturn(List.of(mentoring));
+
+		mentoringService.generateDailyRepeatSessions(MONDAY);
+
+		log.info("[슬롯 생성] {}: 월요일 패턴 → 세션 {}개", MONDAY, mentoring.getSessions().size());
+		assertThat(mentoring.getSessions()).hasSize(1);
+		assertThat(mentoring.getSessions().getFirst().getSessionDate()).isEqualTo(MONDAY);
+	}
+
+	@Test
+	void generateDailyRepeatSessions_no_session_for_non_matching_day() {
+		Mentoring mentoring = activeMultiMentoring(
+				List.of(repeatPattern(DayOfWeek.MONDAY)), List.of());
+		given(mentoringRepository.findActiveWithRepeatPatterns()).willReturn(List.of(mentoring));
+
+		mentoringService.generateDailyRepeatSessions(TUESDAY);
+
+		log.info("[슬롯 생성] {}: 월요일 패턴 + 화요일 대상 → 생성 없음", TUESDAY);
+		assertThat(mentoring.getSessions()).isEmpty();
+	}
+
+	@Test
+	void generateDailyRepeatSessions_skips_duplicate_sessions() {
+		Mentoring mentoring = activeMultiMentoring(
+				List.of(repeatPattern(DayOfWeek.MONDAY)), List.of(session(MONDAY)));
+		given(mentoringRepository.findActiveWithRepeatPatterns()).willReturn(List.of(mentoring));
+
+		mentoringService.generateDailyRepeatSessions(MONDAY);
+
+		log.info("[슬롯 생성] 이미 존재하는 슬롯 중복 추가 차단 → 세션 {}개", mentoring.getSessions().size());
+		assertThat(mentoring.getSessions()).hasSize(1);
+	}
+
+	@Test
+	void generateDailyRepeatSessions_does_nothing_when_no_mentorings() {
+		given(mentoringRepository.findActiveWithRepeatPatterns()).willReturn(List.of());
+
+		mentoringService.generateDailyRepeatSessions(MONDAY);
+
+	}
+
+	@Test
+	void cleanupExpiredSessions_removes_past_available_sessions() {
+		LocalDate today = LocalDate.of(2026, 6, 1);
+		LocalDate past = LocalDate.of(2026, 5, 1);
+		LocalDate future = LocalDate.of(2026, 7, 1);
+		Mentoring mentoring = defaultMentoringBuilder()
+				.sessions(List.of(session(past), session(future)))
+				.build();
+		given(mentoringRepository.findWithExpiredNonBookedSessions(today)).willReturn(
+				List.of(mentoring));
+
+		mentoringService.cleanupExpiredSessions(today);
+
+		log.info("[슬롯 정리] {} 이전 세션 제거 → 남은 세션: {}개", today,
+				mentoring.getSessions().size());
+		assertThat(mentoring.getSessions()).hasSize(1);
+		assertThat(mentoring.getSessions().getFirst().getSessionDate()).isEqualTo(future);
+	}
+
+	@Test
+	void cleanupExpiredSessions_keeps_booked_sessions() {
+		LocalDate today = LocalDate.of(2026, 6, 1);
+		LocalDate past = LocalDate.of(2026, 5, 1);
+		Mentoring mentoring = defaultMentoringBuilder()
+				.sessions(List.of(session(past)))
+				.build();
+		mentoring.bookSession(past, START_TIME);
+		given(mentoringRepository.findWithExpiredNonBookedSessions(today)).willReturn(
+				List.of(mentoring));
+
+		mentoringService.cleanupExpiredSessions(today);
+
+		assertThat(mentoring.getSessions()).hasSize(1);
+		assertThat(mentoring.getSessions().getFirst().getStatus()).isEqualTo(SessionStatus.BOOKED);
+	}
+
+	@Test
+	void cleanupExpiredSessions_does_nothing_when_no_mentorings() {
+		LocalDate today = LocalDate.now();
+		given(mentoringRepository.findWithExpiredNonBookedSessions(any())).willReturn(List.of());
+
+		mentoringService.cleanupExpiredSessions(today);
+
 	}
 }

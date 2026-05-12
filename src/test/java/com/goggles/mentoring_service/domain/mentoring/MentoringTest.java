@@ -199,4 +199,74 @@ class MentoringTest {
 
 		assertThat(mentoring.getStatus()).isEqualTo(MentoringStatus.INACTIVE);
 	}
+
+	@Test
+	void cleanupPastSessions_removes_past_available_sessions() {
+		LocalDate today = LocalDate.of(2026, 6, 1);
+		LocalDate past = LocalDate.of(2026, 5, 1);
+		LocalDate future = LocalDate.of(2026, 7, 1);
+		mentoring.addSessions(List.of(session(past), session(future)));
+
+		mentoring.cleanupPastSessions(today);
+
+		assertThat(mentoring.getSessions()).hasSize(1);
+		assertThat(mentoring.getSessions().getFirst().getSessionDate()).isEqualTo(future);
+	}
+
+	@Test
+	void cleanupPastSessions_keeps_booked_sessions() {
+		LocalDate today = LocalDate.of(2026, 6, 1);
+		LocalDate past1 = LocalDate.of(2026, 5, 1);
+		LocalDate past2 = LocalDate.of(2026, 5, 2);
+		mentoring.addSessions(List.of(session(past1), session(past2)));
+		mentoring.bookSession(past1, START_TIME);
+
+		mentoring.cleanupPastSessions(today);
+
+		assertThat(mentoring.getSessions()).hasSize(1);
+		assertThat(mentoring.getSessions().getFirst().getSessionDate()).isEqualTo(past1);
+		assertThat(mentoring.getSessions().getFirst().getStatus()).isEqualTo(SessionStatus.BOOKED);
+	}
+
+	@Test
+	void cleanupPastSessions_keeps_today_sessions() {
+		LocalDate today = LocalDate.of(2026, 6, 1);
+		mentoring.addSessions(List.of(session(today)));
+
+		mentoring.cleanupPastSessions(today);
+
+		assertThat(mentoring.getSessions()).hasSize(1);
+	}
+
+	// ── addSessionsIfAbsent ───────────────────────────────────────────────────
+
+	@Test
+	void addSessionsIfAbsent_adds_only_new_sessions() {
+		mentoring.addSessions(List.of(session(SESSION_DATE_1)));
+
+		mentoring.addSessionsIfAbsent(List.of(session(SESSION_DATE_1), session(SESSION_DATE_2)));
+
+		assertThat(mentoring.getSessions()).hasSize(2);
+		assertThat(mentoring.getSessions().stream()
+				.map(MentoringSession::getSessionDate)
+				.toList()).containsExactlyInAnyOrder(SESSION_DATE_1, SESSION_DATE_2);
+	}
+
+	@Test
+	void addSessionsIfAbsent_skips_all_existing() {
+		mentoring.addSessions(List.of(session(SESSION_DATE_1)));
+
+		mentoring.addSessionsIfAbsent(List.of(session(SESSION_DATE_1)));
+
+		assertThat(mentoring.getSessions()).hasSize(1);
+	}
+
+	@Test
+	void addSessionsIfAbsent_empty_candidates_does_nothing() {
+		mentoring.addSessions(List.of(session(SESSION_DATE_1)));
+
+		mentoring.addSessionsIfAbsent(List.of());
+
+		assertThat(mentoring.getSessions()).hasSize(1);
+	}
 }
