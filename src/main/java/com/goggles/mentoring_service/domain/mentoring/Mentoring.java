@@ -331,6 +331,9 @@ public class Mentoring extends BaseAudit {
 		findSession(date, startTime).unbook();
 	}
 
+	public void cleanupPastSessions(LocalDate today) {
+		sessions.removeIf(session -> session.getSessionDate().isBefore(today) && !session.isBooked());
+	}
 
 	public void addSessionsIfAbsent(List<MentoringSession> candidates) {
 		Set<LocalDateTime> existing = sessions.stream()

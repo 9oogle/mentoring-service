@@ -20,4 +20,7 @@ public interface MentoringRepository {
 	Page<Mentoring> findAll(MentoringSearchCondition condition, Pageable pageable);
 
 	List<Mentoring> findActiveWithRepeatPatterns();
+
+	List<Mentoring> findWithExpiredNonBookedSessions(LocalDate today);
+
 }

@@ -40,5 +40,9 @@ public class MentoringRepositoryImpl implements MentoringRepository {
 	public List<Mentoring> findActiveWithRepeatPatterns() {
 		return jpaRepository.findByStatusWithRepeatPatterns(MentoringStatus.ACTIVE);
 	}
+
+	@Override
+	public List<Mentoring> findWithExpiredNonBookedSessions(LocalDate today) {
+		return jpaRepository.findWithExpiredNonBookedSessions(today, SessionStatus.BOOKED);
 	}
 }

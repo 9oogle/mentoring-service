@@ -94,6 +94,13 @@ public class MentoringService {
 			mentoring.addSessionsIfAbsent(candidates);
 		}
 	}
+
+	@Transactional
+	public void cleanupExpiredSessions(LocalDate today) {
+		List<Mentoring> mentorings = mentoringRepository.findWithExpiredNonBookedSessions(today);
+		mentorings.forEach(mentoring -> mentoring.cleanupPastSessions(today));
+	}
+
 	private Mentoring getOrThrow(UUID mentoringId) {
 		MentoringId id = new MentoringId(mentoringId);
 		return mentoringRepository.findById(id)
