@@ -9,10 +9,7 @@ import com.goggles.mentoring_service.domain.category.MentoringCategory;
 import com.goggles.mentoring_service.domain.category.MentoringCategoryId;
 import com.goggles.mentoring_service.domain.category.exception.CategoryNotFoundException;
 import com.goggles.mentoring_service.domain.category.repository.MentoringCategoryRepository;
-import com.goggles.mentoring_service.domain.mentoring.Mentoring;
-import com.goggles.mentoring_service.domain.mentoring.MentoringId;
-import com.goggles.mentoring_service.domain.mentoring.MentoringSearchCondition;
-import com.goggles.mentoring_service.domain.mentoring.RepeatPattern;
+import com.goggles.mentoring_service.domain.mentoring.*;
 import com.goggles.mentoring_service.domain.mentoring.exception.MentoringNotFoundException;
 import com.goggles.mentoring_service.domain.mentoring.repository.MentoringRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +29,7 @@ public class MentoringService {
 
 	private final MentoringRepository mentoringRepository;
 	private final MentoringCategoryRepository categoryRepository;
+	private final HolidayProvider holidayProvider;
 
 	public UUID createMentoring(MentoringCommand.Create command) {
 		UUID categoryId = command.categoryId();
@@ -87,6 +85,15 @@ public class MentoringService {
 		mentoring.delete(userId, userType);
 	}
 
+	@Transactional
+	public void generateDailyRepeatSessions(LocalDate targetDate) {
+		List<Mentoring> mentorings = mentoringRepository.findActiveWithRepeatPatterns();
+		for (Mentoring mentoring : mentorings) {
+			List<MentoringSession> candidates =
+					mentoring.generateSessions(targetDate, targetDate, holidayProvider);
+			mentoring.addSessionsIfAbsent(candidates);
+		}
+	}
 	private Mentoring getOrThrow(UUID mentoringId) {
 		MentoringId id = new MentoringId(mentoringId);
 		return mentoringRepository.findById(id)

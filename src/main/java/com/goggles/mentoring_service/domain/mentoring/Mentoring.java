@@ -331,4 +331,18 @@ public class Mentoring extends BaseAudit {
 		findSession(date, startTime).unbook();
 	}
 
+
+	public void addSessionsIfAbsent(List<MentoringSession> candidates) {
+		Set<LocalDateTime> existing = sessions.stream()
+				.map(session -> LocalDateTime.of(session.getSessionDate(), session.getSessionStartTime()))
+				.collect(Collectors.toSet());
+		List<MentoringSession> toAdd = candidates.stream()
+				.filter(session -> !existing.contains(
+						LocalDateTime.of(session.getSessionDate(), session.getSessionStartTime())))
+				.toList();
+		if (!toAdd.isEmpty()) {
+			addSessions(toAdd);
+		}
+	}
+
 }
