@@ -8,7 +8,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.beans.factory.ObjectProvider;
 
 import java.util.concurrent.TimeUnit;
 
@@ -27,24 +26,7 @@ class DistributedLockAspectTest {
 	@BeforeEach
 	void setUp() {
 		redissonClient = mock(RedissonClient.class);
-		ObjectProvider<RedissonClient> provider = mock(ObjectProvider.class);
-		when(provider.getIfAvailable()).thenReturn(redissonClient);
-		aspect = new DistributedLockAspect(provider);
-	}
-
-	@Test
-	void lock_whenRedisUnavailable_proceedsWithoutLock() throws Throwable {
-		ObjectProvider<RedissonClient> emptyProvider = mock(ObjectProvider.class);
-		when(emptyProvider.getIfAvailable()).thenReturn(null);
-		DistributedLockAspect noRedisAspect = new DistributedLockAspect(emptyProvider);
-
-		ProceedingJoinPoint joinPoint = mockJoinPoint("result", new String[]{}, new Object[]{});
-		DistributedLock annotation = mockAnnotation("static-key", 5L, -1L);
-
-		Object result = noRedisAspect.lock(joinPoint, annotation);
-
-		assertThat(result).isEqualTo("result");
-		verifyNoInteractions(redissonClient);
+		aspect = new DistributedLockAspect(redissonClient);
 	}
 
 	@Test
@@ -52,7 +34,6 @@ class DistributedLockAspectTest {
 		RLock rLock = mockAcquiredLock();
 		when(redissonClient.getLock("lock:booking:test-id")).thenReturn(rLock);
 
-		// joinPoint에 'id' 파라미터를 포함해야 SpEL이 올바르게 평가됨
 		ProceedingJoinPoint joinPoint =
 				mockJoinPoint("expected", new String[]{"id"}, new Object[]{"test-id"});
 		DistributedLock annotation = mockAnnotation("'booking:' + #id", 5L, -1L);
@@ -64,7 +45,7 @@ class DistributedLockAspectTest {
 	}
 
 	@Test
-	void lock_whenNotAcquired_throwsConflictException() throws Throwable {
+	void lock_whenNotAcquired_throwsDistributionLockException() throws Throwable {
 		RLock rLock = mockFailedLock();
 		when(redissonClient.getLock(anyString())).thenReturn(rLock);
 

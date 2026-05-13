@@ -8,3 +8,4 @@ public class DistributionLockException extends ConflictException {
 		super(message);
 	}
 }
+

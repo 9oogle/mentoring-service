@@ -9,6 +9,7 @@ import com.goggles.mentoring_service.domain.category.MentoringCategory;
 import com.goggles.mentoring_service.domain.category.repository.MentoringCategoryRepository;
 import com.goggles.mentoring_service.domain.mentoring.*;
 import com.goggles.mentoring_service.domain.mentoring.repository.MentoringRepository;
+import com.goggles.mentoring_service.infrastructure.lock.DistributedLockAspect;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.redisson.api.RLock;
@@ -16,7 +17,8 @@ import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -34,11 +36,25 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
-@Import(TestAuditConfig.class)
+@Import({TestAuditConfig.class, BookingConcurrencyTest.FakeLockConfig.class})
 @ActiveProfiles("test")
 class BookingConcurrencyTest {
 
-	@MockitoBean
+	@TestConfiguration
+	static class FakeLockConfig {
+
+		@Bean
+		public RedissonClient fakeRedissonClient() {
+			return mock(RedissonClient.class);
+		}
+
+		@Bean
+		public DistributedLockAspect distributedLockAspect(RedissonClient fakeRedissonClient) {
+			return new DistributedLockAspect(fakeRedissonClient);
+		}
+	}
+
+	@Autowired
 	private RedissonClient redissonClient;
 
 	@Autowired
@@ -49,7 +65,8 @@ class BookingConcurrencyTest {
 	private MentoringCategoryRepository categoryRepository;
 
 	private UUID mentoringId;
-	private final ConcurrentHashMap<String, java.util.concurrent.locks.ReentrantLock> lockMap = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, java.util.concurrent.locks.ReentrantLock> lockMap =
+			new ConcurrentHashMap<>();
 
 	@BeforeEach
 	void setUp() throws InterruptedException {
@@ -72,8 +89,7 @@ class BookingConcurrencyTest {
 				ready.countDown();
 				try {
 					start.await();
-					BookingCommand.Create command = bookingCommand(mentoringId, menteeId);
-					bookingService.createBooking(command);
+					bookingService.createBooking(bookingCommand(mentoringId, menteeId));
 					successCount.incrementAndGet();
 				} catch (Exception ignored) {
 				}

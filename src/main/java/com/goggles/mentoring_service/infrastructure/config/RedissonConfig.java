@@ -1,9 +1,11 @@
 package com.goggles.mentoring_service.infrastructure.config;
 
+import com.goggles.mentoring_service.infrastructure.lock.DistributedLockAspect;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 import org.redisson.config.SentinelServersConfig;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -40,7 +42,19 @@ public class RedissonConfig {
 		Config config = new Config();
 		String host = env.getProperty("spring.data.redis.host", "localhost");
 		String port = env.getProperty("spring.data.redis.port", "6379");
-		config.useSingleServer().setAddress("redis://" + host + ":" + port);
+		String password = env.getProperty("spring.data.redis.password");
+
+		var singleConfig = config.useSingleServer().setAddress("redis://" + host + ":" + port);
+		if (password != null) {
+			singleConfig.setPassword(password);
+		}
 		return Redisson.create(config);
+	}
+
+	@Bean
+	@ConditionalOnBean(RedissonClient.class)
+	@ConditionalOnMissingBean(DistributedLockAspect.class)
+	public DistributedLockAspect distributedLockAspect(RedissonClient redissonClient) {
+		return new DistributedLockAspect(redissonClient);
 	}
 }

@@ -15,7 +15,7 @@ import com.goggles.mentoring_service.domain.mentoring.Mentoring;
 import com.goggles.mentoring_service.domain.mentoring.MentoringId;
 import com.goggles.mentoring_service.domain.mentoring.exception.MentoringNotFoundException;
 import com.goggles.mentoring_service.domain.mentoring.repository.MentoringRepository;
-import com.goggles.mentoring_service.infrastructure.lock.DistributedLock;
+import com.goggles.mentoring_service.application.lock.DistributedLock;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;

@@ -1,4 +1,4 @@
-package com.goggles.mentoring_service.infrastructure.lock;
+package com.goggles.mentoring_service.application.lock;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
