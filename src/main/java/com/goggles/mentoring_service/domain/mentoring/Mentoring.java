@@ -340,7 +340,7 @@ public class Mentoring extends BaseAudit {
 				.map(session -> LocalDateTime.of(session.getSessionDate(), session.getSessionStartTime()))
 				.collect(Collectors.toSet());
 		List<MentoringSession> toAdd = candidates.stream()
-				.filter(session -> !existing.contains(
+				.filter(session -> existing.add(
 						LocalDateTime.of(session.getSessionDate(), session.getSessionStartTime())))
 				.toList();
 		if (!toAdd.isEmpty()) {
