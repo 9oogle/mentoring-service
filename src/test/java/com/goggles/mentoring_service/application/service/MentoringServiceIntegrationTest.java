@@ -22,6 +22,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -313,6 +314,51 @@ class MentoringServiceIntegrationTest {
 				.size());
 		assertThat(page2.getContent()).isEmpty();
 		assertThat(page2.getNumber()).isEqualTo(2);
+	}
+
+
+	@Test
+	void cleanupExpiredSessions_removes_nonBooked_and_preserves_booked() {
+		LocalDate past1 = LocalDate.of(2025, 1, 1);
+		LocalDate past2 = LocalDate.of(2025, 1, 2);
+
+		// 과거 AVAILABLE 세션 2개 — DISTINCT 동작 겸 검증
+		Mentoring withExpired = defaultMentoringBuilder()
+				.sessions(List.of(session(past1), session(past2)))
+				.build();
+		mentoringRepository.save(withExpired);
+
+		// 과거 BOOKED 세션 — 제거되지 않아야 함
+		Mentoring withBooked = defaultMentoringBuilder()
+				.sessions(List.of(session(past1)))
+				.build();
+		withBooked.bookSession(past1, START_TIME);
+		mentoringRepository.save(withBooked);
+
+		// 미래 세션만 — 쿼리 결과에 포함되지 않아야 함
+		Mentoring withFuture = defaultMentoringBuilder()
+				.sessions(List.of(session(SESSION_DATE_1)))
+				.build();
+		mentoringRepository.save(withFuture);
+
+		em.flush();
+		em.clear();
+
+		mentoringService.cleanupExpiredSessions(LocalDate.now());
+
+		em.flush();
+		em.clear();
+
+		assertThat(mentoringRepository.findById(withExpired.getMentoringId())
+				.orElseThrow().getSessions()).isEmpty();
+
+		List<MentoringSession> bookedSessions = mentoringRepository
+				.findById(withBooked.getMentoringId()).orElseThrow().getSessions();
+		assertThat(bookedSessions).hasSize(1);
+		assertThat(bookedSessions.get(0).getStatus()).isEqualTo(SessionStatus.BOOKED);
+
+		assertThat(mentoringRepository.findById(withFuture.getMentoringId())
+				.orElseThrow().getSessions()).hasSize(1);
 	}
 
 	// ── 헬퍼 ─────────────────────────────────────────────────────────────────

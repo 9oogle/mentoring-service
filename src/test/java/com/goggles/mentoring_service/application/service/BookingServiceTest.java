@@ -28,6 +28,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -41,6 +44,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+
+import com.goggles.mentoring_service.domain.mentoring.SessionStatus;
 
 @ExtendWith(MockitoExtension.class)
 class BookingServiceTest {
@@ -398,5 +403,67 @@ class BookingServiceTest {
 		assertThat(result.getContent()).isEmpty();
 		assertThat(result.getTotalElements()).isZero();
 		verify(bookingRepository).findByUser(any(), any());
+	}
+
+	@Test
+	void autoCancelUnapproved_cancels_approaching_bookings() {
+		MentoringBooking booking = paymentCompletedBooking();
+		given(bookingRepository.findPaymentCompletedWithApproachingSessions(any(), any())).willReturn(
+				List.of(booking));
+		given(mentoringRepository.findById(any())).willReturn(Optional.empty());
+
+		LocalDateTime threshold = LocalDateTime.of(SESSION_DATE, SESSION_START_TIME);
+		int count = bookingService.autoCancelUnapproved(threshold);
+
+		log.info("[자동 취소] threshold={}, 취소 건수={}, 상태={}", threshold, count, booking.getStatus());
+		assertThat(count).isEqualTo(1);
+		assertThat(booking.getStatus()).isEqualTo(BookingStatus.CANCELED);
+	}
+
+	@Test
+	void autoCancelUnapproved_returns_zero_when_no_bookings() {
+		given(bookingRepository.findPaymentCompletedWithApproachingSessions(any(), any())).willReturn(
+				List.of());
+
+		int count = bookingService.autoCancelUnapproved(LocalDateTime.now().plusHours(24));
+
+		assertThat(count).isZero();
+	}
+
+	@Test
+	void autoCancelUnapproved_unbooks_mentoring_session() {
+		MentoringBooking booking = paymentCompletedBooking();
+		Mentoring mentoring = defaultMentoringBuilder()
+				.sessions(List.of(session(SESSION_DATE)))
+				.build();
+		mentoring.bookSession(SESSION_DATE, SESSION_START_TIME);
+
+		given(bookingRepository.findPaymentCompletedWithApproachingSessions(any(), any())).willReturn(
+				List.of(booking));
+		given(mentoringRepository.findById(any())).willReturn(Optional.of(mentoring));
+
+		bookingService.autoCancelUnapproved(LocalDateTime.of(SESSION_DATE, SESSION_START_TIME));
+
+		log.info("[자동 취소] 예약 상태={}, 세션 상태={}",
+				booking.getStatus(), mentoring.getSessions().getFirst().getStatus());
+		assertThat(booking.getStatus()).isEqualTo(BookingStatus.CANCELED);
+		assertThat(mentoring.getSessions().getFirst().getStatus()).isEqualTo(
+				com.goggles.mentoring_service.domain.mentoring.SessionStatus.AVAILABLE);
+	}
+
+	@Test
+	void autoCancelUnapproved_cancels_multiple_bookings() {
+		MentoringBooking booking1 = paymentCompletedBooking();
+		MentoringBooking booking2 = paymentCompletedBooking();
+		given(bookingRepository.findPaymentCompletedWithApproachingSessions(any(), any())).willReturn(
+				List.of(booking1, booking2));
+		given(mentoringRepository.findById(any())).willReturn(Optional.empty());
+
+		int count = bookingService.autoCancelUnapproved(LocalDateTime.now());
+
+		log.info("[자동 취소] 취소 건수={}", count);
+		assertThat(count).isEqualTo(2);
+		assertThat(booking1.getStatus()).isEqualTo(BookingStatus.CANCELED);
+		assertThat(booking2.getStatus()).isEqualTo(BookingStatus.CANCELED);
 	}
 }

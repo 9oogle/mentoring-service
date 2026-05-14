@@ -54,7 +54,7 @@ kafka:
       pending-approval: mentoring.booking.pending_approval.v1
     order:
       mentoring-completed: ${topics.order.mentoring-completed:order.mentoring-completed.v1}
-      mentoring-canceled: ${topics.order.mentoring-cancelled:order.mentoring-canceled.v1}
+      mentoring-canceled: ${topics.order.mentoring-canceled:order.mentoring-canceled.v1}
 
 resilience4j:
   circuitbreaker:
