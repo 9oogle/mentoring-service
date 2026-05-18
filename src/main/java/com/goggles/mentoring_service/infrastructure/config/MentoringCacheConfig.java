@@ -18,9 +18,9 @@ public class MentoringCacheConfig {
 	static final String MENTORING      = "mentoring";
 	static final String MENTORING_LIST = "mentoring-list";
 
-	// 로컬: in-memory 캐시 (직렬화 불필요, 테스트에 최적)
+	// 로컬 / 부하테스트: in-memory 캐시 (Redis 불필요)
 	@Bean
-	@Profile("local")
+	@Profile({"local", "loadtest"})
 	public CacheManager localCacheManager() {
 		return new ConcurrentMapCacheManager(MENTORING, MENTORING_LIST);
 	}

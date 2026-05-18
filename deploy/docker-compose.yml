@@ -1,6 +1,6 @@
 services:
   mentoring-service:
-    image: asia-northeast3-docker.pkg.dev/melodic-crane-494802-u3/goggles/mentoring-service:${IMAGE_TAG:-latest}
+    image: asia-northeast3-docker.pkg.dev/${GCP_PROJECT_ID}/goggles/mentoring-service:${IMAGE_TAG:-latest}
     container_name: mentoring-service
     restart: unless-stopped
     ports:
