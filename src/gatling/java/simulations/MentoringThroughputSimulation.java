@@ -30,6 +30,7 @@ public class MentoringThroughputSimulation extends Simulation {
         List<PopulationBuilder> populations = new ArrayList<>();
 
         if (cfg.isActive("read"))   populations.add(new ReadScenario(cfg).population());
+        if (cfg.isActive("lock"))   populations.add(new LockScenario(cfg).population());
 
         if (populations.isEmpty()) {
             throw new IllegalArgumentException(
