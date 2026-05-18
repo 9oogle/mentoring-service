@@ -30,14 +30,32 @@ public class SearchScenario {
         int vus  = cfg.vusFor("search", 0.3);
         int half = Math.max(1, vus / 2);
 
+        return buildScn().injectClosed(
+                rampConcurrentUsers(0).to(half).during(Duration.ofSeconds(20)),
+                constantConcurrentUsers(vus).during(Duration.ofSeconds(60)),
+                rampConcurrentUsers(vus).to(0).during(Duration.ofSeconds(20))
+        );
+    }
+
+    public PopulationBuilder stressPopulation() {
+        int step = Math.max(1, (int) (cfg.stressStepVUs * 0.2));
+        return buildScn().injectClosed(
+                incrementConcurrentUsers(step)
+                        .times(cfg.stressSteps)
+                        .eachLevelLasting(Duration.ofSeconds(cfg.stressStepSecs))
+                        .separatedByRampsLasting(Duration.ofSeconds(5))
+                        .startingFrom(step)
+        );
+    }
+
+    private ScenarioBuilder buildScn() {
         Iterator<Map<String, Object>> keywordFeeder = Stream
                 .generate(() -> {
                     String kw = KEYWORDS[ThreadLocalRandom.current().nextInt(KEYWORDS.length)];
                     return Map.<String, Object>of("keyword", kw);
                 })
                 .iterator();
-
-        ScenarioBuilder scn = scenario("키워드 검색")
+        return scenario("키워드 검색")
                 .feed(keywordFeeder)
                 .exec(http("GET 키워드 검색")
                         .get("/api/v1/mentorings")
@@ -46,11 +64,5 @@ public class SearchScenario {
                         .queryParam("size", "20")
                         .check(status().is(200)))
                 .pause(Duration.ofMillis(50));
-
-        return scn.injectClosed(
-                rampConcurrentUsers(0).to(half).during(Duration.ofSeconds(20)),
-                constantConcurrentUsers(vus).during(Duration.ofSeconds(60)),
-                rampConcurrentUsers(vus).to(0).during(Duration.ofSeconds(20))
-        );
     }
 }

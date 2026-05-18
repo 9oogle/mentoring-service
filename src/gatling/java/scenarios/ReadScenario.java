@@ -25,11 +25,29 @@ public class ReadScenario {
         int vus  = cfg.vusFor("read", 0.6);
         int half = Math.max(1, vus / 2);
 
+        return buildScn().injectClosed(
+                rampConcurrentUsers(0).to(half).during(Duration.ofSeconds(20)),
+                constantConcurrentUsers(vus).during(Duration.ofSeconds(60)),
+                rampConcurrentUsers(vus).to(0).during(Duration.ofSeconds(20))
+        );
+    }
+
+    public PopulationBuilder stressPopulation() {
+        int step = Math.max(1, (int) (cfg.stressStepVUs * 0.6));
+        return buildScn().injectClosed(
+                incrementConcurrentUsers(step)
+                        .times(cfg.stressSteps)
+                        .eachLevelLasting(Duration.ofSeconds(cfg.stressStepSecs))
+                        .separatedByRampsLasting(Duration.ofSeconds(5))
+                        .startingFrom(step)
+        );
+    }
+
+    private ScenarioBuilder buildScn() {
         Iterator<Map<String, Object>> idFeeder = Stream
                 .generate(() -> Map.<String, Object>of("mentoringId", cfg.readMentoringId))
                 .iterator();
-
-        ScenarioBuilder scn = scenario("읽기 (목록/상세)")
+        return scenario("읽기 (목록/상세)")
                 .exec(session -> session.set("doDetail", ThreadLocalRandom.current().nextDouble() >= 0.7))
                 .doIf(s -> !(boolean) s.get("doDetail")).then(
                         exec(http("GET 멘토링 목록")
@@ -45,11 +63,5 @@ public class ReadScenario {
                                         .check(status().is(200)))
                 )
                 .pause(Duration.ofMillis(100));
-
-        return scn.injectClosed(
-                rampConcurrentUsers(0).to(half).during(Duration.ofSeconds(20)),
-                constantConcurrentUsers(vus).during(Duration.ofSeconds(60)),
-                rampConcurrentUsers(vus).to(0).during(Duration.ofSeconds(20))
-        );
     }
 }

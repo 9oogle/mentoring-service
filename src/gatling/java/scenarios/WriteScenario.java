@@ -22,7 +22,26 @@ public class WriteScenario {
         int vus  = cfg.vusFor("write", 0.2);
         int half = Math.max(1, vus / 2);
 
-        ScenarioBuilder scn = scenario("멘토링 생성")
+        return buildScn().injectClosed(
+                rampConcurrentUsers(0).to(half).during(Duration.ofSeconds(20)),
+                constantConcurrentUsers(vus).during(Duration.ofSeconds(60)),
+                rampConcurrentUsers(vus).to(0).during(Duration.ofSeconds(20))
+        );
+    }
+
+    public PopulationBuilder stressPopulation() {
+        int step = Math.max(1, (int) (cfg.stressStepVUs * 0.2));
+        return buildScn().injectClosed(
+                incrementConcurrentUsers(step)
+                        .times(cfg.stressSteps)
+                        .eachLevelLasting(Duration.ofSeconds(cfg.stressStepSecs))
+                        .separatedByRampsLasting(Duration.ofSeconds(5))
+                        .startingFrom(step)
+        );
+    }
+
+    private ScenarioBuilder buildScn() {
+        return scenario("멘토링 생성")
                 .exec(session -> {
                     int month = ThreadLocalRandom.current().nextInt(12) + 1;
                     return session
@@ -46,11 +65,5 @@ public class WriteScenario {
                         .check(status().is(201))
                 )
                 .pause(Duration.ofMillis(300));
-
-        return scn.injectClosed(
-                rampConcurrentUsers(0).to(half).during(Duration.ofSeconds(20)),
-                constantConcurrentUsers(vus).during(Duration.ofSeconds(60)),
-                rampConcurrentUsers(vus).to(0).during(Duration.ofSeconds(20))
-        );
     }
 }

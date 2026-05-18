@@ -13,6 +13,10 @@ public class SimulationConfig {
     public final int         peakVUs;
     public final Set<String> activeScenarios;
 
+    public final int stressStepVUs;
+    public final int stressSteps;
+    public final int stressStepSecs;
+
     public String categoryId;
     public String readMentoringId;
     public String lockMentoringId;
@@ -26,6 +30,9 @@ public class SimulationConfig {
         this.activeScenarios = new HashSet<>(
                 Arrays.asList(System.getProperty("scenarios", "read,write,lock").split(","))
         );
+        this.stressStepVUs   = Integer.parseInt(System.getProperty("stressStepVUs",  "20"));
+        this.stressSteps     = Integer.parseInt(System.getProperty("stressSteps",    "10"));
+        this.stressStepSecs  = Integer.parseInt(System.getProperty("stressStepSecs", "30"));
     }
 
     public boolean isActive(String name) {
