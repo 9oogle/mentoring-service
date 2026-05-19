@@ -4,10 +4,11 @@ services:
     env_file: .env
     environment:
       SPRING_PROFILES_ACTIVE: dev
+      MONITORING_HOST: ${MONITORING_HOST}
     ports:
       - "9006:9006"
     volumes:
-      - ./ssl/kafka.truststore.jks:/app/ssl/kafka.truststore.jks:ro
+      - /home/deploy/ssl/kafka.truststore.jks:/app/ssl/kafka.truststore.jks:ro
       - mentoring-logs:/app/logs
     restart: unless-stopped
     networks:

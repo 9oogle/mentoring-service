@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <include resource="org/springframework/boot/logging/logback/defaults.xml" />
+
+  <property name="SERVICE_NAME" value="mentoring-service" />
+  <springProperty scope="context" name="LOKI_HOST" source="MONITORING_HOST" defaultValue="localhost"/>
+  <property name="LOKI_URL" value="http://${LOKI_HOST}:3100/loki/api/v1/push" />
+
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+      <charset>utf8</charset>
+    </encoder>
+  </appender>
+
+  <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
+    <http>
+      <url>${LOKI_URL}</url>
+    </http>
+    <format>
+      <label>
+        <pattern>app=mentoring-service,host=${HOSTNAME},level=%level</pattern>
+      </label>
+      <message>
+        <pattern>l=%level c=%logger{20} t=%thread | %msg %ex{full}</pattern>
+      </message>
+    </format>
+  </appender>
+
+  <springProfile name="local">
+    <root level="INFO">
+      <appender-ref ref="CONSOLE" />
+      <appender-ref ref="LOKI" />
+    </root>
+  </springProfile>
+
+  <springProfile name="prod | dev">
+    <root level="WARN">
+      <appender-ref ref="CONSOLE" />
+      <appender-ref ref="LOKI" />
+    </root>
+  </springProfile>
+
+</configuration>
