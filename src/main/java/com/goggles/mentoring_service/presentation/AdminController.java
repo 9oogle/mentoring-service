@@ -16,14 +16,14 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/admin/")
+@RequestMapping("/api/v1/admin/mentoring/")
 @RequiredArgsConstructor
 public class AdminController {
 
 	private final CategoryService categoryService;
 
 
-	@GetMapping("mentoring-categories")
+	@GetMapping("categories")
 	public CategoryResponse.CategoryListForAdmin getAllCategories(UserContext userContext) {
 		CategoryCommand.GetList command =
 				new CategoryCommand.GetList(userContext.userId(), userContext.userType());
@@ -31,7 +31,7 @@ public class AdminController {
 		return CategoryResponse.CategoryListForAdmin.of(categories);
 	}
 
-	@PostMapping("mentoring-categories")
+	@PostMapping("categories")
 	@ResponseStatus(HttpStatus.CREATED)
 	public CategoryResponse.Create createCategory(UserContext userContext,
 			@Valid @RequestBody CategoryRequest.Create request) {
@@ -40,14 +40,14 @@ public class AdminController {
 		return new CategoryResponse.Create(categoryId);
 	}
 
-	@PutMapping("mentoring-categories/active")
+	@PutMapping("categories/active")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void updateActiveCategories(UserContext userContext,
 			@Valid @RequestBody CategoryRequest.UpdateActive request) {
 		categoryService.updateActiveCategories(request.toCommand(userContext));
 	}
 
-	@PatchMapping("mentoring-categories/{categoryId}")
+	@PatchMapping("categories/{categoryId}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void updateCategory(UserContext userContext, @PathVariable UUID categoryId,
 			@Valid @RequestBody CategoryRequest.Update request) {
@@ -55,7 +55,7 @@ public class AdminController {
 		categoryService.updateCategory(command);
 	}
 
-	@DeleteMapping("mentoring-categories/{categoryId}")
+	@DeleteMapping("categories/{categoryId}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void deleteCategory(UserContext userContext, @PathVariable UUID categoryId) {
 		CategoryCommand.Delete command =

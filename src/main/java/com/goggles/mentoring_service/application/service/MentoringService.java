@@ -13,6 +13,9 @@ import com.goggles.mentoring_service.domain.mentoring.*;
 import com.goggles.mentoring_service.domain.mentoring.exception.MentoringNotFoundException;
 import com.goggles.mentoring_service.domain.mentoring.repository.MentoringRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -44,6 +47,7 @@ public class MentoringService {
 				.mentoringId();
 	}
 
+	@Cacheable(value = "mentoring", key = "#mentoringId.toString()")
 	@Transactional(readOnly = true)
 	public MentoringResult.Detail getMentoring(UUID mentoringId) {
 		return MentoringResult.Detail.from(getOrThrow(mentoringId));
@@ -54,6 +58,7 @@ public class MentoringService {
 		return MentoringResult.Schedules.from(getOrThrow(mentoringId));
 	}
 
+	@Cacheable(value = "mentoring-list", key = "#condition.toString() + ':' + #pageRequest.toString()")
 	@Transactional(readOnly = true)
 	public Page<MentoringResult.Summary> searchMentorings(MentoringSearchCondition condition,
 			CommonPageRequest pageRequest) {
@@ -62,6 +67,10 @@ public class MentoringService {
 		return page.map(MentoringResult.Summary::from);
 	}
 
+	@Caching(evict = {
+		@CacheEvict(value = "mentoring",      key = "#mentoringId.toString()"),
+		@CacheEvict(value = "mentoring-list", allEntries = true)
+	})
 	public void updateMentoring(UUID mentoringId, MentoringCommand.Update command) {
 		Mentoring mentoring = getOrThrow(mentoringId);
 		List<TimeSchedules> timeSchedules = command.timeSchedules();
@@ -75,11 +84,19 @@ public class MentoringService {
 	}
 
 
+	@Caching(evict = {
+		@CacheEvict(value = "mentoring",      key = "#mentoringId.toString()"),
+		@CacheEvict(value = "mentoring-list", allEntries = true)
+	})
 	public void deactivateMentoring(UUID mentoringId, UUID userId, UserType userType) {
 		Mentoring mentoring = getOrThrow(mentoringId);
 		mentoring.deactivate(userId, userType);
 	}
 
+	@Caching(evict = {
+		@CacheEvict(value = "mentoring",      key = "#mentoringId.toString()"),
+		@CacheEvict(value = "mentoring-list", allEntries = true)
+	})
 	public void deleteMentoring(UUID mentoringId, UUID userId, UserType userType) {
 		Mentoring mentoring = getOrThrow(mentoringId);
 		mentoring.delete(userId, userType);

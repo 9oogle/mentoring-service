@@ -68,7 +68,7 @@ class AdminControllerTest {
 								.toUpperCase(), null, false)));
 
 		mockMvc.perform(
-						get("/api/v1/admin/mentoring-categories").headers(headersFor(UserType.MASTER)))
+						get("/api/v1/admin/mentoring/categories").headers(headersFor(UserType.MASTER)))
 				.andDo(print())
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.categories").isArray())
@@ -88,7 +88,7 @@ class AdminControllerTest {
 				.getAllCategories(any());
 
 		mockMvc.perform(
-						get("/api/v1/admin/mentoring-categories").headers(headersFor(UserType.INSTRUCTOR)))
+						get("/api/v1/admin/mentoring/categories").headers(headersFor(UserType.INSTRUCTOR)))
 				.andDo(print())
 				.andExpect(status().isForbidden())
 				.andExpect(jsonPath("$.title").value("Forbidden"))
@@ -103,7 +103,7 @@ class AdminControllerTest {
 		given(categoryService.createCategory(any())).willReturn(categoryId);
 
 		mockMvc.perform(
-						post("/api/v1/admin/mentoring-categories").contentType(MediaType.APPLICATION_JSON)
+						post("/api/v1/admin/mentoring/categories").contentType(MediaType.APPLICATION_JSON)
 								.headers(headersFor(UserType.MASTER))
 								.content(objectMapper.writeValueAsString(
 										Map.of("title", "Java 백엔드", "code", "JAVA", "sortOrder", 0))))
@@ -119,7 +119,7 @@ class AdminControllerTest {
 				.createCategory(any());
 
 		mockMvc.perform(
-						post("/api/v1/admin/mentoring-categories").contentType(MediaType.APPLICATION_JSON)
+						post("/api/v1/admin/mentoring/categories").contentType(MediaType.APPLICATION_JSON)
 								.headers(headersFor(UserType.INSTRUCTOR))
 								.content(objectMapper.writeValueAsString(
 										Map.of("title", "Java 백엔드", "code", "JAVA", "sortOrder", 0))))
@@ -132,7 +132,7 @@ class AdminControllerTest {
 	@Test
 	void createCategory_blank_title() throws Exception {
 		mockMvc.perform(
-						post("/api/v1/admin/mentoring-categories").contentType(MediaType.APPLICATION_JSON)
+						post("/api/v1/admin/mentoring/categories").contentType(MediaType.APPLICATION_JSON)
 								.headers(headersFor(UserType.MASTER))
 								.content(objectMapper.writeValueAsString(
 										Map.of("title", "", "code", "JAVA", "sortOrder", 0))))
@@ -147,7 +147,7 @@ class AdminControllerTest {
 		UUID id1 = UUID.randomUUID();
 		UUID id2 = UUID.randomUUID();
 
-		mockMvc.perform(put("/api/v1/admin/mentoring-categories/active").contentType(
+		mockMvc.perform(put("/api/v1/admin/mentoring/categories/active").contentType(
 								MediaType.APPLICATION_JSON)
 						.headers(headersFor(UserType.MASTER))
 						.content(objectMapper.writeValueAsString(
@@ -158,7 +158,7 @@ class AdminControllerTest {
 
 	@Test
 	void updateActiveCategories_empty_list() throws Exception {
-		mockMvc.perform(put("/api/v1/admin/mentoring-categories/active").contentType(
+		mockMvc.perform(put("/api/v1/admin/mentoring/categories/active").contentType(
 								MediaType.APPLICATION_JSON)
 						.headers(headersFor(UserType.MASTER))
 						.content(objectMapper.writeValueAsString(Map.of("categoryIds", List.of()))))
@@ -172,7 +172,7 @@ class AdminControllerTest {
 		willThrow(new ForbiddenException(errorMessage)).given(categoryService)
 				.updateActiveCategories(any());
 
-		mockMvc.perform(put("/api/v1/admin/mentoring-categories/active").contentType(
+		mockMvc.perform(put("/api/v1/admin/mentoring/categories/active").contentType(
 								MediaType.APPLICATION_JSON)
 						.headers(headersFor(UserType.INSTRUCTOR))
 						.content(objectMapper.writeValueAsString(Map.of("categoryIds", List.of()))))
@@ -188,7 +188,7 @@ class AdminControllerTest {
 		willThrow(new CategoryNotFoundException(unknownId)).given(categoryService)
 				.updateActiveCategories(any());
 
-		mockMvc.perform(put("/api/v1/admin/mentoring-categories/active").contentType(
+		mockMvc.perform(put("/api/v1/admin/mentoring/categories/active").contentType(
 								MediaType.APPLICATION_JSON)
 						.headers(headersFor(UserType.MASTER))
 						.content(objectMapper.writeValueAsString(

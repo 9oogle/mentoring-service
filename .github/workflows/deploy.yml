@@ -21,10 +21,13 @@ jobs:
         env:
           SECRET_VM_HOST: ${{ secrets.VM_HOST }}
           SECRET_VM_SSH_KEY: ${{ secrets.VM_SSH_KEY }}
+          SECRET_GCP_PROJECT_NUMBER: ${{ secrets.GCP_PROJECT_NUMBER }}
+          SECRET_TRUST_STORE_PASSWORD: ${{ secrets.TRUST_STORE_PASSWORD }}
         run: |
           echo "=== Variables ==="
           echo "GAR_LOCATION     : ${{ vars.GAR_LOCATION }}"
           echo "GCP_PROJECT_ID   : ${{ vars.GCP_PROJECT_ID }}"
+          echo "GCP_SA_EMAIL      : ${{ vars.GCP_SA_EMAIL }}"
           echo "GAR_REPOSITORY   : ${{ vars.GAR_REPOSITORY }}"
           echo "SERVICE_NAME     : ${{ vars.SERVICE_NAME }}"
           echo "VM_USER          : ${{ vars.VM_USER }}"
@@ -33,13 +36,16 @@ jobs:
           echo "HEALTH_CHECK_PORT: ${{ vars.HEALTH_CHECK_PORT }}"
           echo ""
           echo "=== Secrets (존재 여부만 확인) ==="
-          [ -n "$SECRET_VM_HOST"    ] && echo "VM_HOST     : ✅" || echo "VM_HOST     : ❌ 누락"
-          [ -n "$SECRET_VM_SSH_KEY" ] && echo "VM_SSH_KEY  : ✅" || echo "VM_SSH_KEY  : ❌ 누락"
+          [ -n "$SECRET_VM_HOST"             ] && echo "VM_HOST             : ✅" || echo "VM_HOST             : ❌ 누락"
+          [ -n "$SECRET_VM_SSH_KEY"          ] && echo "VM_SSH_KEY          : ✅" || echo "VM_SSH_KEY          : ❌ 누락"
+          [ -n "$SECRET_GCP_PROJECT_NUMBER"  ] && echo "GCP_PROJECT_NUMBER  : ✅" || echo "GCP_PROJECT_NUMBER  : ❌ 누락"
+          [ -n "$SECRET_TRUST_STORE_PASSWORD"] && echo "TRUST_STORE_PASSWORD: ✅" || echo "TRUST_STORE_PASSWORD: ❌ 누락"
           echo ""
 
           MISSING=()
           [ -z "${{ vars.GAR_LOCATION }}"      ] && MISSING+=("vars.GAR_LOCATION")
           [ -z "${{ vars.GCP_PROJECT_ID }}"    ] && MISSING+=("vars.GCP_PROJECT_ID")
+          [ -z "${{ vars.GCP_SA_EMAIL }}"       ] && MISSING+=("vars.GCP_SA_EMAIL")
           [ -z "${{ vars.GAR_REPOSITORY }}"    ] && MISSING+=("vars.GAR_REPOSITORY")
           [ -z "${{ vars.SERVICE_NAME }}"      ] && MISSING+=("vars.SERVICE_NAME")
           [ -z "${{ vars.VM_USER }}"           ] && MISSING+=("vars.VM_USER")
@@ -48,10 +54,13 @@ jobs:
           [ -z "${{ vars.HEALTH_CHECK_PORT }}" ] && MISSING+=("vars.HEALTH_CHECK_PORT")
           [ -z "$SECRET_VM_HOST"               ] && MISSING+=("secrets.VM_HOST")
           [ -z "$SECRET_VM_SSH_KEY"            ] && MISSING+=("secrets.VM_SSH_KEY")
+          [ -z "$SECRET_GCP_PROJECT_NUMBER"    ] && MISSING+=("secrets.GCP_PROJECT_NUMBER")
+          [ -z "$SECRET_TRUST_STORE_PASSWORD"  ] && MISSING+=("secrets.TRUST_STORE_PASSWORD")
 
           if [ ${#MISSING[@]} -gt 0 ]; then
             echo "=== 누락된 변수 ==="
             for var in "${MISSING[@]}"; do
+        
               echo "  ❌ $var"
             done
             exit 1
@@ -120,12 +129,15 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: projects/985172684764/locations/global/workloadIdentityPools/github-pool/providers/github-provider-v2
-          service_account: deployManager@melodic-crane-494802-u3.iam.gserviceaccount.com
+          workload_identity_provider: projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-pool/providers/github-provider-v2
+          service_account: ${{ vars.GCP_SA_EMAIL }}
+          project_id: ${{ vars.GCP_PROJECT_ID }}
 
 
       - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker ${{ vars.GAR_LOCATION }}-docker.pkg.dev --quiet
+        run: |
+          gcloud auth configure-docker ${{ vars.GAR_LOCATION }}-docker.pkg.dev --quiet
+          
 
       - name: Build and push image
         run: |
@@ -160,7 +172,7 @@ jobs:
           port: ${{ vars.VM_SSH_PORT }}
           key: ${{ secrets.VM_SSH_KEY }}
           source: "${{ steps.vars.outputs.compose }}"
-          target: "${{ vars.APP_DIR }}"
+          target: "${{ vars.APP_DIR }}/${{ vars.SERVICE_NAME }}"
 
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1
@@ -172,12 +184,13 @@ jobs:
           script: |
             set -e
 
-            APP_DIR="${{ vars.APP_DIR }}"
+            APP_DIR="${{ vars.APP_DIR }}/${{ vars.SERVICE_NAME }}"
             SERVICE="${{ vars.SERVICE_NAME }}"
             NEW_TAG="${{ github.sha }}"
             export IMAGE="${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY }}/${{ vars.SERVICE_NAME }}"
             ENV_FILE="$APP_DIR/.env"
 
+            mkdir -p $APP_DIR
             cd $APP_DIR
 
             # 롤백용 이전 태그 저장
@@ -198,38 +211,22 @@ jobs:
             }
 
             upsert_env IMAGE_TAG "$NEW_TAG"
-            upsert_env SPRING_DATASOURCE_URL "${{ secrets.DB_URL }}/${{ vars.DB_SCHEMA }}"
-            upsert_env EUREKA_CLIENT_SERVICEURL_DEFAULTZONE "http://${{ secrets.VM_HOST }}:9001/eureka/"
+            upsert_env SPRING_DATASOURCE_URL "jdbc:postgresql://${{ secrets.DB_URL }}/user_db"
+            upsert_env DB_USERNAME "${{ secrets.DB_USERNAME }}"
+            upsert_env DB_PASSWORD "${{ secrets.DB_PASSWORD }}"
+            upsert_env EUREKA_CLIENT_SERVICEURL_DEFAULTZONE "http://${{ secrets.VM_INTERNAL_HOST }}:9001/eureka/"
             upsert_env KAFKA_BOOTSTRAP_SERVERS "${{ secrets.KAFKA_1_INTERNAL_IP }}:9092,${{ secrets.KAFKA_2_INTERNAL_IP }}:9092,${{ secrets.KAFKA_3_INTERNAL_IP }}:9092"
+            upsert_env TRUST_STORE_PASSWORD "${{ secrets.TRUST_STORE_PASSWORD }}"
             upsert_env MONITORING_HOST "${{ secrets.MONITORING_VM_HOST }}"
 
-            # Kafka SSL truststore 복원
-            mkdir -p $APP_DIR/ssl
+            # config server는 Eureka 디스커버리로 찾으므로 URI 직접 지정 불필요
+            sed -i '/^SPRING_CLOUD_CONFIG_URI=/d' "$ENV_FILE" 2>/dev/null || true
 
-            TRUSTSTORE_B64="${{ secrets.TRUSTSTORE_JKS_B64 }}"
-            echo "[SSL] TRUSTSTORE_JKS_B64 secret 길이: ${#TRUSTSTORE_B64}"
-            if [ -z "$TRUSTSTORE_B64" ]; then
-              echo "[SSL] ❌ TRUSTSTORE_JKS_B64 secret이 비어있음"
+            # SSL truststore는 VM 공용 경로에 직접 배치 (/home/deploy/ssl/kafka.truststore.jks)
+            if [ ! -f "/home/deploy/ssl/kafka.truststore.jks" ]; then
+              echo "[SSL] ❌ /home/deploy/ssl/kafka.truststore.jks 파일 없음 — VM에 직접 배치 필요"
               exit 1
             fi
-
-            echo "$TRUSTSTORE_B64" | base64 -d > $APP_DIR/ssl/kafka.truststore.jks
-
-            echo "[SSL] 파일 경로: $APP_DIR/ssl/kafka.truststore.jks"
-            if [ -f "$APP_DIR/ssl/kafka.truststore.jks" ]; then
-              FILE_SIZE=$(stat -c%s "$APP_DIR/ssl/kafka.truststore.jks")
-              echo "[SSL] ✅ 파일 존재 (크기: ${FILE_SIZE} bytes)"
-              if [ "$FILE_SIZE" -eq 0 ]; then
-                echo "[SSL] ❌ 파일이 비어있음 — base64 디코딩 실패"
-                exit 1
-              fi
-            else
-              echo "[SSL] ❌ 파일 생성 실패"
-              exit 1
-            fi
-
-            echo "[SSL] ssl 디렉토리 내용:"
-            ls -lh $APP_DIR/ssl/
 
             # 새 이미지 pull & 재시작
             COMPOSE_FILE="${{ steps.vars.outputs.compose }}"

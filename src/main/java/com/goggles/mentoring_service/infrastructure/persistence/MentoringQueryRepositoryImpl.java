@@ -51,8 +51,6 @@ public class MentoringQueryRepositoryImpl implements MentoringQueryRepository {
 					.like(pattern)
 					.or(m.subtitle.lower()
 							.like(pattern))
-					.or(m.description.lower()
-							.like(pattern))
 					.or(m.mentor.name.lower()
 							.like(pattern))
 					.or(m.mentoringCategory.name.lower()
