@@ -15,6 +15,7 @@ import com.goggles.mentoring_service.domain.mentoring.Mentoring;
 import com.goggles.mentoring_service.domain.mentoring.MentoringId;
 import com.goggles.mentoring_service.domain.mentoring.exception.MentoringNotFoundException;
 import com.goggles.mentoring_service.domain.mentoring.repository.MentoringRepository;
+import com.goggles.mentoring_service.application.lock.DistributedLock;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -34,6 +35,7 @@ public class BookingService {
 	private final MentoringRepository mentoringRepository;
 	private final BookingEvent events;
 
+	@DistributedLock(key = "'booking:' + #command.mentoringId()")
 	@Transactional
 	public BookingResult.Create createBooking(BookingCommand.Create command) {
 		MentoringId mentoringId = new MentoringId(command.mentoringId());
@@ -173,6 +175,7 @@ public class BookingService {
 		booking.completeSession(command.sessionId(), command.userId(), command.userType());
 	}
 
+	@DistributedLock(key = "'booking:reschedule:' + #command.bookingId()")
 	@Transactional
 	public void rescheduleSession(BookingCommand.RescheduleSession command) {
 		MentoringBooking booking = findBooking(command.bookingId());
